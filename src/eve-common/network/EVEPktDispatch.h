@@ -26,7 +26,7 @@
 #ifndef __EVEDISPATCHERS_H_INCL__
 #define __EVEDISPATCHERS_H_INCL__
 
-class PyPacket;
+class EVEPacket;
 class PyRep;
 class PyTuple;
 class AuthenticationReq;
@@ -38,23 +38,23 @@ class ErrorResponse;
 class EVEPacketDispatcher
 {
 public:
-    bool DispatchPacket( PyPacket* packet );
+    bool DispatchPacket (EVEPacket* packet);
 
 protected:
-    virtual bool Handle_AuthenticationReq( PyPacket* packet, AuthenticationReq& req );
-    virtual bool Handle_AuthenticationRsp( PyPacket* packet, AuthenticationRsp& rsp );
+    virtual bool Handle_AuthenticationReq (EVEPacket* packet, AuthenticationReq& req);
+    virtual bool Handle_AuthenticationRsp (EVEPacket* packet, AuthenticationRsp& rsp);
 
-    virtual bool Handle_CallReq( PyPacket* packet, PyCallStream& req );
-    virtual bool Handle_CallRsp( PyPacket* packet );
-    virtual bool Handle_ErrorResponse( PyPacket* packet, ErrorResponse& error );
+    virtual bool Handle_CallReq (EVEPacket* packet, PyCallStream& req);
+    virtual bool Handle_CallRsp (EVEPacket* packet);
+    virtual bool Handle_ErrorResponse (EVEPacket* packet, ErrorResponse& error);
 
-    virtual bool Handle_Notify( PyPacket* packet );
-    virtual bool Handle_SessionChange( PyPacket* packet, SessionChangeNotification& sessionChange );
+    virtual bool Handle_Notify (EVEPacket* packet);
+    virtual bool Handle_SessionChange (EVEPacket* packet, SessionChangeNotification& sessionChange);
 
-    virtual bool Handle_PingReq( PyPacket* packet );
-    virtual bool Handle_PingRsp( PyPacket* packet );
+    virtual bool Handle_PingReq (EVEPacket* packet);
+    virtual bool Handle_PingRsp (EVEPacket* packet);
 
-    virtual bool Handle_Other( PyPacket* packet );
+    virtual bool Handle_Other (EVEPacket* packet);
 };
 
 

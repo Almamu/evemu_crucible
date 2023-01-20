@@ -25,6 +25,8 @@
 
 #ifndef __UTILS__SINGLETON_H__INCL__
 #define __UTILS__SINGLETON_H__INCL__
+
+#include <cassert>
 #include <memory>
 
 /**

@@ -29,22 +29,14 @@
 #include "database/dbcore.h"
 #include "network/packet_types.h"
 
-class PyRep;
-class PyObject;
-class PyTuple;
-class PyList;
-class PyDict;
-class PyObjectEx;
-class PyPackedRow;
-class DBRowDescriptor;
-
+#include "python/Types.h"
 
 void DBResultToIntIntDict(DBQueryResult &result, std::map<int32, int32> &into);
 void DBResultToUIntUIntDict(DBQueryResult &result, std::map<uint32, uint32> &into);
 // result is assumed to be "ORDER BY result[0]"
-void DBResultToIntIntlistDict(DBQueryResult &result, std::map<int32, PyRep *> &into);
+void DBResultToIntIntlistDict(DBQueryResult &result, std::map<int32, PyDataType *> &into);
 
-PyRep *DBColumnToPyRep(const DBResultRow &row, uint32 column_index);
+PyDataType *DBColumnToPyDataType(const DBResultRow &row, uint32 column_index);
 
 // this returns a std PyObject "util.Rowset" with data in 'lines'
 PyObject *DBResultToRowset(DBQueryResult &result);

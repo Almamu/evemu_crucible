@@ -23,94 +23,46 @@
     Author:     Zhur, mmcs
 */
 
-#ifndef __PYDUMPVISITOR_H_INCL__
-#define __PYDUMPVISITOR_H_INCL__
+#ifndef __PYDUMPVISITOR_H__
+#define __PYDUMPVISITOR_H__
 
-#include "python/PyVisitor.h"
+#include "PyVisitor.h"
+#include "PyPfxVisitor.h"
 
 class PyDumpVisitor : public PyPfxVisitor
 {
 public:
-    PyDumpVisitor( const char* pfx = "", bool full_nested = false );
+    PyDumpVisitor (const char* pfx = "", bool fullNested = false);
 
-    bool fullNested() const { return mFullNested; }
+    bool isFullNested () const;
 
 protected:
     // Output functions
     virtual void _print( const char* fmt, ... ) = 0;
     virtual void _dump( const char* pfx, const uint8* data, size_t len ) = 0;
 
-    //! primitive data visitors
-    bool VisitInteger( const PyInt* rep );
-    bool VisitLong( const PyLong* rep );
-    bool VisitReal( const PyFloat* rep );
-    bool VisitBoolean( const PyBool* rep );
-    bool VisitNone( const PyNone* rep );
-    bool VisitBuffer( const PyBuffer* rep );
-    bool VisitString( const PyString* rep );
-    bool VisitWString( const PyWString* rep );
-    bool VisitToken( const PyToken* rep );
+    virtual bool VisitNone (const PyNone* rep);
+    virtual bool VisitInteger (const PyInt* rep);
+    virtual bool VisitReal (const PyFloat* rep);
+    virtual bool VisitString (const PyString* rep);
+    virtual bool VisitToken (const PyToken* rep);
+    virtual bool VisitBuffer (const PyBuffer* rep);
+    virtual bool VisitBoolean (const PyBool* rep);
 
-    //! the nested types Visitor
-    bool VisitTuple( const PyTuple* rep );
-    bool VisitList( const PyList* rep );
-    bool VisitDict( const PyDict* rep );
+    virtual bool VisitTuple (const PyTuple* rep);
+    virtual bool VisitList (const PyList* rep);
+    virtual bool VisitDict (const PyDict* rep);
 
-    //! Object type visitor
-    bool VisitObject( const PyObject* rep );
-    bool VisitObjectEx( const PyObjectEx* rep );
-    //! PackedRow type visitor
-    bool VisitPackedRow( const PyPackedRow* rep );
-    //! wrapper types Visitor
-    bool VisitSubStruct( const PySubStruct* rep );
-    bool VisitSubStream( const PySubStream* rep );
-    bool VisitChecksumedStream( const PyChecksumedStream* rep );
+    virtual bool VisitObject (const PyObject* rep);
+    virtual bool VisitObjectEx (const PyObjectEx* rep);
 
+    virtual bool VisitPackedRow (const PyPackedRow* rep);
+
+    virtual bool VisitSubStruct (const PySubStruct* rep);
+    virtual bool VisitSubStream (const PySubStream* rep);
 private:
-    const bool mFullNested;
+    const bool mIsFullNested;
 };
 
-class PyLogDumpVisitor : public PyDumpVisitor
-{
-public:
-    PyLogDumpVisitor( LogType log_type, LogType log_hex_type, const char* pfx = "", bool full_nested = false, bool full_hex = false );
 
-    bool fullHex() const { return mFullHex; }
-
-    LogType logType() const { return mLogType; }
-    LogType logHexType() const { return mLogHexType; }
-
-protected:
-    void _print( const char* fmt, ... );
-    void _dump( const char* pfx, const uint8* data, size_t len );
-
-private:
-    const bool mFullHex;
-
-    const LogType mLogType;
-    const LogType mLogHexType;
-};
-
-class PyFileDumpVisitor : public PyDumpVisitor
-{
-public:
-    PyFileDumpVisitor( FILE* _file, const char* pfx = "", bool full_nested = false, bool full_hex = false );
-
-    bool fullHex() const { return mFullHex; }
-
-    FILE* file() const { return mFile; }
-
-protected:
-    void _print( const char* fmt, ... );
-    void _dump( const char* pfx, const uint8* data, size_t len );
-
-private:
-    const bool mFullHex;
-
-    FILE* const mFile;
-};
-
-#endif
-
-
-
+#endif /* !__PYDUMPVISITOR_H__ */

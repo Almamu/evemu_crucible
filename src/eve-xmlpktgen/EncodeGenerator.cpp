@@ -505,7 +505,7 @@ bool ClassEncodeGenerator::ProcessObjectInline(const TiXmlElement* field)
 
     fprintf(mOutputFile,
         "    PyString* %s(nullptr);\n"
-        "    PyRep* %s(nullptr);\n"
+        "    PyDataType* %s(nullptr);\n"
         "\n",
         tname,
         aname
@@ -927,7 +927,7 @@ bool ClassEncodeGenerator::ProcessDictInline(const TiXmlElement* field)
             ++count;
 
             fprintf(mOutputFile,
-                "    PyRep* %s(nullptr);\n",
+                "    PyDataType* %s(nullptr);\n",
                 vname
            );
             push(vname);
@@ -1087,7 +1087,7 @@ bool ClassEncodeGenerator::ProcessSubStreamInline(const TiXmlElement* field)
 
     //encode the sub-element into a temp
     fprintf(mOutputFile,
-        "    PyRep* %s;\n",
+        "    PyDataType* %s;\n",
         varname
    );
 
@@ -1112,7 +1112,7 @@ bool ClassEncodeGenerator::ProcessSubStructInline(const TiXmlElement* field)
 
     //encode the sub-element into a temp
     fprintf(mOutputFile,
-        "    PyRep* %s;\n",
+        "    PyDataType* %s;\n",
         varname
    );
 
