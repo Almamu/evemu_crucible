@@ -26,7 +26,7 @@
 #ifndef PY_TRACE_LOG_H
 #define PY_TRACE_LOG_H
 
-#include "PyRep.h"
+#include "python/oldfiles/PyRep.h"
 
 /* ascents cross platform color thingy's */
 #ifdef HAVE_WINDOWS_H

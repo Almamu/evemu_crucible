@@ -26,7 +26,7 @@
 #ifndef __EVE_MARSHAL_STRING_TABLE_H__INCL__
 #define __EVE_MARSHAL_STRING_TABLE_H__INCL__
 
-#include "python/PyRep.h"
+#include "python/PyDataType.h"
 
 /* Since returned index is always > 0, we may use 0 as error signal. */
 #define STRING_TABLE_ERROR 0
@@ -44,11 +44,10 @@
  * @author Captnoord
  * @date December 2008
  */
-class MarshalStringTable
-: public Singleton<MarshalStringTable>
+class MarshalStringTable : public Singleton<MarshalStringTable>
 {
 public:
-    MarshalStringTable();
+    MarshalStringTable ();
 
     /**
      * @brief lookup a index nr using a string
@@ -57,7 +56,7 @@ public:
      *
      * @return the index number of the string that was given; STRING_TABLE_ERROR if string is not found.
      */
-    uint8 LookupIndex( const std::string& str );
+    uint8 LookupIndex (const std::string& str);
 
     /**
     * @brief lookup a index nr using a string
@@ -66,7 +65,7 @@ public:
     *
     * @return the index number of the string that was given; STRING_TABLE_ERROR if string is not found.
     */
-    uint8 LookupIndex( const char* str );
+    uint8 LookupIndex (const char* str);
 
     /**
      * @brief lookup a string using a index
@@ -75,7 +74,7 @@ public:
      *
      * @return if succeeds returns pointer to static string; if fails returns NULL.
      */
-    const char* LookupString( uint8 index );
+    const char* LookupString (uint8 index);
 
 private:
     /**
@@ -85,13 +84,13 @@ private:
      *
      * @return djb2 has of the string.
      */
-    uint32 hash( const char* str )
+    uint32 hash (const char* str)
     {
         uint32 hash = 5381;
         int c;
 
-        while( ( c = *str++ ) )
-            hash = ( ( hash << 5 ) + hash ) + c; /* hash * 33 + c */
+        while ((c = *str++))
+            hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
         return hash;
     }
@@ -103,7 +102,7 @@ private:
     StringTableMap  mStringTableMap;
 
     /* we made up this list so we have efficient string communication with the client */
-    static const char* const s_mStringTable[];
+    static const char* const s_mStringTable [];
 
     /* the current string count of the string table */
     static const size_t s_mStringTableSize;

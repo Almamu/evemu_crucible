@@ -610,7 +610,7 @@ bool ClassDumpGenerator::ProcessDictRaw( const TiXmlElement* field )
     }
 
     //TODO: un-kludge this with respect to printf placeholders/types
-    //could make PyRep's out of them and use ->Dump, but thats annoying
+    //could make PyDataType's out of them and use ->Dump, but thats annoying
 
     fprintf( mOutputFile,
         "    _log( l_type, \"%%s%s: Dictionary with %%lu entries\", pfx, %s.size() );\n"

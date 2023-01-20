@@ -33,12 +33,6 @@ bool IsPrintable( const PyString* str )
     return IsPrintable( str->content() );
 }
 
-bool IsPrintable( const PyWString* str )
-{
-    // how to do it correctly?
-    return IsPrintable( str->content() );
-}
-
 bool DBTYPE_IsCompatible( DBTYPE type, const PyRep* rep )
 {
 // Helper macro, checks type and range

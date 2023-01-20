@@ -48,7 +48,7 @@ bool ClassDecodeGenerator::ProcessElementDef(const TiXmlElement* field)
     const TiXmlElement* main = field->FirstChildElement();
 
     fprintf(mOutputFile,
-        "bool %s::Decode(PyRep* packet) {\n",
+        "bool %s::Decode(PyDataType* packet) {\n",
         mName
    );
 
@@ -61,7 +61,7 @@ bool ClassDecodeGenerator::ProcessElementDef(const TiXmlElement* field)
     fprintf(mOutputFile,
         "    return true;\n"
         "}\n\n"
-        "bool %s::Decode(PyRep** packet) {\n"
+        "bool %s::Decode(PyDataType** packet) {\n"
         "    bool res = Decode(*packet);\n"
         "    PyDecRef(*packet);\n"
         "    *packet = nullptr;\n"
@@ -69,7 +69,7 @@ bool ClassDecodeGenerator::ProcessElementDef(const TiXmlElement* field)
         "}\n\n"
         "bool %s::Decode(%s** packet) {\n"
         "    //quick forwarder to avoid making the user cast it if they have a properly typed object\n"
-        "    return Decode((PyRep**)packet);\n"
+        "    return Decode((PyDataType**)packet);\n"
         "}\n\n",
         mName,
         mName, GetEncodeType(main)
@@ -162,7 +162,7 @@ bool ClassDecodeGenerator::ProcessRaw(const TiXmlElement* field)
                 "        _log(XMLP__DECODE_WARNING, \" unusual is enabled. %s was decoded as PyWString\");\n"
                 "        %s = %s->AsWString()->content();\n"
                 "    } else {\n",
-                "        _log(XMLP__DECODE_WARNING, \" unusual is enabled. %s was decoded as PyRep\");\n"
+                "        _log(XMLP__DECODE_WARNING, \" unusual is enabled. %s was decoded as PyDataType\");\n"
                 "        PySafeDecRef(%s);\n"
                 "        %s = %s;\n"
                 "        PyIncRef(%s);\n"
@@ -205,7 +205,7 @@ bool ClassDecodeGenerator::ProcessInt(const TiXmlElement* field)
         std::cout << std::endl <<  "DecodeGen::ProcessInt field at line " << field->Row() << " is missing the name attribute, skipping.";
         return false;
     }
-    /** @note:  commented code is depreciated in favor of PyRep::IntegerValue(), which tests and decodes as integers */
+    /** @note:  commented code is depreciated in favor of PyDataType::IntegerValue(), which tests and decodes as integers */
 
     //const char* safe = field->Attribute("safe");
     const char* none_marker = field->Attribute("none_marker");
@@ -220,12 +220,12 @@ bool ClassDecodeGenerator::ProcessInt(const TiXmlElement* field)
                 name, none_marker
         );
 
-    fprintf(mOutputFile, "    %s = PyRep::IntegerValue(%s);\n", name, v);
+    fprintf(mOutputFile, "    %s = PyDataType::IntegerValue(%s);\n", name, v);
 
     /*
     fprintf(mOutputFile,
             "    if (%s->IsInt())\n"
-            "        %s = PyRep::IntegerValue(%s);\n"
+            "        %s = PyDataType::IntegerValue(%s);\n"
             "    else\n",
             v,
             name, v
@@ -274,7 +274,7 @@ bool ClassDecodeGenerator::ProcessLong(const TiXmlElement* field)
     }
 
     const char* v = top();
-    fprintf(mOutputFile, "    %s = PyRep::IntegerValue(%s);\n", name, v);
+    fprintf(mOutputFile, "    %s = PyDataType::IntegerValue(%s);\n", name, v);
 
     pop();
     return true;
@@ -310,7 +310,7 @@ bool ClassDecodeGenerator::ProcessReal(const TiXmlElement* field)
     );
 
     if (safe != nullptr) {
-        fprintf(mOutputFile, "\n    %s = PyRep::IntegerValue(%s);\n", name, v);
+        fprintf(mOutputFile, "\n    %s = PyDataType::IntegerValue(%s);\n", name, v);
     } else {
         fprintf(mOutputFile,
                 "{\n"
@@ -334,7 +334,7 @@ bool ClassDecodeGenerator::ProcessBool(const TiXmlElement* field)
     }
 
     const char* v = top();
-    fprintf(mOutputFile, "    %s = PyRep::IntegerValue(%s);\n", name, v);
+    fprintf(mOutputFile, "    %s = PyDataType::IntegerValue(%s);\n", name, v);
 
     pop();
     return true;
@@ -493,7 +493,7 @@ bool ClassDecodeGenerator::ProcessWString(const TiXmlElement* field)
                 name, none_marker
         );
 
-    /** @todo update these to use  PyRep::StringContent()  */
+    /** @todo update these to use  PyDataType::StringContent()  */
     fprintf(mOutputFile,
             "    if (%s->IsWString())\n"
             "        %s = %s->AsWString()->content();\n"

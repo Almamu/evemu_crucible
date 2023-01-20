@@ -563,7 +563,7 @@ bool ClassCloneGenerator::ProcessDictInt( const TiXmlElement* field )
     }
 
     fprintf( mOutputFile,
-            "    std::map<int32, PyRep*>::const_iterator %s_cur = %s.begin();\n"
+            "    std::map<int32, PyDataType*>::const_iterator %s_cur = %s.begin();\n"
             "    //free any existing elements first\n"
             "    for (; %s_cur != %s.end(); %s_cur++)\n"
             "        PyDecRef( %s_cur->second );\n"
@@ -593,7 +593,7 @@ bool ClassCloneGenerator::ProcessDictStr( const TiXmlElement* field )
     }
 
     fprintf( mOutputFile,
-            "    std::map<std::string, PyRep*>::const_iterator %s_cur = %s.begin();\n"
+            "    std::map<std::string, PyDataType*>::const_iterator %s_cur = %s.begin();\n"
             "    //free any existing elements first\n"
             "    for (; %s_cur != %s.end(); %s_cur++)\n"
             "        PyDecRef( %s_cur->second );\n"

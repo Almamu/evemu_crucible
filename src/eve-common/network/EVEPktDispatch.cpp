@@ -27,13 +27,11 @@
 #include "eve-common.h"
 
 #include "network/EVEPktDispatch.h"
-#include "packets/AccountPkts.h"
-#include "packets/General.h"
-#include "python/PyPacket.h"
+#include "python/EVEPacket.h"
 #include "python/PyVisitor.h"
-#include "python/PyRep.h"
+#include "python/Types.h"
 
-bool EVEPacketDispatcher::DispatchPacket(PyPacket* packet)
+bool EVEPacketDispatcher::DispatchPacket(EVEPacket* packet)
 {
     switch(packet->type) {
         case AUTHENTICATION_REQ: {
@@ -155,56 +153,56 @@ bool EVEPacketDispatcher::DispatchPacket(PyPacket* packet)
 }
 
 /* default handlers do nothing but print */
-bool EVEPacketDispatcher::Handle_AuthenticationReq(PyPacket* packet, AuthenticationReq& req)
+bool EVEPacketDispatcher::Handle_AuthenticationReq(EVEPacket* packet, AuthenticationReq& req)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Authentication Request");
     return false;
 }
-bool EVEPacketDispatcher::Handle_AuthenticationRsp(PyPacket* packet, AuthenticationRsp& rsp)
+bool EVEPacketDispatcher::Handle_AuthenticationRsp(EVEPacket* packet, AuthenticationRsp& rsp)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Authentication Response");
     return false;
 }
 
-bool EVEPacketDispatcher::Handle_CallReq(PyPacket* packet, PyCallStream& req)
+bool EVEPacketDispatcher::Handle_CallReq(EVEPacket* packet, PyCallStream& req)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Call Request");
     return false;
 }
-bool EVEPacketDispatcher::Handle_CallRsp(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_CallRsp(EVEPacket* packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Call Response");
     return false;
 }
-bool EVEPacketDispatcher::Handle_ErrorResponse(PyPacket* packet, ErrorResponse& body)
+bool EVEPacketDispatcher::Handle_ErrorResponse(EVEPacket* packet, ErrorResponse& body)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Error Response");
     return false;
 }
 
-bool EVEPacketDispatcher::Handle_Notify(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_Notify(EVEPacket* packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Notification");
     return false;
 }
-bool EVEPacketDispatcher::Handle_SessionChange(PyPacket* packet, SessionChangeNotification& notify)
+bool EVEPacketDispatcher::Handle_SessionChange(EVEPacket* packet, SessionChangeNotification& notify)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled SessionChange");
     return false;
 }
 
-bool EVEPacketDispatcher::Handle_PingReq(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_PingReq(EVEPacket* packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Ping Request.");
     return false;
 }
-bool EVEPacketDispatcher::Handle_PingRsp(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_PingRsp(EVEPacket* packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Ping Response.");
     return false;
 }
 
-bool EVEPacketDispatcher::Handle_Other(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_Other(EVEPacket* packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Packet of type %s (%i)", MACHONETMSG_TYPE_NAMES[ packet->type ], (int)packet->type);
     return false;
