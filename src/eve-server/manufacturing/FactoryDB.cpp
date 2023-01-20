@@ -21,7 +21,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "character/Character.h"
 #include "manufacturing/FactoryDB.h"
 
@@ -100,7 +100,7 @@ bool FactoryDB::DeleteBlueprint(uint32 blueprintID) {
     return true;
 }
 
-PyRep* FactoryDB::GetMaterialCompositionOfItemType(const uint32 typeID) {
+PyDataType* FactoryDB::GetMaterialCompositionOfItemType(const uint32 typeID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -205,7 +205,7 @@ void FactoryDB::GetBlueprintType(DBQueryResult& res) {
     }
 }
 
-PyRep *FactoryDB::GetJobs2(const int32 ownerID, const bool completed)
+PyDataType *FactoryDB::GetJobs2(const int32 ownerID, const bool completed)
 {
     DBQueryResult res;
 
@@ -253,7 +253,7 @@ PyRep *FactoryDB::GetJobs2(const int32 ownerID, const bool completed)
     return DBResultToRowset(res);
 }
 
-PyRep *FactoryDB::AssemblyLinesSelectPublic(const uint32 regionID) {
+PyDataType *FactoryDB::AssemblyLinesSelectPublic(const uint32 regionID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -279,7 +279,7 @@ PyRep *FactoryDB::AssemblyLinesSelectPublic(const uint32 regionID) {
     return DBResultToCRowset(res);
 }
 
-PyRep *FactoryDB::AssemblyLinesSelectPersonal(const uint32 charID) {
+PyDataType *FactoryDB::AssemblyLinesSelectPersonal(const uint32 charID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -303,7 +303,7 @@ PyRep *FactoryDB::AssemblyLinesSelectPersonal(const uint32 charID) {
     return DBResultToCRowset(res);
 }
 
-PyRep *FactoryDB::AssemblyLinesSelectPrivate(const uint32 charID) {
+PyDataType *FactoryDB::AssemblyLinesSelectPrivate(const uint32 charID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -327,7 +327,7 @@ PyRep *FactoryDB::AssemblyLinesSelectPrivate(const uint32 charID) {
 }
 
 /** @todo  need to add check/query for POS assembly modules here */
-PyRep *FactoryDB::AssemblyLinesSelectCorporation(const uint32 corpID) {
+PyDataType *FactoryDB::AssemblyLinesSelectCorporation(const uint32 corpID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -352,7 +352,7 @@ PyRep *FactoryDB::AssemblyLinesSelectCorporation(const uint32 corpID) {
 }
 
 /** @todo  need to add check/query for POS assembly modules here */
-PyRep *FactoryDB::AssemblyLinesSelectAlliance(const int32 allianceID) {
+PyDataType *FactoryDB::AssemblyLinesSelectAlliance(const int32 allianceID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -378,7 +378,7 @@ PyRep *FactoryDB::AssemblyLinesSelectAlliance(const int32 allianceID) {
 }
 
 /** @todo  need to add check/query for POS assembly modules here */
-PyRep *FactoryDB::AssemblyLinesGet(const uint32 containerID) {
+PyDataType *FactoryDB::AssemblyLinesGet(const uint32 containerID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,

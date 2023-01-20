@@ -42,41 +42,41 @@ public:
 protected:
     CharacterDB m_db;    //using this for now until we decide if we need to split them. Might be bad since we actually have two instances of it, but so far it has no member data.
 
-    PyResult GetPublicInfo(PyCallArgs& call, PyInt* ownerID);
-    PyResult GetPublicInfo3(PyCallArgs& call, PyInt* characterID);
-    PyResult GetPrivateInfo(PyCallArgs& call, PyInt* characterID);
-    PyResult AddToBounty(PyCallArgs& call, PyInt* characterID, PyInt* amount);
-    PyResult GetTopBounties(PyCallArgs& call);
-    PyResult AddOwnerNote(PyCallArgs& call, PyString* idStr, PyWString* part);
-    PyResult GetOwnerNote(PyCallArgs& call, PyInt* noteID);
-    PyResult GetOwnerNoteLabels(PyCallArgs& call);
-    PyResult GetContactList(PyCallArgs& call);
-    PyResult GetCloneTypeID(PyCallArgs& call);
-    PyResult GetHomeStation(PyCallArgs& call);
-    PyResult GetFactions(PyCallArgs& call);
-    PyResult SetActivityStatus(PyCallArgs& call, PyInt* afk, PyInt* secondsAFK);
-    PyResult GetSettingsInfo(PyCallArgs& call);
-    PyResult LogSettings(PyCallArgs& call, PyRep* settingsInfoRet);
-    PyResult GetCharacterDescription(PyCallArgs& call, PyInt* characterID);
-    PyResult SetCharacterDescription(PyCallArgs& call, PyWString* description);
-    PyResult GetPaperdollState(PyCallArgs& call);
-    PyResult GetNote(PyCallArgs& call, PyInt* itemID);
-    PyResult SetNote(PyCallArgs& call, PyInt* itemID, PyString* note);
-    PyResult AddContact(PyCallArgs& call, PyInt* characterID, PyInt* standing, PyInt* inWatchlist, PyInt* notify, std::optional<PyString*> note);
-    PyResult AddContact(PyCallArgs& call, PyInt* characterID, PyFloat* standing, PyInt* inWatchlist, PyBool* notify, std::optional<PyWString*> note);
-    PyResult EditContact(PyCallArgs& call, PyInt* characterID, PyInt* standing, PyInt* inWatchlist, PyInt* notify, std::optional<PyString*> note);
-    PyResult EditContact(PyCallArgs& call, PyInt* characterID, PyFloat* standing, PyInt* inWatchlist, PyBool* notify, std::optional<PyWString*> note);
-    PyResult GetRecentShipKillsAndLosses(PyCallArgs& call, PyInt* num, std::optional<PyInt*> startIndex);
-    PyResult GetLabels(PyCallArgs& call);
-    PyResult CreateLabel(PyCallArgs& call);
-    PyResult DeleteContacts(PyCallArgs& call, PyList* contactIDs);
-    PyResult BlockOwners(PyCallArgs& call, PyList* ownerIDs);
-    PyResult UnblockOwners(PyCallArgs& call, PyList* ownerIDs);
-    PyResult EditContactsRelationshipID(PyCallArgs& call, PyList* contactIDs, PyInt* relationshipID);
-    PyResult GetImageServerLink(PyCallArgs& call);
+    EVEResult GetPublicInfo(EVECallArgs& call, PyInt* ownerID);
+    EVEResult GetPublicInfo3(EVECallArgs& call, PyInt* characterID);
+    EVEResult GetPrivateInfo(EVECallArgs& call, PyInt* characterID);
+    EVEResult AddToBounty(EVECallArgs& call, PyInt* characterID, PyInt* amount);
+    EVEResult GetTopBounties(EVECallArgs& call);
+    EVEResult AddOwnerNote(EVECallArgs& call, PyString* idStr, PyString* part);
+    EVEResult GetOwnerNote(EVECallArgs& call, PyInt* noteID);
+    EVEResult GetOwnerNoteLabels(EVECallArgs& call);
+    EVEResult GetContactList(EVECallArgs& call);
+    EVEResult GetCloneTypeID(EVECallArgs& call);
+    EVEResult GetHomeStation(EVECallArgs& call);
+    EVEResult GetFactions(EVECallArgs& call);
+    EVEResult SetActivityStatus(EVECallArgs& call, PyInt* afk, PyInt* secondsAFK);
+    EVEResult GetSettingsInfo(EVECallArgs& call);
+    EVEResult LogSettings(EVECallArgs& call, PyDataType* settingsInfoRet);
+    EVEResult GetCharacterDescription(EVECallArgs& call, PyInt* characterID);
+    EVEResult SetCharacterDescription(EVECallArgs& call, PyString* description);
+    EVEResult GetPaperdollState(EVECallArgs& call);
+    EVEResult GetNote(EVECallArgs& call, PyInt* itemID);
+    EVEResult SetNote(EVECallArgs& call, PyInt* itemID, PyString* note);
+    EVEResult AddContact(EVECallArgs& call, PyInt* characterID, PyInt* standing, PyInt* inWatchlist, PyInt* notify, std::optional<PyString*> note);
+    EVEResult AddContact(EVECallArgs& call, PyInt* characterID, PyFloat* standing, PyInt* inWatchlist, PyBool* notify, std::optional<PyString*> note);
+    EVEResult EditContact(EVECallArgs& call, PyInt* characterID, PyInt* standing, PyInt* inWatchlist, PyInt* notify, std::optional<PyString*> note);
+    EVEResult EditContact(EVECallArgs& call, PyInt* characterID, PyFloat* standing, PyInt* inWatchlist, PyBool* notify, std::optional<PyString*> note);
+    EVEResult GetRecentShipKillsAndLosses(EVECallArgs& call, PyInt* num, std::optional<PyInt*> startIndex);
+    EVEResult GetLabels(EVECallArgs& call);
+    EVEResult CreateLabel(EVECallArgs& call);
+    EVEResult DeleteContacts(EVECallArgs& call, PyList* contactIDs);
+    EVEResult BlockOwners(EVECallArgs& call, PyList* ownerIDs);
+    EVEResult UnblockOwners(EVECallArgs& call, PyList* ownerIDs);
+    EVEResult EditContactsRelationshipID(EVECallArgs& call, PyList* contactIDs, PyInt* relationshipID);
+    EVEResult GetImageServerLink(EVECallArgs& call);
 
 	//overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters) override;
 };
 
 
@@ -86,11 +86,11 @@ public:
     CharMgrBound(EVEServiceManager& mgr, CharMgrService& parent, uint32 ownerID, uint16 contFlag);
 
 protected:
-    PyResult List(PyCallArgs& call);
-    PyResult ListStations(PyCallArgs& call, PyInt* blueprintOnly, PyBool* isCorporation);
-    PyResult ListStations(PyCallArgs& call, PyInt* blueprintOnly, PyInt* isCorporation);
-    PyResult ListStationItems(PyCallArgs& call, PyInt* stationID);
-    PyResult ListStationBlueprintItems(PyCallArgs& call, PyInt* locationID, PyInt* stationID, PyInt* forCorporation);
+  EVEResult List(EVECallArgs& call);
+  EVEResult ListStations(EVECallArgs& call, PyInt* blueprintOnly, PyBool* isCorporation);
+  EVEResult ListStations(EVECallArgs& call, PyInt* blueprintOnly, PyInt* isCorporation);
+  EVEResult ListStationItems(EVECallArgs& call, PyInt* stationID);
+  EVEResult ListStationBlueprintItems(EVECallArgs& call, PyInt* locationID, PyInt* stationID, PyInt* forCorporation);
 
 private:
     uint32 m_ownerID;

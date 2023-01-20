@@ -52,13 +52,13 @@ ReprocessingService::ReprocessingService(EVEServiceManager& mgr) :
 {
 }
 
-BoundDispatcher* ReprocessingService::BindObject(Client* client, PyRep* bindParameters) {
-    if (!bindParameters->IsInt()) {
+BoundDispatcher* ReprocessingService::BindObject(Client* client, PyDataType* bindParameters) {
+    if (!bindParameters->is<PyInt>()) {
         _log(SERVICE__ERROR, "%s: Non-integer bind argument '%s'", client->GetName(), bindParameters->TypeString());
         return nullptr;
     }
 
-    uint32 stationID = bindParameters->AsInt()->value();
+    uint32 stationID = bindParameters->as<PyInt>()->value();
     if (!sDataMgr.IsStation(stationID)) {
         _log(SERVICE__ERROR, "%s: Expected stationID, but got %u.", client->GetName(), stationID);
         return nullptr;
@@ -89,22 +89,22 @@ ReprocessingServiceBound::ReprocessingServiceBound(EVEServiceManager& mgr, Repro
         m_stationRef->GetRefineData(m_stationCorpID, m_staEfficiency, m_tax);
 }
 
-PyResult ReprocessingServiceBound::GetOptionsForItemTypes(PyCallArgs &call, PyDict* typeIDs) {
+EVEResult ReprocessingServiceBound::GetOptionsForItemTypes(EVECallArgs&call, PyDict* typeIDs) {
     _log(MANUF__INFO, "%s: Calling GetOptionsForItemTypes().", call.client->GetName());
-    call.Dump(MANUF__DUMP);
+    call.dump(MANUF__DUMP);
 
-    std::map <uint32, PyRep*> typeIDMap;
+    std::map <uint32, PyDataType*> typeIDMap;
 
     // TODO: rewrite this after the python types are improved
     PyDict::const_iterator dict_2_cur = typeIDs->begin();
     for (size_t dict_2_index(0); dict_2_cur != typeIDs->end(); ++dict_2_cur, ++dict_2_index) {
-        if (!dict_2_cur->first->IsInt()) {
+        if (!dict_2_cur->first->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_GetOptionsForItemTypes failed: Key %u in dict dict_2 is not an integer: %s", dict_2_index, dict_2_cur->first->TypeString());
             return nullptr;
         }
 
-        const PyInt* k = dict_2_cur->first->AsInt();
-        typeIDMap[k->value()] = dict_2_cur->second->Clone();
+        const PyInt* k = dict_2_cur->first->as<PyInt>();
+        typeIDMap[k->value()] = dict_2_cur->second->clone();
     }
 
     Rsp_GetOptionsForItemTypes      rsp;
@@ -119,7 +119,7 @@ PyResult ReprocessingServiceBound::GetOptionsForItemTypes(PyCallArgs &call, PyDi
     return rsp.Encode();
 }
 
-PyResult ReprocessingServiceBound::GetReprocessingInfo(PyCallArgs &call) {
+EVEResult ReprocessingServiceBound::GetReprocessingInfo(EVECallArgs&call) {
     Client *pClient = call.client;
     Rsp_GetReprocessingInfo rsp;
         rsp.standing = GetStanding(pClient);
@@ -129,29 +129,29 @@ PyResult ReprocessingServiceBound::GetReprocessingInfo(PyCallArgs &call) {
     return rsp.Encode();
 }
 
-PyResult ReprocessingServiceBound::GetQuote(PyCallArgs &call, PyInt* itemID) {
+EVEResult ReprocessingServiceBound::GetQuote(EVECallArgs&call, PyInt* itemID) {
     return GetQuote(itemID->value(), call.client);
 }
 
-PyResult ReprocessingServiceBound::GetQuotes(PyCallArgs &call, PyList* itemIDs, PyInt* activeShipID) {
+EVEResult ReprocessingServiceBound::GetQuotes(EVECallArgs&call, PyList* itemIDs, PyInt* activeShipID) {
     // why shipID here?  processing in cap indy ships?
 
     std::vector<uint32> items;
 
     PyList::const_iterator list_2_cur = itemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_GetQuotes failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         items.push_back(t->value());
     }
 
     Rsp_GetQuotes rsp;
     for (auto cur : items) {
-        PyRep* quote = GetQuote(cur, call.client);
+        PyDataType* quote = GetQuote(cur, call.client);
         if (quote != nullptr)
             rsp.quotes[cur] = quote;
     }
@@ -159,18 +159,18 @@ PyResult ReprocessingServiceBound::GetQuotes(PyCallArgs &call, PyList* itemIDs, 
     return rsp.Encode();
 }
 
-PyResult ReprocessingServiceBound::Reprocess(PyCallArgs &call, PyList* itemIDs, PyInt* fromLocation, std::optional<PyInt*> ownerID, std::optional<PyInt*> flag, PyBool* unknown, PyList* skipChecks) {
+EVEResult ReprocessingServiceBound::Reprocess(EVECallArgs&call, PyList* itemIDs, PyInt* fromLocation, std::optional<PyInt*> ownerID, std::optional<PyInt*> flag, PyBool* unknown, PyList* skipChecks) {
     // TODO: rewrite these once the python types are improved
     std::vector<uint32> items;
 
     PyList::const_iterator list_2_cur = itemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_Reprocess failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         items.push_back(t->value());
     }
 
@@ -178,12 +178,12 @@ PyResult ReprocessingServiceBound::Reprocess(PyCallArgs &call, PyList* itemIDs, 
 
     PyList::const_iterator list_3_cur = skipChecks->begin();
     for (uint32 list_3_index(0); list_3_cur != skipChecks->end(); ++list_3_cur, ++list_3_index) {
-        if (!(*list_3_cur)->IsString()) {
+        if (!(*list_3_cur)->is<PyString>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_Reprocess failed: Element %u in list list_3 is not a string: %s", list_3_index, (*list_3_cur)->TypeString());
             return nullptr;
         }
 
-        const PyString* t = (*list_3_cur)->AsString();
+        const PyString* t = (*list_3_cur)->as<PyString>();
         skipChecksVector.push_back(t->content());
     }
 
@@ -193,7 +193,7 @@ PyResult ReprocessingServiceBound::Reprocess(PyCallArgs &call, PyList* itemIDs, 
     }
 
     _log(MANUF__INFO, "%s: Calling Reprocess().", call.client->GetName());
-    call.Dump(MANUF__DUMP);
+    call.dump(MANUF__DUMP);
 
     if (ownerID.has_value() == false)
         ownerID = new PyInt(call.client->GetCharacterID());
@@ -292,7 +292,7 @@ float ReprocessingServiceBound::CalcReprocessingEfficiency(const Client* pClient
     return efficiency;
 }
 
-PyRep *ReprocessingServiceBound::GetQuote(uint32 itemID, Client* pClient) {
+PyDataType *ReprocessingServiceBound::GetQuote(uint32 itemID, Client* pClient) {
     InventoryItemRef iRef = sItemFactory.GetItemRef( itemID );
     if (iRef.get() == nullptr)
         return nullptr;    // No action as GetQuote is also called for reprocessed items (probably for check)
@@ -346,7 +346,7 @@ PyRep *ReprocessingServiceBound::GetQuote(uint32 itemID, Client* pClient) {
             line.client			= uint32(efficiency * (1.0f - tax)   * ratio);
             line.station		= uint32(efficiency * tax           * ratio);
             line.unrecoverable	= ratio - line.client - line.station;
-        quote.lines->AddItem( line.Encode() );
+        quote.lines->add( line.Encode() );
     }
 
     return quote.Encode();

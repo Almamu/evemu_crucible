@@ -31,7 +31,7 @@
 #include "system/BookmarkDB.h"
 #include "system/BookmarkService.h"
 
-PyRep* BookmarkDB::GetBookmarksInFolder(uint32 folderID)
+PyDataType* BookmarkDB::GetBookmarksInFolder(uint32 folderID)
 {
     DBQueryResult res;
     if (folderID) {
@@ -62,9 +62,9 @@ PyRep* BookmarkDB::GetBookmarksInFolder(uint32 folderID)
     DBResultRow row;
     while (res.GetRow(row)) {
         PyDict* dict = new PyDict();
-        dict->SetItemString("bookmarkID", new PyInt(row.GetInt(0)));
-        dict->SetItemString("folderID", ((folderID == 0) ? PyStatic.NewNone() : new PyInt(folderID)));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        dict->set ("bookmarkID", new PyInt(row.GetInt(0)));
+        dict->set ("folderID", ((folderID == 0) ? PyStatic.NewNone() : new PyInt(folderID)));
+        list->add(new PyObject("util.KeyVal", dict));
     }
 
     return list;
@@ -83,7 +83,7 @@ void BookmarkDB::GetBookmarkByFolderID(int32 folderID, std::vector< int32 >& bmI
         bmIDs.push_back(row.GetInt(0));
 }
 
-PyRep *BookmarkDB::GetBookmarks(uint32 ownerID) {
+PyDataType *BookmarkDB::GetBookmarks(uint32 ownerID, PythonArena* arena) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT"
@@ -109,58 +109,53 @@ PyRep *BookmarkDB::GetBookmarks(uint32 ownerID) {
     DBResultRow row;
     // Corp bookmarks are read differently and should be as a dict of bookmarks with the key being bookmarkID
     if (IsCorp(ownerID)) {
-        PyDict* corpBookmarks = new PyDict();
+        PyDict* corpBookmarks = arena->Dict();
         while (res.GetRow(row)) {
-            PyDict* dict = new PyDict();
-            dict->SetItemString("bookmarkID", new PyInt(row.GetInt(0)));
-            dict->SetItemString("ownerID", new PyInt(row.GetInt(1)));
-            dict->SetItemString("itemID", new PyInt(row.GetInt(2)));
-            dict->SetItemString("typeID", new PyInt(row.GetInt(3)));
-            dict->SetItemString("memo", new PyString(row.GetText(4)));
-            dict->SetItemString("created", new PyLong(row.GetInt64(5)));
-            dict->SetItemString("x", new PyFloat(row.GetFloat(6)));
-            dict->SetItemString("y", new PyFloat(row.GetFloat(7)));
-            dict->SetItemString("z", new PyFloat(row.GetFloat(8)));
-            dict->SetItemString("locationID", new PyInt(row.GetInt(9)));
-            dict->SetItemString("note", new PyString(row.GetText(10)));
-            dict->SetItemString("creatorID", new PyInt(row.GetInt(11)));
-            if (row.IsNull(12) or (row.GetInt(12) == 0)) {
-                dict->SetItemString("folderID", PyStatic.NewNone());
-            } else {
-                dict->SetItemString("folderID", new PyInt(row.GetInt(12)));
-            }
-            corpBookmarks->SetItem(new PyInt(row.GetInt(0)), new PyObject("util.KeyVal", dict));
+            corpBookmarks->set(
+                arena->Int(row.GetInt(0)),
+                arena->Object("util.KeyVal", arena->Dict({
+                    {"bookmarkID", arena->Int(row.GetInt(0))},
+                    {"ownerID", arena->Int(row.GetInt(1))},
+                    {"itemID", arena->Int(row.GetInt(2))},
+                    {"typeID", arena->Int(row.GetInt(3))},
+                    {"memo", arena->String(row.GetText(4))},
+                    {"created", arena->Int(row.GetInt64(5))},
+                    {"x", arena->Float(row.GetFloat(6))},
+                    {"y", arena->Float(row.GetFloat(7))},
+                    {"z", arena->Float(row.GetFloat(8))},
+                    {"locationID", arena->Int(row.GetInt(9))},
+                    {"note", arena->String(row.GetText(10))},
+                    {"creatorID", arena->Int(row.GetInt(11))},
+                    {"folderID", row.IsNull(12) || row.GetInt (12) == 0 ? (PyDataType*) arena->None() : arena->Int (row.GetInt (12))},
+                }))
+            );
         }
         return corpBookmarks;
     }
 
-    PyList* list = new PyList();
+    PyList* list = arena->List();
     while (res.GetRow(row)) {
-        PyDict* dict = new PyDict();
-        dict->SetItemString("bookmarkID", new PyInt(row.GetInt(0)));
-        dict->SetItemString("ownerID", new PyInt(row.GetInt(1)));
-        dict->SetItemString("itemID", new PyInt(row.GetInt(2)));
-        dict->SetItemString("typeID", new PyInt(row.GetInt(3)));
-        dict->SetItemString("memo", new PyString(row.GetText(4)));
-        dict->SetItemString("created", new PyLong(row.GetInt64(5)));
-        dict->SetItemString("x", new PyFloat(row.GetFloat(6)));
-        dict->SetItemString("y", new PyFloat(row.GetFloat(7)));
-        dict->SetItemString("z", new PyFloat(row.GetFloat(8)));
-        dict->SetItemString("locationID", new PyInt(row.GetInt(9)));
-        dict->SetItemString("note", new PyString(row.GetText(10)));
-        dict->SetItemString("creatorID", new PyInt(row.GetInt(11)));
-        if (row.IsNull(12) or (row.GetInt(12) == 0)) {
-            dict->SetItemString("folderID", PyStatic.NewNone());
-        } else {
-            dict->SetItemString("folderID", new PyInt(row.GetInt(12)));
-        }
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(arena->Object("util.KeyVal", arena->Dict({
+            {"bookmarkID", arena->Int(row.GetInt(0))},
+            {"ownerID", arena->Int(row.GetInt(1))},
+            {"itemID", arena->Int(row.GetInt(2))},
+            {"typeID", arena->Int(row.GetInt(3))},
+            {"memo", arena->String(row.GetText(4))},
+            {"created", arena->Int(row.GetInt64(5))},
+            {"x", arena->Float(row.GetFloat(6))},
+            {"y", arena->Float(row.GetFloat(7))},
+            {"z", arena->Float(row.GetFloat(8))},
+            {"locationID", arena->Int(row.GetInt(9))},
+            {"note", arena->String(row.GetText(10))},
+            {"creatorID", arena->Int(row.GetInt(11))},
+            {"folderID", row.IsNull(12) || row.GetInt (12) == 0 ? (PyDataType*) arena->None() : arena->Int (row.GetInt (12))},
+        })));
     }
 
     return list;
 }
 
-PyRep *BookmarkDB::GetFolders(uint32 ownerID) {
+PyDataType *BookmarkDB::GetFolders(uint32 ownerID, PythonArena* arena) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT"
@@ -177,15 +172,15 @@ PyRep *BookmarkDB::GetFolders(uint32 ownerID) {
     }
 
     //return DBResultToCRowset(res);
-    PyList* list = new PyList();
+    PyList* list = arena->List();
     DBResultRow row;
     while (res.GetRow(row)) {
-        PyDict* dict = new PyDict();
-        dict->SetItemString("ownerID", new PyInt(row.GetInt(0)));
-        dict->SetItemString("folderID", new PyInt(row.GetInt(1)));
-        dict->SetItemString("folderName", new PyString(row.GetText(2)));
-        dict->SetItemString("creatorID", new PyInt(row.GetInt(3)));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(arena->Object("util.KeyVal", arena->Dict({
+            {"ownerID", arena->Int(row.GetInt(0))},
+            {"folderID", arena->Int(row.GetInt(1))},
+            {"folderName", arena->String(row.GetText(2))},
+            {"creatorID", arena->Int(row.GetInt(3))},
+        })));
     }
 
     return list;
@@ -214,18 +209,19 @@ PyTuple* BookmarkDB::GetBookmarkDescription(uint32 bookmarkID)
         return nullptr;
     }
 
-    PyTuple* tuple = new PyTuple(2);
     DBResultRow row;
     if (res.GetRow(row)) {
-        tuple->SetItem(0, new PyString(row.GetText(0)));
-        tuple->SetItem(1, new PyString(row.GetText(1)));
+        return new PyTuple {
+            new PyString(row.GetText(0)),
+            new PyString(row.GetText(1))
+        };
     } else {
         // this should be empty string, not none
-        tuple->SetItem(0, PyStatic.NewNone());
-        tuple->SetItem(1, PyStatic.NewNone());
+        return new PyTuple {
+            PyStatic.NewNone(),
+            PyStatic.NewNone()
+        };
     }
-
-    return tuple;
 }
 
 bool BookmarkDB::GetBookmarkInformation(uint32 bookmarkID, uint32& itemID, uint16& typeID, uint32& locationID, double& x, double& y, double& z)
@@ -335,16 +331,16 @@ void BookmarkDB::ChangeOwner(uint32 bookmarkID, uint32 ownerID/*1*/) {
 }
 
 
-bool BookmarkDB::UpdateBookmark(int32 bookmarkID, int32 ownerID, int32 folderID, PyRep* memo, PyRep* comment)
+bool BookmarkDB::UpdateBookmark(int32 bookmarkID, int32 ownerID, int32 folderID, PyDataType* memo, PyDataType* comment)
 {
     std::string eMemo, eNote;
     eMemo.clear();
     eNote.clear();
-    if (!PyRep::StringContent(memo).empty())
-        sDatabase.DoEscapeString(eMemo, PyRep::StringContent(memo));
+    if (!memo->string().empty())
+        sDatabase.DoEscapeString(eMemo, memo->string());
 
-    if (!PyRep::StringContent(comment).empty())
-        sDatabase.DoEscapeString(eNote, PyRep::StringContent(comment));
+    if (!comment->string().empty())
+        sDatabase.DoEscapeString(eNote, comment->string());
 
     DBerror err;
     if (!sDatabase.RunQuery(err, "UPDATE bookmarks SET memo = '%s', note = '%s', folderID = %i, ownerID = %i WHERE bookmarkID = %i",

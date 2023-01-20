@@ -42,10 +42,10 @@ public:
 protected:
     ShipDB m_db;
 
-    PyResult GetFormations(PyCallArgs& call);
+    EVEResult GetFormations(EVECallArgs& call);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher *BindObject(Client *client, PyRep* bindParameters) override;
+    BoundDispatcher *BindObject(Client *client, PyDataType* bindParameters) override;
 };
 
 
@@ -55,26 +55,26 @@ public:
     BeyonceBound(EVEServiceManager& mgr, BeyonceService& parent, Client* client);
 
 protected:
-    PyResult CmdFollowBall(PyCallArgs& call, PyInt* ballID, PyRep* distance);
-    PyResult CmdSetSpeedFraction(PyCallArgs& call, PyFloat* speedFraction);
-    PyResult CmdAlignTo(PyCallArgs& call, PyInt* entityID);
-    PyResult CmdGotoDirection(PyCallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z);
-    PyResult CmdGotoBookmark(PyCallArgs& call, PyInt* bookmarkID);
-    PyResult CmdOrbit(PyCallArgs& call, PyInt* entityID, PyRep* rangeValue);
-    PyResult CmdWarpToStuff(PyCallArgs& call, PyString* type, PyRep* id);
-    PyResult CmdWarpToStuffAutopilot(PyCallArgs& call, PyInt* destID);
-    PyResult CmdStop(PyCallArgs& call);
-    PyResult CmdDock(PyCallArgs& call, PyInt* celestialID, PyInt* shipID, std::optional<PyRep*> paymentRequired);
-    PyResult CmdStargateJump(PyCallArgs& call, PyInt* fromStargateID, PyInt* toStargateID, PyInt* shipID);
-    PyResult CmdAbandonLoot(PyCallArgs& call, PyList* wreckIDs);
-    PyResult UpdateStateRequest(PyCallArgs& call);
-    PyResult CmdJumpThroughFleet(PyCallArgs& call, PyInt* otherCharID, PyInt* otherShipID, PyInt* beaconID, PyInt* solarSystemID);
-    PyResult CmdJumpThroughAlliance(PyCallArgs& call, PyInt* otherShipID, PyInt* beaconID, PyInt* solarSystemID);
-    PyResult CmdJumpThroughCorporationStructure(PyCallArgs& call, PyInt* itemID, PyInt* remoteStructureID, PyInt* remoteSystemID);
-    PyResult CmdBeaconJumpFleet(PyCallArgs& call, PyInt* characterID, PyInt* beaconID, PyInt* solarSystemID);
-    PyResult CmdBeaconJumpAlliance(PyCallArgs& call, PyInt* beaconID, PyInt* solarSystemID);
-    PyResult CmdFleetRegroup(PyCallArgs& call);
-    PyResult CmdFleetTagTarget(PyCallArgs& call, PyInt* itemID, PyString* tag);
+  EVEResult CmdFollowBall(EVECallArgs& call, PyInt* ballID, PyDataType* distance);
+  EVEResult CmdSetSpeedFraction(EVECallArgs& call, PyFloat* speedFraction);
+  EVEResult CmdAlignTo(EVECallArgs& call, PyInt* entityID);
+  EVEResult CmdGotoDirection(EVECallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z);
+  EVEResult CmdGotoBookmark(EVECallArgs& call, PyInt* bookmarkID);
+  EVEResult CmdOrbit(EVECallArgs& call, PyInt* entityID, PyDataType* rangeValue);
+  EVEResult CmdWarpToStuff(EVECallArgs& call, PyString* type, PyDataType* id);
+  EVEResult CmdWarpToStuffAutopilot(EVECallArgs& call, PyInt* destID);
+  EVEResult CmdStop(EVECallArgs& call);
+  EVEResult CmdDock(EVECallArgs& call, PyInt* celestialID, PyInt* shipID, std::optional<PyDataType*> paymentRequired);
+  EVEResult CmdStargateJump(EVECallArgs& call, PyInt* fromStargateID, PyInt* toStargateID, PyInt* shipID);
+  EVEResult CmdAbandonLoot(EVECallArgs& call, PyList* wreckIDs);
+  EVEResult UpdateStateRequest(EVECallArgs& call);
+  EVEResult CmdJumpThroughFleet(EVECallArgs& call, PyInt* otherCharID, PyInt* otherShipID, PyInt* beaconID, PyInt* solarSystemID);
+  EVEResult CmdJumpThroughAlliance(EVECallArgs& call, PyInt* otherShipID, PyInt* beaconID, PyInt* solarSystemID);
+  EVEResult CmdJumpThroughCorporationStructure(EVECallArgs& call, PyInt* itemID, PyInt* remoteStructureID, PyInt* remoteSystemID);
+  EVEResult CmdBeaconJumpFleet(EVECallArgs& call, PyInt* characterID, PyInt* beaconID, PyInt* solarSystemID);
+  EVEResult CmdBeaconJumpAlliance(EVECallArgs& call, PyInt* beaconID, PyInt* solarSystemID);
+  EVEResult CmdFleetRegroup(EVECallArgs& call);
+  EVEResult CmdFleetTagTarget(EVECallArgs& call, PyInt* itemID, PyString* tag);
     
 private:
     BookmarkService* m_bookmark;

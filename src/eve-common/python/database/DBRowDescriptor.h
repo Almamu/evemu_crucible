@@ -1,0 +1,110 @@
+/*
+    ------------------------------------------------------------------------------------
+    LICENSE:
+    ------------------------------------------------------------------------------------
+    This file is part of EVEmu: EVE Online Server Emulator
+    Copyright 2006 - 2021 The EVEmu Team
+    For the latest information visit https://evemu.dev
+    ------------------------------------------------------------------------------------
+    This program is free software; you can redistribute it and/or modify it under
+    the terms of the GNU Lesser General Public License as published by the Free Software
+    Foundation; either version 2 of the License, or (at your option) any later
+    version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License along with
+    this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+    Place - Suite 330, Boston, MA 02111-1307, USA, or go to
+    http://www.gnu.org/copyleft/lesser.txt.
+    ------------------------------------------------------------------------------------
+    Author:     Zhur
+    Updates:    Allan
+    Rewrite:    Almamu
+*/
+
+#pragma once
+
+#include "database/dbcore.h"
+#include "../PyObjectEx.h"
+#include "../PyTuple.h"
+
+/**
+ * @brief Python object "blue.DBRowDescriptor"
+ *
+ * This object is used by PyPackedRow and CRowSet
+ * to describe the columns and their types.
+ *
+ * @author Bloody.Rabbit
+ */
+class DBRowDescriptor : public PyObjectEx_Type1 {
+public:
+    DBRowDescriptor ();
+    /**
+     * @param[in] keywords Some sort of keyword list.
+     */
+    DBRowDescriptor (PyList* keywords, bool checkArenaOwnership = true);
+    /**
+     * @param[in] result Query result to build column list from.
+     */
+    DBRowDescriptor (const DBQueryResult& res);
+    /**
+     * @param[in] result Row to build column list from.
+     */
+    DBRowDescriptor (const DBResultRow& row);
+
+    ~DBRowDescriptor() = default;
+
+    /**
+     * @return Column count.
+     */
+    [[nodiscard]] uint32_t count () const;
+    /**
+     * @param[in] index Index of column name of which should be returned.
+     *
+     * @return Name of column.
+     */
+    [[nodiscard]] const PyString* name (uint32_t index) const;
+    /**
+     * @param[in] index Index of column type of which should be returned.
+     *
+     * @return Type of column.
+     */
+    [[nodiscard]] DBTYPE type (uint32_t index) const;
+    /**
+     * @param[in] name Name of column index of which should be returned.
+     *
+     * @return Index of column; column count if not found.
+     */
+    [[nodiscard]] uint32_t find (const char* name) const;
+    /**
+     * @brief Verifies value for certain column.
+     *
+     * @param[in] index Index of the column.
+     * @param[in] value The value.
+     *
+     * @retval true  Type of column and type of value are compatible.
+     * @retval false Type of column and type of value aren't compatible.
+     */
+    [[nodiscard]] bool verify (uint32_t index, PyDataType* value);
+
+    /**
+     * Adds new column.
+     *
+     * @param[in] name Name of new column.
+     * @param[in] type Type of new column.
+     */
+    void add (const char* name, DBTYPE type);
+
+    [[nodiscard]] DBRowDescriptor* clone (PythonArena* arena) const;
+
+protected:
+    DBRowDescriptor (PyTuple* args, bool checkArenaOwnership);
+
+    PyTuple* _GetColumnList () const;
+    PyTuple* _GetColumn (size_t index) const;
+
+    PyTuple* _CreateArgs ();
+};

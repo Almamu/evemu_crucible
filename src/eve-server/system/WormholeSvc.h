@@ -34,7 +34,7 @@ public:
     WormHoleSvc();
 
 protected:
-    PyResult WormholeJump(PyCallArgs& call, PyInt* itemID);
+  EVEResult WormholeJump(EVECallArgs& call, PyInt* itemID);
 };
 
 #endif  // EVEMU_SYSTEM_WORMHOLESVC_H_

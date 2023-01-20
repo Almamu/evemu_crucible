@@ -27,7 +27,7 @@
 
 
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "npc/Drone.h"
 #include "planet/CustomsOffice.h"
 #include "planet/Moon.h"
@@ -47,7 +47,7 @@ ShipService::ShipService(EVEServiceManager& mgr) :
 }
 
 /** @todo do we need more data here?  */
-BoundDispatcher *ShipService::BindObject(Client *client, PyRep* bindParameters) {
+BoundDispatcher *ShipService::BindObject(Client *client, PyDataType* bindParameters) {
     /*
      * 23:08:44 [ClientMsg] ShipService bind request
      * 23:08:44 [ClientMsg]      Tuple: 2 elements
@@ -87,8 +87,8 @@ ShipBound::ShipBound (EVEServiceManager& mgr, ShipService& parent, ShipItem* shi
     this->Add("LeaveShip", &ShipBound::LeaveShip);
     this->Add("ActivateShip", &ShipBound::ActivateShip);
     this->Add("Undock", &ShipBound::Undock);
-    this->Add("AssembleShip", static_cast <PyResult (ShipBound::*)(PyCallArgs&, PyInt*)> (&ShipBound::AssembleShip));
-    this->Add("AssembleShip", static_cast <PyResult(ShipBound::*)(PyCallArgs&, PyList*)> (&ShipBound::AssembleShip));
+    this->Add("AssembleShip", static_cast <EVEResult (ShipBound::*)(EVECallArgs&, PyInt*)> (&ShipBound::AssembleShip));
+    this->Add("AssembleShip", static_cast <EVEResult (ShipBound::*)(EVECallArgs&, PyList*)> (&ShipBound::AssembleShip));
     this->Add("Drop", &ShipBound::Drop);
     this->Add("Scoop", &ShipBound::Scoop);
     this->Add("ScoopDrone", &ShipBound::ScoopDrone);
@@ -103,7 +103,7 @@ ShipBound::ShipBound (EVEServiceManager& mgr, ShipService& parent, ShipItem* shi
 }
 
 /* only called in space */
-PyResult ShipBound::Board(PyCallArgs &call, PyInt* newShipID, std::optional<PyInt*> oldShipID) {
+EVEResult ShipBound::Board(EVECallArgs&call, PyInt* newShipID, std::optional<PyInt*> oldShipID) {
     if (call.client->IsSessionChange()) {
         call.client->SendNotifyMsg("Session Change currently active.");
         return nullptr;
@@ -170,7 +170,7 @@ PyResult ShipBound::Board(PyCallArgs &call, PyInt* newShipID, std::optional<PyIn
 }
 
 /* only called in space */
-PyResult ShipBound::Eject(PyCallArgs &call) {
+EVEResult ShipBound::Eject(EVECallArgs&call) {
     if (call.client->IsSessionChange()) {
         call.client->SendNotifyMsg("Session Change currently active.");
         return nullptr;
@@ -212,7 +212,7 @@ PyResult ShipBound::Eject(PyCallArgs &call) {
 
 // NOTE  LeaveShip and ActivateShip are working.  dont fuck with them
 /* only called when docked. */
-PyResult ShipBound::LeaveShip(PyCallArgs &call, PyInt* shipID)
+EVEResult ShipBound::LeaveShip(EVECallArgs&call, PyInt* shipID)
 {
     if (call.client->IsSessionChange()) {
         call.client->SendNotifyMsg("Session Change currently active.");
@@ -236,7 +236,7 @@ PyResult ShipBound::LeaveShip(PyCallArgs &call, PyInt* shipID)
 }
 
 /* only called when docked. */
-PyResult ShipBound::ActivateShip(PyCallArgs &call, PyInt* newShipID, std::optional<PyInt*> oldShipID) {
+EVEResult ShipBound::ActivateShip(EVECallArgs&call, PyInt* newShipID, std::optional<PyInt*> oldShipID) {
     //self.instanceCache, self.instanceFlagQuantityCache, self.wbData = self.remoteShipMgr.ActivateShip(shipID, oldShipID)
 
     if (call.client->IsSessionChange()) {
@@ -254,16 +254,18 @@ PyResult ShipBound::ActivateShip(PyCallArgs &call, PyInt* newShipID, std::option
     pClient->BoardShip(newShipRef);
 
     // response should return ship modules, loaded charges, and linked weapons
-    PyTuple* rsp = new PyTuple(3);
-        rsp->SetItem(0, newShipRef->GetShipState());    //dict of ship modules
-        rsp->SetItem(1, newShipRef->GetChargeState());    //dict of flagID/subLocation{loc, flag, typeID}
-        rsp->SetItem(2, newShipRef->GetLinkedWeapons()); // dict of linked modules
+    PyTuple* rsp = call.arena.Tuple ({
+        newShipRef->GetShipState(&call.arena), // dict of ship modules
+        newShipRef->GetChargeState(&call.arena), // dict of flagID -> subLocation {loc, flag, typeID}
+        newShipRef->GetLinkedWeapons(&call.arena), // dict of linked modules
+    });
+
     if (is_log_enabled(CLIENT__INFO))
-        rsp->Dump(CLIENT__INFO, "    ");
+        rsp->dump(CLIENT__INFO, "    ");
     return rsp;
 }
 
-PyResult ShipBound::Undock(PyCallArgs &call, PyInt* shipID, PyBool* ignoreContraband) {
+EVEResult ShipBound::Undock(EVECallArgs&call, PyInt* shipID, PyBool* ignoreContraband) {
     //ShipIllegalTypeUndock
 
     /*  we could have some fun with these....
@@ -286,14 +288,14 @@ PyResult ShipBound::Undock(PyCallArgs &call, PyInt* shipID, PyBool* ignoreContra
     //  get vector of online modules as (k,v) pair,
     //    where key is slotID, value is moduleID
     if (call.byname.find("onlineModules") != call.byname.end()) {
-        PyDict* onlineModules = call.byname["onlineModules"]->AsDict();
+        PyDict* onlineModules = call.byname["onlineModules"]->as<PyDict>();
         if (is_log_enabled(MODULE__INFO)) {
             _log(MODULE__INFO, "Dumping 'onlineModules' List");
-            onlineModules->Dump(MODULE__INFO, "   ");
+            onlineModules->dump(MODULE__INFO, "   ");
         }
         PyDict::const_iterator cur = onlineModules->begin(), end = onlineModules->end();
         for (; cur != end; ++cur)
-            pShip->AddModuleToOnlineVec(cur->second->AsInt()->value());
+            pShip->AddModuleToOnlineVec(cur->second->as<PyInt>()->value());
     }
 
     pClient->UndockFromStation();
@@ -304,10 +306,10 @@ PyResult ShipBound::Undock(PyCallArgs &call, PyInt* shipID, PyBool* ignoreContra
     return this->GetOID();
 }
 
-PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <PyInt*> oOwnerID, PyBool* ignoreWarning)
+EVEResult ShipBound::Drop(EVECallArgs&call, PyList* PyToDropList, std::optional <PyInt*> oOwnerID, PyBool* ignoreWarning)
 {
     _log(SHIP__INFO, "ShipBound::Handle_Drop()");
-    call.Dump(SHIP__INFO);
+    call.dump(SHIP__INFO);
 
     if (sDataMgr.IsStation(call.client->GetLocationID())) {
         _log(SERVICE__ERROR, "%s: Trying to drop items when not in space!", call.client->GetName());
@@ -338,8 +340,8 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
         PyList* list = new PyList();
         GPoint location(pShip->position());
         location.MakeRandomPointOnSphereLayer(500,1500);
-        qty = PyToDropList->items.at(i)->AsTuple()->items.at(1)->AsInt()->value();
-        itemID = PyToDropList->items.at(i)->AsTuple()->items.at(0)->AsInt()->value();
+        qty = PyToDropList->at<PyTuple>(i)->at<PyInt>(1)->value();
+        itemID = PyToDropList->at<PyTuple>(i)->at<PyInt>(0)->value();
         iRef = sItemFactory.GetItemRef(itemID);
         if (iRef.get() == nullptr) {
             sLog.Error("ShipBound::Handle_Drop()", "%s: Unable to find item %u to drop.", pClient->GetName(), itemID);
@@ -384,7 +386,7 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
                         if (pClient->GetShipSE()->LaunchDrone(newItem)) {
                             dropped = true;
                             shipDrop = true;
-                            list->AddItem(new PyInt(newItem->itemID()));
+                            list->add(new PyInt(newItem->itemID()));
                         } else
                             throw UserError ("MaxBandwithExceeded2")
                                     .AddTypeName ("droneNAme", newItem->typeID ())
@@ -395,7 +397,7 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
                     if (pClient->GetShipSE()->LaunchDrone(iRef)) {
                         dropped = true;
                         shipDrop = true;
-                        list->AddItem(new PyInt(iRef->itemID()));
+                        list->add(new PyInt(iRef->itemID()));
                     } else
                             throw UserError ("MaxBandwithExceeded2")
                                     .AddTypeName ("droneNAme", iRef->typeID ())
@@ -455,7 +457,7 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
                 shipDrop = true;
                 pSE->GetPOSSE()->Drop(pClient->GetShipSE()->SysBubble());
                 pSystem->AddEntity(pSE);
-                list->AddItem(new PyInt(entity.itemID));
+                list->add(new PyInt(entity.itemID));
             } break;
             case EVEDB::invCategories::Deployable: {
                 pClient->SendNotifyMsg("Launching Deployables isnt available yet.");
@@ -592,7 +594,7 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
                 shipDrop = true;
                 pSE->GetPOSSE()->Drop(pClient->GetShipSE()->SysBubble());
                 pSystem->AddEntity(pSE);
-                list->AddItem(new PyInt(entity.itemID));
+                list->add(new PyInt(entity.itemID));
             } break;
             case EVEDB::invCategories::Celestial: { //Outpost construction platforms
                 if (iRef->groupID() == EVEDB::invGroups::Construction_Platform) {
@@ -646,7 +648,7 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
                     shipDrop = true;
                     pSE->GetPOSSE()->Drop(pClient->GetShipSE()->SysBubble());
                     pSystem->AddEntity(pSE);
-                    list->AddItem(new PyInt(entity.itemID));
+                    list->add(new PyInt(entity.itemID));
                 }
                 if (iRef->groupID() == EVEDB::invGroups::Secure_Cargo_Container or
                     EVEDB::invGroups::Secure_Cargo_Container or
@@ -687,7 +689,7 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
                     shipDrop = true;
                     pSE->GetPOSSE()->Drop(pClient->GetShipSE()->SysBubble());
                     pSystem->AddEntity(pSE);
-                    list->AddItem(new PyInt(entity.itemID));
+                    list->add(new PyInt(entity.itemID));
                 }
             } break;
             default: {
@@ -699,13 +701,13 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
     // however, on non-throw error, data is tuple of errID, errDetailsType, errDetails (unknown where these are defined)
 
         if (dropped) {
-            dict->SetItem(new PyInt(iRef->itemID()), list);
+            dict->set(new PyInt(iRef->itemID()), list);
         } else {
-            PyTuple* err = new PyTuple(3);
-            err->SetItem(0, new PyInt(1));
-            err->SetItem(1, new PyString("unsure"));
-            err->SetItem(2, new PyString("misc error"));
-            dict->SetItem(new PyInt(iRef->itemID()), err);
+            dict->set(new PyInt(iRef->itemID()), new PyTuple {
+                new PyInt (1),
+                new PyString ("unsure"),
+                new PyString ("misc error")
+            });
         }
     }
 
@@ -718,7 +720,7 @@ PyResult ShipBound::Drop(PyCallArgs &call, PyList* PyToDropList, std::optional <
     return dict;
 }
 
-PyResult ShipBound::Scoop(PyCallArgs &call, PyInt* itemID) {
+EVEResult ShipBound::Scoop(EVECallArgs&call, PyInt* itemID) {
     Client* pClient(call.client);
     SystemManager* pSysMgr(pClient->SystemMgr());
     if (pSysMgr == nullptr) {
@@ -778,17 +780,17 @@ PyResult ShipBound::Scoop(PyCallArgs &call, PyInt* itemID) {
     return PyStatic.mtDict();
 }
 
-PyResult ShipBound::ScoopDrone(PyCallArgs &call, PyList* itemIDs) {
+EVEResult ShipBound::ScoopDrone(EVECallArgs&call, PyList* itemIDs) {
     std::vector <int32> ints;
 
     PyList::const_iterator list_2_cur = itemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
     // per patch notes, if ship is too far to scoop, it will automagically travel closer till drone is within range, then scoop and stop
@@ -837,17 +839,17 @@ PyResult ShipBound::ScoopDrone(PyCallArgs &call, PyList* itemIDs) {
     return PyStatic.mtDict();
 }
 
-PyResult ShipBound::Jettison(PyCallArgs &call, PyList* itemIDs) {
+EVEResult ShipBound::Jettison(EVECallArgs&call, PyList* itemIDs) {
     std::vector <int32> ints;
 
     PyList::const_iterator list_2_cur = itemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
     Client* pClient(call.client);
@@ -1057,16 +1059,14 @@ PyResult ShipBound::Jettison(PyCallArgs &call, PyList* itemIDs) {
     return this->GetOID();
 }
 
-PyResult ShipBound::AssembleShip(PyCallArgs& args, PyInt* shipID) {
+EVEResult ShipBound::AssembleShip(EVECallArgs& args, PyInt* shipID) {
     // this one has subSystems as a byname argument, handled by the AssembleShip call with a PyList for now
-    PyList* list = new PyList();
-
-    list->AddItem(shipID);
-
-    return this->AssembleShip(args, list);
+    return this->AssembleShip(args, new PyList {
+        shipID
+    });
 }
 
-PyResult ShipBound::AssembleShip(PyCallArgs &call, PyList* itemIDs) {
+EVEResult ShipBound::AssembleShip(EVECallArgs&call, PyList* itemIDs) {
     /* 13:05:41 [BindDump] NodeID: 888444 BindID: 129 calling AssembleShip in service manager 'ShipBound'
      * 13:05:41 [BindDump]   Call Arguments:
      * 13:05:41 [BindDump]       Tuple: 1 elements
@@ -1094,7 +1094,7 @@ PyResult ShipBound::AssembleShip(PyCallArgs &call, PyList* itemIDs) {
      *                  [PyInt 0]
      */
 
-    call.Dump(COLLECT__CALL_DUMP);
+    call.dump(COLLECT__CALL_DUMP);
     if (call.tuple->empty())
         return nullptr;
 
@@ -1121,22 +1121,22 @@ PyResult ShipBound::AssembleShip(PyCallArgs &call, PyList* itemIDs) {
          */
         // this is a list of subSystems for t3 assembly
         t3Ship = true;
-        itemIDList.push_back(PyRep::IntegerValueU32(call.tuple->GetItem(0)));
-        subSystemList = call.byname.find("subSystems")->second->AsList();
-    } else if (call.tuple->GetItem(0)->IsList()) {
+        itemIDList.push_back(call.tuple->at (0)->u32());
+        subSystemList = call.byname.find("subSystems")->second->as<PyList>();
+    } else if (call.tuple->at (0)->is<PyList>()) {
         PyList::const_iterator list_2_cur = itemIDs->begin();
         for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-            if (!(*list_2_cur)->IsInt()) {
+            if (!(*list_2_cur)->is<PyInt>()) {
                 _log(XMLP__DECODE_ERROR, "Decode Call_AssembleShip failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
                 return nullptr;
             }
 
-            const PyInt* t = (*list_2_cur)->AsInt();
+            const PyInt* t = (*list_2_cur)->as<PyInt>();
             itemIDList.push_back(t->value());
         }
     } else if (call.tuple->size() == 2) { // this one doesn't seem to be anywhere in the normal client code
-        if (call.tuple->GetItem(0)->IsInt()
-        and call.tuple->GetItem(1)->IsString()) {
+        if (call.tuple->at (0)->is<PyInt>()
+        and call.tuple->at (1)->is<PyString>()) {
             // This block is for how DNA calls AssembleShip
             // @TODO Ignoring name
             // Can't get xmlpktgen to pickup the change so.. lol
@@ -1144,7 +1144,7 @@ PyResult ShipBound::AssembleShip(PyCallArgs &call, PyList* itemIDs) {
             //    codelog(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
             //    return nullptr;
             //}
-            itemIDList.push_back(PyRep::IntegerValueU32(call.tuple->GetItem(0)));
+            itemIDList.push_back(call.tuple->at (0)->u32());
         } else {
             sLog.Error("AssembleShip", "tuple size == 2 and ([0] != int and [1] != string) or some shit like that.");
         }
@@ -1183,7 +1183,7 @@ PyResult ShipBound::AssembleShip(PyCallArgs &call, PyList* itemIDs) {
             InventoryItemRef subSystemItem(nullptr);
             PyList::const_iterator itr = subSystemList->begin(), end = subSystemList->end();
             while (itr != end) {
-                subSystemItem = sItemFactory.GetItemRef(PyRep::IntegerValueU32(*itr));
+                subSystemItem = sItemFactory.GetItemRef((*itr)->u32());
                 if (subSystemItem.get() != nullptr)
                     subSystemItem->Move(ship->itemID(), (EVEItemFlags)(subSystemItem->GetAttribute(AttrSubSystemSlot).get_uint32()), true);
                 ++itr;
@@ -1195,16 +1195,16 @@ PyResult ShipBound::AssembleShip(PyCallArgs &call, PyList* itemIDs) {
     return nullptr;
 }
 
-PyResult ShipBound::GetShipConfiguration(PyCallArgs &call)
+EVEResult ShipBound::GetShipConfiguration(EVECallArgs&call)
 {
     PyDict* dict = new PyDict();
-    dict->SetItemString("allowFleetSMBUsage", new PyBool(call.client->GetShipSE()->GetFleetSMBUsage()));
+    dict->set ("allowFleetSMBUsage", new PyBool(call.client->GetShipSE()->GetFleetSMBUsage()));
     return dict;
 }
 
-PyResult ShipBound::ConfigureShip(PyCallArgs &call, PyDict* configuration)
+EVEResult ShipBound::ConfigureShip(EVECallArgs&call, PyDict* configuration)
 {
-    call.client->GetShipSE()->SetFleetSMBUsage(configuration->GetItemString("allowFleetSMBUsage")->AsBool());
+    call.client->GetShipSE()->SetFleetSMBUsage(configuration->get<PyBool>("allowFleetSMBUsage"));
 
     return nullptr;
 }
@@ -1219,8 +1219,7 @@ PyResult ShipBound::ConfigureShip(PyCallArgs &call, PyDict* configuration)
  * @note   these do absolutely nothing at this time....
  */
 
-
-PyResult ShipBound::LaunchFromContainer(PyCallArgs &call, PyInt* structureID, PyList* ids) {
+EVEResult ShipBound::LaunchFromContainer(EVECallArgs&call, PyInt* structureID, PyList* ids) {
     /*
      * def LaunchSMAContents(self, invItems):
      *        ids = []
@@ -1232,44 +1231,43 @@ PyResult ShipBound::LaunchFromContainer(PyCallArgs &call, PyInt* structureID, Py
      */
 
     _log(SERVICE__CALL_DUMP, "ShipBound::Handle_LaunchFromContainer()");
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
 
 // ShipMaintenanceArray
-PyResult ShipBound::ScoopToSMA(PyCallArgs &call, PyInt* objectID) {
+EVEResult ShipBound::ScoopToSMA(EVECallArgs&call, PyInt* objectID) {
     // no packet data
 
     _log(SERVICE__CALL_DUMP, "ShipBound::Handle_ScoopToSMA()");
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
-
-PyResult ShipBound::BoardStoredShip(PyCallArgs &call, PyInt* structureID, PyInt* shipID) {
+EVEResult ShipBound::BoardStoredShip(EVECallArgs&call, PyInt* structureID, PyInt* shipID) {
     // no packet data
 
     //sm.StartService('sessionMgr').PerformSessionChange('board', ship.BoardStoredShip, structureID, shipID)
     _log(SERVICE__CALL_DUMP, "ShipBound::Handle_BoardStoredShip()");
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ShipBound::StoreVessel(PyCallArgs &call, PyInt* destID) {
+EVEResult ShipBound::StoreVessel(EVECallArgs&call, PyInt* destID) {
     // no packet data
 
     //sm.StartService('sessionMgr').PerformSessionChange('storeVessel', ship.StoreVessel, destID)
     _log(SERVICE__CALL_DUMP, "ShipBound::Handle_StoreVessel()");
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ShipBound::SelfDestruct(PyCallArgs &call, PyInt* shipID) {
+EVEResult ShipBound::SelfDestruct(EVECallArgs&call, PyInt* shipID) {
     /** @todo finish this later
      * 22:13:29 L ShipBound::Handle_SelfDestruct(): size=1
      * 22:13:29 [SvcCall]   Call Arguments:
@@ -1277,7 +1275,7 @@ PyResult ShipBound::SelfDestruct(PyCallArgs &call, PyInt* shipID) {
      * 22:13:29 [SvcCall]         [ 0] Integer field: 140000378     <- ship id
      *
   _log(SERVICE__CALL_DUMP, "ShipBound::Handle_SelfDestruct()");
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
     [PyTuple 1 items]
       [PyTuple 2 items]
         [PyInt 0]

@@ -106,7 +106,7 @@ void AccountDB::UpdateCorpBalance(uint32 corpID, uint16 accountKey, double amoun
 }
 
 
-PyRep *AccountDB::GetWalletDivisionsInfo(uint32 corpID) {
+PyDataType *AccountDB::GetWalletDivisionsInfo(uint32 corpID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT balance1, balance2, balance3, balance4, balance5, balance6,  balance7"
@@ -122,17 +122,17 @@ PyRep *AccountDB::GetWalletDivisionsInfo(uint32 corpID) {
     if (res.GetRow(row))
         for (int8 i = 0; i < 7; ++i) {
             PyDict *dict = new PyDict();
-            dict->SetItemString("key", new PyInt(1000 + i));
-            dict->SetItemString("balance", new PyFloat(row.GetDouble(i)));
-            list->AddItem(new PyObject("util.KeyVal", dict));
+            dict->set ("key", new PyInt(1000 + i));
+            dict->set ("balance", new PyFloat(row.GetDouble(i)));
+            list->add(new PyObject("util.KeyVal", dict));
         }
 
     if (is_log_enabled(ACCOUNT__RSP_DUMP))
-        list->Dump(ACCOUNT__RSP_DUMP, "    ");
+        list->dump(ACCOUNT__RSP_DUMP, "    ");
     return list;
 }
 
-PyRep* AccountDB::GetJournal(uint32 ownerID, int8 entryTypeID, uint16 accountKey, int64 fromDate, bool reverse/*false*/)
+PyDataType* AccountDB::GetJournal(uint32 ownerID, int8 entryTypeID, uint16 accountKey, int64 fromDate, bool reverse/*false*/)
 {
     std::string tblName = "jnlCharacters";
     if (IsCorp(ownerID))

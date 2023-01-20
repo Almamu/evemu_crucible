@@ -51,7 +51,7 @@ FactoryService::FactoryService() :
     this->Add("GetBlueprintInformationAtLocationWithFlag", &FactoryService::GetBlueprintInformationAtLocationWithFlag);
 }
 
-PyResult FactoryService::GetMaterialCompositionOfItemType(PyCallArgs &call, PyInt* typeID) {
+EVEResult FactoryService::GetMaterialCompositionOfItemType(EVECallArgs&call, PyInt* typeID) {
     // Outpost construction platforms require a different query
     if ((typeID->value() == EVEDB::invTypes::CaldariResearchOutpost) or
     (typeID->value() == EVEDB::invTypes::AmarrFactoryOutpost) or
@@ -65,7 +65,7 @@ PyResult FactoryService::GetMaterialCompositionOfItemType(PyCallArgs &call, PyIn
     return FactoryDB::GetMaterialCompositionOfItemType(typeID->value());
 }
 
-PyResult FactoryService::GetBlueprintAttributes(PyCallArgs &call, PyInt* blueprintID) {
+EVEResult FactoryService::GetBlueprintAttributes(EVECallArgs&call, PyInt* blueprintID) {
     BlueprintRef bRef = sItemFactory.GetBlueprintRef(blueprintID->value());
     if (bRef.get() == nullptr)
         return nullptr;
@@ -73,22 +73,22 @@ PyResult FactoryService::GetBlueprintAttributes(PyCallArgs &call, PyInt* bluepri
     return bRef->GetBlueprintAttributes();
 }
 
-PyResult FactoryService::GetMaterialsForTypeWithActivity(PyCallArgs &call, PyInt* typeID) {
+EVEResult FactoryService::GetMaterialsForTypeWithActivity(EVECallArgs&call, PyInt* typeID) {
     return sDataMgr.GetBPMatlData(typeID->value());
 }
 
 
 // these next two are for corp locked items calls
-PyResult FactoryService::GetBlueprintInformationAtLocation(PyCallArgs &call, PyInt* hangarID, PyInt* one) {
+EVEResult FactoryService::GetBlueprintInformationAtLocation(EVECallArgs&call, PyInt* hangarID, PyInt* one) {
     //    blueprints = sm.RemoteSvc('factory').GetBlueprintInformationAtLocation(hangarID, 1)
     _log(MANUF__MESSAGE, "FactoryService::GetBlueprintInformationAtLocation() size= %lli", call.tuple->size());
-    call.Dump(MANUF__DUMP);
+    call.dump(MANUF__DUMP);
     return nullptr;
 }
 
-PyResult FactoryService::GetBlueprintInformationAtLocationWithFlag(PyCallArgs &call, PyInt* locationID, PyInt* flag, PyInt* one) {
+EVEResult FactoryService::GetBlueprintInformationAtLocationWithFlag(EVECallArgs&call, PyInt* locationID, PyInt* flag, PyInt* one) {
     //blueprints = sm.RemoteSvc('factory').GetBlueprintInformationAtLocationWithFlag(locationID, self.flagInput, 1)
     _log(MANUF__MESSAGE, "FactoryService::Handle_GetBlueprintInformationAtLocationWithFlag() size= %lli", call.tuple->size());
-    call.Dump(MANUF__DUMP);
+    call.dump(MANUF__DUMP);
     return nullptr;
 }

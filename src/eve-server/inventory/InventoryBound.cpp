@@ -28,7 +28,7 @@
 #include "../../eve-common/EVE_Station.h"
 
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "inventory/InventoryBound.h"
 #include "inventory/InvBrokerService.h"
@@ -77,26 +77,26 @@ InventoryBound::InventoryBound(EVEServiceManager &mgr, BoundServiceParent<Invent
             this, m_self->name(), m_itemID, ownerID, sDataMgr.GetFlagName(flag), (m_passive ? "true" : "false"));
 }
 
-PyResult InventoryBound::GetItem(PyCallArgs &call) {
+EVEResult InventoryBound::GetItem(EVECallArgs&call) {
     _log(INV__MESSAGE, "Calling InventoryBound::GetItem() for %s(%u)", m_self->name(), m_itemID);
-    return m_self->GetItem();
+    return m_self->GetItem ();
 }
 
-PyResult InventoryBound::StripFitting(PyCallArgs &call)
+EVEResult InventoryBound::StripFitting(EVECallArgs&call)
 {
     call.client->GetShip()->StripFitting();
     return nullptr;
 }
 
-PyResult InventoryBound::DestroyFitting(PyCallArgs &call, PyInt* itemID) {
+EVEResult InventoryBound::DestroyFitting(EVECallArgs&call, PyInt* itemID) {
     _log(INV__MESSAGE, "Calling InventoryBound::DestroyFitting() for %s(%u)", m_self->name(), m_itemID);
     call.client->GetShip()->RemoveRig(sItemFactory.GetItemRef(itemID->value()));
 
     return nullptr;
 }
 
-PyResult InventoryBound::StackAll(PyCallArgs &call, std::optional <PyInt*> flag) {
-    call.Dump(INV__DUMP);
+EVEResult InventoryBound::StackAll(EVECallArgs&call, std::optional <PyInt*> flag) {
+    call.dump(INV__DUMP);
 
     EVEItemFlags stackFlag = m_flag;
 
@@ -113,7 +113,7 @@ PyResult InventoryBound::StackAll(PyCallArgs &call, std::optional <PyInt*> flag)
     return nullptr;
 }
 
-PyResult InventoryBound::ImportExportWithPlanet(PyCallArgs &call, PyInt* spaceportPinID, PyDict* importData, PyDict* exportData, PyFloat* taxRate) {
+EVEResult InventoryBound::ImportExportWithPlanet(EVECallArgs&call, PyInt* spaceportPinID, PyDict* importData, PyDict* exportData, PyFloat* taxRate) {
     /*
             customsOfficeInventory = sm.GetService('invCache').GetInventoryFromId(self.customsOfficeID)
             customsOfficeInventory.ImportExportWithPlanet(self.spaceportPinID, importData, exportData, self.taxRate)
@@ -145,10 +145,10 @@ PyResult InventoryBound::ImportExportWithPlanet(PyCallArgs &call, PyInt* spacepo
 
     std::map<uint32, uint16> importItems, exportItems;
     for (PyDict::const_iterator itr = importData->begin(); itr != importData->end(); ++itr)
-        importItems[PyRep::IntegerValueU32(itr->first)] = PyRep::IntegerValue(itr->second);
+        importItems[itr->first->u32()] = itr->second->i64();
 
     for (PyDict::const_iterator itr = exportData->begin(); itr != exportData->end(); ++itr)
-        exportItems[PyRep::IntegerValueU32(itr->first)] = PyRep::IntegerValue(itr->second);
+        exportItems[itr->first->u32()] = itr->second->i64();
 
     // ok, so from here, we need to get officeRef->officeSE->planet->colony to make xfer....crazy shit
     StructureItemRef sRef = StructureItemRef::StaticCast(m_self);
@@ -158,15 +158,15 @@ PyResult InventoryBound::ImportExportWithPlanet(PyCallArgs &call, PyInt* spacepo
     return nullptr;
 }
 
-PyResult InventoryBound::RemoveChargeToHangar(PyCallArgs &call, PyTuple* chargeInfo, std::optional<PyRep*> quantity) {
-    int32 shipID = PyRep::IntegerValue(chargeInfo->GetItem(0));
-    int32 flagID = PyRep::IntegerValue(chargeInfo->GetItem(1));
-    int32 typeID = PyRep::IntegerValue(chargeInfo->GetItem(2));
+EVEResult InventoryBound::RemoveChargeToHangar(EVECallArgs&call, PyTuple* chargeInfo, std::optional<PyDataType*> quantity) {
+    int32 shipID = chargeInfo->at (0)->i64();
+    int32 flagID = chargeInfo->at (1)->i64();
+    int32 typeID = chargeInfo->at (2)->i64();
     
     /** @todo determine if this is needed, and implement if so */
     //uint32 quantity = 0;
     //if (call.tuple->size() == 2)
-    //    quantity = PyRep::IntegerValue(call.tuple->GetItem(1));
+    //    quantity = PyRep::IntegerValue(call.tuple->at (1));
 
     // this call is used to remove sublocation (charge) items, which is virtual to real.
     //  since our code does this, we will return "None" here to avoid client subsequently calling MultiAdd() or MultiMerge()
@@ -174,15 +174,15 @@ PyResult InventoryBound::RemoveChargeToHangar(PyCallArgs &call, PyTuple* chargeI
     return PyStatic.NewNone();
 }
 
-PyResult InventoryBound::RemoveChargeToCargo(PyCallArgs &call, PyTuple* chargeInfo, std::optional<PyRep*> quantity) {
-    int32 shipID = PyRep::IntegerValue(chargeInfo->GetItem(0));
-    int32 flagID = PyRep::IntegerValue(chargeInfo->GetItem(1));
-    int32 typeID = PyRep::IntegerValue(chargeInfo->GetItem(2));
+EVEResult InventoryBound::RemoveChargeToCargo(EVECallArgs&call, PyTuple* chargeInfo, std::optional<PyDataType*> quantity) {
+    int32 shipID = chargeInfo->at (0)->i64();
+    int32 flagID = chargeInfo->at (1)->i64();
+    int32 typeID = chargeInfo->at (2)->i64();
 
     /** @todo determine if this is needed, and implement if so */
     //uint32 quantity = 0;
     //if (call.tuple->size() == 2)
-    //    quantity = PyRep::IntegerValue(call.tuple->GetItem(1));
+    //    quantity = PyRep::IntegerValue(call.tuple->at (1));
 
     // this call is used to remove sublocation (charge) items, which is virtual to real.
     //  since our code does this, we will return "None" here to avoid client subsequently calling MultiAdd() or MultiMerge()
@@ -190,9 +190,9 @@ PyResult InventoryBound::RemoveChargeToCargo(PyCallArgs &call, PyTuple* chargeIn
     return PyStatic.NewNone();
 }
 
-PyResult InventoryBound::MultiMerge(PyCallArgs &call, PyList* items, std::optional<PyRep*> sourceContainerID) {
+EVEResult InventoryBound::MultiMerge(EVECallArgs&call, PyList* items, std::optional<PyDataType*> sourceContainerID) {
     _log(INV__MESSAGE, "IB::MultiMerge() called by %s(%u)", m_self->name(), m_itemID);
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     sItemFactory.SetUsingClient(call.client);
     Inventory* pInv(nullptr); // = sItemFactory.GetInventoryFromId(args.locationID);
@@ -203,16 +203,16 @@ PyResult InventoryBound::MultiMerge(PyCallArgs &call, PyList* items, std::option
     }
     */
 
-    std::vector<PyRep *>::const_iterator itr = items->begin(), end = items->end();
+    std::vector<PyDataType *>::const_iterator itr = items->begin(), end = items->end();
     for (; itr != end; ++itr) {
-        if ((*itr)->IsTuple() == false)
+        if ((*itr)->is<PyTuple>() == false)
             continue;
 
-        PyTuple* tuple1 = (*itr)->AsTuple();
+        PyTuple* tuple1 = (*itr)->as<PyTuple>();
 
-        int32 sourceID = PyRep::IntegerValue(tuple1->GetItem(0));
-        int32 destID = PyRep::IntegerValue(tuple1->GetItem(1));
-        int32 qty = PyRep::IntegerValue(tuple1->GetItem(2));
+        int32 sourceID = tuple1->at (0)->i64();
+        int32 destID = tuple1->at (1)->i64();
+        int32 qty = tuple1->at (2)->i64();
 
         InventoryItemRef srcItem = sItemFactory.GetItemRef( sourceID );
         if (srcItem.get() == nullptr) {
@@ -247,15 +247,15 @@ PyResult InventoryBound::MultiMerge(PyCallArgs &call, PyList* items, std::option
  * Removing Module/Charges from ship (using 'remove' button on item slot)
  * Adding Modules to a specific slot on ship
  */
-PyResult InventoryBound::Add(PyCallArgs &call, PyInt* itemID, PyInt* containerID) {
+EVEResult InventoryBound::Add(EVECallArgs&call, PyInt* itemID, PyInt* containerID) {
     if (is_log_enabled(INV__DUMP)) {
         _log(INV__DUMP, "IB::Handle_Add() size= %lli", call.tuple->size());
-        call.Dump(INV__DUMP);
+        call.dump(INV__DUMP);
     }
 
     uint16 toFlag = m_flag;
     if (call.byname.find("flag") != call.byname.end())
-        toFlag = PyRep::IntegerValueU32(call.byname.find("flag")->second);
+        toFlag = call.byname.find("flag")->second->u32();
     if (toFlag == flagLocked) {
         // corp role 'equip config' can move locked items (per client)
         _log(INV__ERROR, "IB::Handle_Add() - item %i from %i sent flagLocked.  continuing but this needs to be fixed.", \
@@ -268,7 +268,7 @@ PyResult InventoryBound::Add(PyCallArgs &call, PyInt* itemID, PyInt* containerID
     bool moveStack = false;
     int32 quantity = 0;
     if (call.byname.find("qty") != call.byname.end())
-        quantity = PyRep::IntegerValue(call.byname.find("qty")->second);
+        quantity = call.byname.find("qty")->second->i64();
 
     if (call.byname.find("dividing") != call.byname.end()) {
         // split stack, move original ref, leave remainder here with new item
@@ -290,7 +290,7 @@ PyResult InventoryBound::Add(PyCallArgs &call, PyInt* itemID, PyInt* containerID
 
     float capacity = 0.0f;
     if (call.byname.find("capacity") != call.byname.end())
-        capacity = PyRep::IntegerValueU32(call.byname.find("capacity")->second);
+        capacity = call.byname.find("capacity")->second->u32();
 
     if (quantity < 1)
         quantity = 1;
@@ -306,14 +306,14 @@ PyResult InventoryBound::Add(PyCallArgs &call, PyInt* itemID, PyInt* containerID
 }
 
 // this call is for moving items to *THIS* inventory
-PyResult InventoryBound::MultiAdd(PyCallArgs &call, PyList* itemIDs, PyInt* containerID) {
+EVEResult InventoryBound::MultiAdd(EVECallArgs&call, PyList* itemIDs, PyInt* containerID) {
     if (is_log_enabled(INV__DUMP)) {
         _log(INV__DUMP, "IB::Handle_MultiAdd() size= %lli", call.tuple->size());
-        call.Dump(INV__DUMP);
+        call.dump(INV__DUMP);
     }
 
-    if (call.tuple->items.size() != 2) {
-        _log(INV__ERROR, "IB::Handle_MultiAdd()  Unexpected number of elements in tuple: %lu (should be 2).", call.tuple->items.size() );
+    if (call.tuple->size() != 2) {
+        _log(INV__ERROR, "IB::Handle_MultiAdd()  Unexpected number of elements in tuple: %lu (should be 2).", call.tuple->size() );
         return nullptr;
     }
 
@@ -321,33 +321,33 @@ PyResult InventoryBound::MultiAdd(PyCallArgs &call, PyList* itemIDs, PyInt* cont
 
     PyList::const_iterator list_2_cur = itemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_MultiAdd_2 failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         items.push_back(t->value());
     }
 
 
     uint16 toFlag = m_flag;
     if (call.byname.find("flag") != call.byname.end())
-        toFlag = PyRep::IntegerValueU32(call.byname.find("flag")->second);
+        toFlag = call.byname.find("flag")->second->u32();
 
     int32 quantity = 1;
     if (call.byname.find("qty") != call.byname.end())
-        quantity = PyRep::IntegerValue(call.byname.find("qty")->second);
+        quantity = call.byname.find("qty")->second->i64();
 
     //bool byname(fromManyFlags):true == unload charges from module referenced
     bool moveStack = false;
     if (call.byname.find("fromManyFlags") != call.byname.end())
-        if (!call.byname.find("fromManyFlags")->second->IsNone())
+        if (!call.byname.find("fromManyFlags")->second->is<PyNone>())
             moveStack = true;
 
     float capacity = 0.0f;
     if (call.byname.find("capacity") != call.byname.end())
-        capacity = PyRep::IntegerValueU32(call.byname.find("capacity")->second);
+        capacity = call.byname.find("capacity")->second->u32();
 
     if (capacity > 1) {
         moveStack = true;
@@ -372,7 +372,7 @@ PyResult InventoryBound::MultiAdd(PyCallArgs &call, PyList* itemIDs, PyInt* cont
     return MoveItems( call.client, items, (EVEItemFlags)toFlag, quantity, moveStack, capacity);
 }
 
-PyRep* InventoryBound::MoveItems(Client* pClient, std::vector< int32 >& items, EVEItemFlags toFlag, int32 quantity, bool moveStack, float capacity)
+PyDataType* InventoryBound::MoveItems(Client* pClient, std::vector< int32 >& items, EVEItemFlags toFlag, int32 quantity, bool moveStack, float capacity)
 {   // complete method rewrite -allan 21Dec17
     ShipItem* pShip = pClient->GetShip().get();
     bool donating = false, ship = false, customs = false;
@@ -678,12 +678,12 @@ std::vector< int32 > InventoryBound::CatSortItems(std::vector< InventoryItemRef 
  * @note   these below are partially coded
  */
 
-PyResult InventoryBound::List(PyCallArgs &call, std::optional <PyInt*> listFlag) {
+EVEResult InventoryBound::List(EVECallArgs&call, std::optional <PyInt*> listFlag) {
     if (pInventory == nullptr)
         return PyStatic.NewNone();
 
     _log(INV__DUMP, "IB::List() dump.");
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     /* ownerID will need to be 'modified' here for corp access because of how we load items */
     //uint32 ownerID = m_ownerID;
@@ -696,7 +696,7 @@ PyResult InventoryBound::List(PyCallArgs &call, std::optional <PyInt*> listFlag)
 
     EVEItemFlags flag = m_flag, oldFlag = m_flag;
     if (call.byname.find("flag") != call.byname.end())
-        flag = (EVEItemFlags)PyRep::IntegerValueU32(call.byname.find("flag")->second);
+        flag = (EVEItemFlags)call.byname.find("flag")->second->u32();
 
     if (listFlag.has_value()) {
         flag = (EVEItemFlags)listFlag.value()->value();
@@ -755,22 +755,22 @@ PyResult InventoryBound::List(PyCallArgs &call, std::optional <PyInt*> listFlag)
     return pInventory->List(flag, m_ownerID);
 }
 
-PyResult InventoryBound::CreateBookmarkVouchers(PyCallArgs &call, PyList* bookmarkIDs, PyInt* flag, PyBool* isMove) {
+EVEResult InventoryBound::CreateBookmarkVouchers(EVECallArgs&call, PyList* bookmarkIDs, PyInt* flag, PyBool* isMove) {
     /*
      *    bookmarksDeleted, newVouchers = self.CreateBookmarkVouchers(bookmarkIDs, flag, isMove)
      */
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     /*
-        if (tuple1->GetItem(0)->IsList()) {
-        bmIDs = tuple1->GetItem(0)->AsList();
+        if (tuple1->at (0)->is<PyList>()) {
+        bmIDs = tuple1->at (0)->as<PyList>();
         //PyIncRef(bmIDs);
     } else {
-        _log(XMLP__DECODE_ERROR, "Decode Call_CreateVouchers failed: bmIDs is not a list: %s", tuple1->GetItem(0)->TypeString());
+        _log(XMLP__DECODE_ERROR, "Decode Call_CreateVouchers failed: bmIDs is not a list: %s", tuple1->at (0)->TypeString());
         return false;
     }
 
-    flag = PyRep::IntegerValue(tuple1->GetItem(1));
-    isMove = PyRep::IntegerValue(tuple1->GetItem(2));
+    flag = PyRep::IntegerValue(tuple1->at (1));
+    isMove = PyRep::IntegerValue(tuple1->at (2));
     */
     if (m_self->ownerID() != call.client->GetCharID())
         throw UserError ("CanOnlyCreateVoucherInPersonalHangar");
@@ -795,46 +795,48 @@ PyResult InventoryBound::CreateBookmarkVouchers(PyCallArgs &call, PyList* bookma
         PyList::const_iterator itr = bookmarkIDs->begin();
         for (; itr != bookmarkIDs->end(); ++itr) {
             //ItemData ( typeID, ownerID, locationID, flag, quantity, customInfo, contraband)
-            ItemData iData( 51, call.client->GetCharacterID(), locTemp, flagNone, 1, itoa(PyRep::IntegerValueU32(*itr)));
+            ItemData iData( 51, call.client->GetCharacterID(), locTemp, flagNone, 1, itoa((*itr)->u32()));
             InventoryItemRef iRef = sItemFactory.SpawnItem( iData );
             if (iRef.get() == nullptr) {
-                codelog(ITEM__ERROR, "%s: Failed to spawn bookmark voucher for bmID %u", call.client->GetName(), PyRep::IntegerValueU32(*itr));
+                codelog(ITEM__ERROR, "%s: Failed to spawn bookmark voucher for bmID %u", call.client->GetName(), (*itr)->u32());
                 continue;
             }
             //iRef->Rename(std::to_string(BookmarkDB::GetBookmarkName(PyRep::IntegerValueU32(*itr))));
             iRef->Move(locationID, (EVEItemFlags)flag->value(), true);
             /*
             PyDict* dict = new PyDict();
-            dict->SetItemString("description", new PyString(BookmarkDB::GetBookmarkName(atoi(iRef->customInfo().c_str()))));
-            dict->SetItemString( "itemID",       new PyInt(iRef->itemID()));
-            dict->SetItemString( "typeID",       new PyInt(iRef->type().id()));
-            dict->SetItemString( "ownerID",      new PyInt(iRef->ownerID()));
-            dict->SetItemString( "locationID",   new PyInt(iRef->locationID()));
-            dict->SetItemString( "flagID",       new PyInt(iRef->flag()));
-            dict->SetItemString( "quantity",     new PyInt(iRef->quantity()));
-            dict->SetItemString( "groupID",      new PyInt(iRef->type().groupID()));
-            dict->SetItemString( "categoryID",   new PyInt(iRef->type().categoryID()));
-            dict->SetItemString( "customInfo",   new PyString(iRef->customInfo()));
+            dict->set ("description", new PyString(BookmarkDB::GetBookmarkName(atoi(iRef->customInfo().c_str()))));
+            dict->set ( "itemID",       new PyInt(iRef->itemID()));
+            dict->set ( "typeID",       new PyInt(iRef->type().id()));
+            dict->set ( "ownerID",      new PyInt(iRef->ownerID()));
+            dict->set ( "locationID",   new PyInt(iRef->locationID()));
+            dict->set ( "flagID",       new PyInt(iRef->flag()));
+            dict->set ( "quantity",     new PyInt(iRef->quantity()));
+            dict->set ( "groupID",      new PyInt(iRef->type().groupID()));
+            dict->set ( "categoryID",   new PyInt(iRef->type().categoryID()));
+            dict->set ( "customInfo",   new PyString(iRef->customInfo()));
             vouchers->AddItem(new PyObject("util.KeyVal", dict));
             */
             if (isMove->value()) {
                 PyDict* dict = new PyDict();
                 // may need more here.  not sure yet
-                //dict->SetItemString("description", new PyString(BookmarkDB::GetBookmarkName(atoi(iRef->customInfo().c_str()))));
-                dict->SetItemString("bookmarkID", new PyInt(PyRep::IntegerValueU32(*itr)));
-                deleted->AddItem(new PyObject("util.KeyVal", dict));
+                //dict->set ("description", new PyString(BookmarkDB::GetBookmarkName(atoi(iRef->customInfo().c_str()))));
+                dict->set ("bookmarkID", new PyInt((*itr)->u32()));
+                deleted->add(new PyObject("util.KeyVal", dict));
                 // change owner in db to remove bm from current owner's pnp window
-                m_db.ChangeOwner(PyRep::IntegerValueU32(*itr));
+                m_db.ChangeOwner((*itr)->u32());
             }
         }
     }
 
     //  when bm is copied to another players' places tab, copy data from db using bookmarkID stored in ItemData.customInfo
 
-    PyTuple* tuple = new PyTuple(2);
-    tuple->SetItem(0, deleted );
-    tuple->SetItem(1, vouchers);
-    tuple->Dump(BOOKMARK__RSP_DUMP, "    ");
+    PyTuple* tuple = new PyTuple {
+        deleted, vouchers
+    };
+
+    tuple->dump(BOOKMARK__RSP_DUMP, "    ");
+
     return tuple;
 }
 
@@ -842,38 +844,38 @@ PyResult InventoryBound::CreateBookmarkVouchers(PyCallArgs &call, PyList* bookma
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult InventoryBound::TakeOutTrash(PyCallArgs &call, PyInt* itemIDs) {
+EVEResult InventoryBound::TakeOutTrash(EVECallArgs&call, PyInt* itemIDs) {
     //TakeOutTrash([ invItem.itemID for invItem in invItems ])
     sLog.Error("IB::TakeOutTrash", "Character '%s', self: '%s'(%u)", call.client->GetName(), m_self->name(), m_itemID);
     _log(INV__MESSAGE, "%s Calling InventoryBound::TakeOutTrash() for %s(%u)", call.client->GetName(), m_self->name(), m_itemID);
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
     return nullptr;
 }
 
-PyResult InventoryBound::SetPassword(PyCallArgs &call, PyInt* which, PyString* newPassword, PyString* oldPassword) {
+EVEResult InventoryBound::SetPassword(EVECallArgs&call, PyInt* which, PyString* newPassword, PyString* oldPassword) {
     _log(INV__MESSAGE, "%s Calling InventoryBound::SetPassword() for %s(%u)", call.client->GetName(), m_self->name(), m_itemID);
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
     return nullptr;
 }
 
-PyResult InventoryBound::ListDroneBay(PyCallArgs &call) {
+EVEResult InventoryBound::ListDroneBay(EVECallArgs&call) {
     // i dont think this one is used....
     sLog.Error("IB::ListDroneBay", "Character '%s', self: '%s'(%u)", call.client->GetName(), m_self->name(), m_itemID);
     _log(INV__MESSAGE, "%s Calling InventoryBound::ListDroneBay() for %s(%u)", call.client->GetName(), m_self->name(), m_itemID);
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
     return nullptr;
 }
 
-PyResult InventoryBound::RunRefiningProcess(PyCallArgs &call) {
+EVEResult InventoryBound::RunRefiningProcess(EVECallArgs&call) {
     _log(POS__MESSAGE, "%s Calling InventoryBound::RunRefiningProcess() for %s(%u)", call.client->GetName(), m_self->name(), m_itemID);
-    call.Dump(POS__DUMP);
+    call.dump(POS__DUMP);
     return nullptr;
 }
 
 // This function is called when an outpost construction platform is instructed to build
-PyResult InventoryBound::Build(PyCallArgs &call) {
+EVEResult InventoryBound::Build(EVECallArgs&call) {
     _log(POS__MESSAGE, "%s Calling InventoryBound::Build() for %s(%u)", call.client->GetName(), m_self->name(), m_itemID);
-    call.Dump(POS__DUMP);
+    call.dump(POS__DUMP);
 
     /*
     Outpost construction process:

@@ -27,7 +27,7 @@
 
 #include "character/CertificateMgrDB.h"
 
-//PyRep* CertificateMgrDB::GetMyCertificates( uint32 characterID )
+//PyDataType* CertificateMgrDB::GetMyCertificates( uint32 characterID )
 //{
 //    sLog.Debug( "CertificateMgrDB", "Called GetMyCertificates stub." );
 //
@@ -40,7 +40,7 @@
 //    return rs.Encode();
 //}
 
-PyRep *CertificateMgrDB::GetCertificateCategories() {
+PyDataType *CertificateMgrDB::GetCertificateCategories() {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT categoryID, categoryName, description, dataID, categoryNameID FROM crtCategories")) {
         codelog(DATABASE__ERROR, "Failed to query certificate categories: %s.", res.error.c_str());
@@ -50,7 +50,7 @@ PyRep *CertificateMgrDB::GetCertificateCategories() {
     return(DBResultToIndexRowset(res, "categoryID"));
 }
 
-PyRep *CertificateMgrDB::GetAllShipCertificateRecommendations() {
+PyDataType *CertificateMgrDB::GetAllShipCertificateRecommendations() {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT shipTypeID, certificateID, recommendationLevel, recommendationID FROM crtRecommendations")) {
         codelog(DATABASE__ERROR, "Failed to query certificate categories: %s.", res.error.c_str());
@@ -60,7 +60,7 @@ PyRep *CertificateMgrDB::GetAllShipCertificateRecommendations() {
     return DBResultToRowset(res);
 }
 
-PyRep *CertificateMgrDB::GetCertificateClasses() {
+PyDataType *CertificateMgrDB::GetCertificateClasses() {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT classID, className, classNameID, description, dataID FROM crtClasses")) {
         codelog(DATABASE__ERROR, "Failed to query certificate classes: %s.", res.error.c_str());

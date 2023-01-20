@@ -19,8 +19,8 @@ public:
     WorldSpaceServer();
 
 protected:
-    PyResult GetWorldSpaceTypeIDFromWorldSpaceID(PyCallArgs& call, PyInt* worldSpaceID);
-    PyResult GetWorldSpaceMachoAddress(PyCallArgs& call, PyString* address);
+  EVEResult GetWorldSpaceTypeIDFromWorldSpaceID(EVECallArgs& call, PyInt* worldSpaceID);
+  EVEResult GetWorldSpaceMachoAddress(EVECallArgs& call, PyString* address);
 };
 
 #endif  // __EVE_SYSTEM_WORLDSPACE_H_

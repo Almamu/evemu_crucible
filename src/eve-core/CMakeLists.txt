@@ -20,6 +20,12 @@ SET( INCLUDE
 SET( SOURCE
      "${TARGET_SOURCE_DIR}/eve-compat.cpp" )
 
+SET( config_INCLUDE
+     "${TARGET_INCLUDE_DIR}/config/EVEServerConfig.h" )
+
+SET( config_SOURCE
+     "${TARGET_SOURCE_DIR}/config/EVEServerConfig.cpp" )
+
 SET( database_INCLUDE
      "${TARGET_INCLUDE_DIR}/database/dbcore.h"
      "${TARGET_INCLUDE_DIR}/database/dbtype.h" )
@@ -35,9 +41,11 @@ SET( error_SOURCE
 SET( log_INCLUDE
      "${TARGET_INCLUDE_DIR}/log/LogNew.h"
      "${TARGET_INCLUDE_DIR}/log/logsys.h"
+     "${TARGET_INCLUDE_DIR}/log/Profiler.h"
      "${TARGET_INCLUDE_DIR}/log/logtypes.h" )
 SET( log_SOURCE
      "${TARGET_SOURCE_DIR}/log/LogNew.cpp"
+     "${TARGET_SOURCE_DIR}/log/Profiler.cpp"
      "${TARGET_SOURCE_DIR}/log/logsys.cpp" )
 
 SET( math_INCLUDE
@@ -113,6 +121,7 @@ SET( utils_SOURCE
 # Setup the library #
 #####################
 SOURCE_GROUP( "src"            FILES ${INCLUDE} )
+SOURCE_GROUP( "src\\config"    FILES ${config_INCLUDE} )
 SOURCE_GROUP( "src\\database"  FILES ${database_INCLUDE} )
 #SOURCE_GROUP( "src\\error"     FILES ${error_INCLUDE} )
 SOURCE_GROUP( "src\\log"       FILES ${log_INCLUDE} )
@@ -123,6 +132,7 @@ SOURCE_GROUP( "src\\threading" FILES ${threading_INCLUDE} )
 SOURCE_GROUP( "src\\utils"     FILES ${utils_INCLUDE} )
 
 SOURCE_GROUP( "src"            FILES ${SOURCE} )
+SOURCE_GROUP( "src\\config"    FILES ${config_SOURCE} )
 SOURCE_GROUP( "src\\database"  FILES ${database_SOURCE} )
 #SOURCE_GROUP( "src\\error"     FILES ${error_SOURCE} )
 SOURCE_GROUP( "src\\log"       FILES ${log_SOURCE} )
@@ -134,6 +144,7 @@ SOURCE_GROUP( "src\\utils"     FILES ${utils_SOURCE} )
 
 ADD_LIBRARY( "${TARGET_NAME}"
              ${INCLUDE}           ${SOURCE}
+             ${config_INCLUDE}  ${config_SOURCE}
              ${database_INCLUDE}  ${database_SOURCE}
              #${error_INCLUDE}     ${error_SOURCE}
              ${log_INCLUDE}       ${log_SOURCE}

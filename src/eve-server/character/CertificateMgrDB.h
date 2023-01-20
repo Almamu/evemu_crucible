@@ -34,10 +34,10 @@ class CertificateMgrDB
 : public ServiceDB
 {
 public:
-    PyRep *GetMyCertificates(uint32 characterID);
-    PyRep *GetCertificateCategories();
-    PyRep *GetAllShipCertificateRecommendations();
-    PyRep *GetCertificateClasses();
+    PyDataType *GetMyCertificates(uint32 characterID);
+    PyDataType *GetCertificateCategories();
+    PyDataType *GetAllShipCertificateRecommendations();
+    PyDataType *GetCertificateClasses();
 
     bool LoadCertificates( uint32 characterID, CertMap &into );
     bool SaveCertificates( uint32 characterID, const CertMap& from );

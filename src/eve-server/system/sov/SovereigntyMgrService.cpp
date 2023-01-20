@@ -39,6 +39,6 @@ SovereigntyMgrService::SovereigntyMgrService() :
 }
 
 // this is only call to this service
-PyResult SovereigntyMgrService::GetSystemSovereigntyInfo(PyCallArgs &call, PyInt* systemID) {
+EVEResult SovereigntyMgrService::GetSystemSovereigntyInfo(EVECallArgs&call, PyInt* systemID) {
     return svDataMgr.GetSystemSovereignty(systemID->value());
 }

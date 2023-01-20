@@ -45,38 +45,38 @@ StationSvc::StationSvc(EVEServiceManager& mgr) :
     this->m_cache = m_manager.Lookup <ObjCacheService>("objectCaching");
 }
 
-PyResult StationSvc::GetStationItemBits(PyCallArgs &call) {
-    return stDataMgr.GetStationItemBits(call.client->GetStationID());
+EVEResult StationSvc::GetStationItemBits(EVECallArgs&call) {
+    return stDataMgr.GetStationItemBits(call.client->GetStationID(), &call.arena);
 }
 
-PyResult StationSvc::GetSolarSystem(PyCallArgs &call, PyInt* solarSystemID) {
+EVEResult StationSvc::GetSolarSystem(EVECallArgs&call, PyInt* solarSystemID) {
     ObjectCachedMethodID method_id(GetName().c_str(), "GetSolarSystem");
 
     if (!this->m_cache->IsCacheLoaded(method_id)) {
         PyPackedRow *t = SystemDB::GetSolarSystemPackedRow(solarSystemID->value());
 
-        this->m_cache->GiveCache(method_id, (PyRep **)&t);
+        this->m_cache->GiveCache(method_id, (PyDataType **)&t);
     }
 
     return(this->m_cache->MakeObjectCachedMethodCallResult(method_id));
 }
 
-PyResult StationSvc::GetStation(PyCallArgs &call, PyInt* stationID) {
+EVEResult StationSvc::GetStation(EVECallArgs&call, PyInt* stationID) {
     return stDataMgr.GetStationPyData(stationID->value());
 }
 
 //This is called when opening up the sov dashboard
-PyResult StationSvc::GetAllianceSystems(PyCallArgs &call) {
+EVEResult StationSvc::GetAllianceSystems(EVECallArgs&call) {
   sLog.White( "StationSvc::Handle_GetAllianceSystems()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return svDataMgr.GetAllianceSystems();
 }
 
 //This call is made by client when player opens 'Settled Systems' dropdown in alliance details ui
-PyResult StationSvc::GetSystemsForAlliance(PyCallArgs &call, PyInt* allianceID) {
+EVEResult StationSvc::GetSystemsForAlliance(EVECallArgs&call, PyInt* allianceID) {
     // systems = sm.RemoteSvc('stationSvc').GetSystemsForAlliance(session.allianceid)
   sLog.White( "StationSvc::Handle_GetSystemsForAlliance()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
     return nullptr;
 }

@@ -33,7 +33,7 @@ m_planet(pPlanet)
 {
 }
 
-PyRep* PlanetMgr::UpdateNetwork(PyList* commandList)
+PyDataType* PlanetMgr::UpdateNetwork(PyList* commandList)
 {
     using namespace PI;
     bool cancel = false;
@@ -41,9 +41,9 @@ PyRep* PlanetMgr::UpdateNetwork(PyList* commandList)
         if (cancel)
             return m_colony->GetColony();
         UUNCommand uunc;
-        if (!uunc.Decode(commandList->GetItem(i)->AsTuple())) {
+        if (!uunc.Decode(commandList->at <PyTuple> (i))) {
             _log(SERVICE__ERROR, "Failed to decode args for UUNCommand");
-            commandList->Dump(PLANET__WARNING, "      ");
+            commandList->dump(PLANET__WARNING, "      ");
             m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04508.");
             return nullptr;
         }
@@ -77,7 +77,7 @@ PyRep* PlanetMgr::UpdateNetwork(PyList* commandList)
 bool PlanetMgr::UpgradeCommandCenter(UUNCommand& nc) {
     // the return here is used to cancel loop in UpdateNetwork.  return false = continue
 
-    int8 oldLevel = m_colony->GetLevel(), newLevel = (int8)PyRep::IntegerValue(nc.command_data->GetItem(1));
+    int8 oldLevel = m_colony->GetLevel(), newLevel = (int8)nc.command_data->at (1)->i64();
     int32 cost = 0;
     using namespace PI::Pin;
 
@@ -112,14 +112,14 @@ bool PlanetMgr::UpgradeCommandCenter(UUNCommand& nc) {
         Account::KeyType::Cash
     );
 
-    m_colony->UpgradeCommandCenter(PyRep::IntegerValue(nc.command_data->GetItem(0)), newLevel);
+    m_colony->UpgradeCommandCenter(nc.command_data->at (0)->i64(), newLevel);
     return false;
 }
 
 bool PlanetMgr::CreatePin(UUNCommand& nc) {
     // the return here is used to break out of loop if needed.  return false = continue
     using namespace EVEDB::invGroups;
-    uint32 typeID = PyRep::IntegerValueU32(nc.command_data->GetItem(1));
+    uint32 typeID = nc.command_data->at (1)->u32();
     uint32 groupID = sItemFactory.GetType(typeID)->groupID();
 
     switch (groupID) {
@@ -145,7 +145,7 @@ bool PlanetMgr::CreatePin(UUNCommand& nc) {
             UUNCCommandCenter uunccc;
             if (!uunccc.Decode(nc.command_data)) {
                 _log(SERVICE__ERROR, "Failed to decode args for UUNCCommandCenter");
-                nc.command_data->Dump(PLANET__WARNING, "      ");
+                nc.command_data->dump(PLANET__WARNING, "      ");
                 m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04508.");
                 return true;
             }
@@ -227,7 +227,7 @@ bool PlanetMgr::CreatePin(UUNCommand& nc) {
     UUNCStandardPin uuncsp;
     if (!uuncsp.Decode(nc.command_data)) {
         _log(SERVICE__ERROR, "Failed to decode args for UUNCStandardPin");
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
         return true;
     }
@@ -260,12 +260,12 @@ bool PlanetMgr::CreatePin(UUNCommand& nc) {
 
 void PlanetMgr::CreateLink(UUNCommand& nc) {
     uint32 src = 0, dest = 0, level = 0;
-    if (nc.command_data->GetItem(0)->IsInt()) {
-        if (nc.command_data->GetItem(1)->IsInt()) {
+    if (nc.command_data->at (0)->is<PyInt>()) {
+        if (nc.command_data->at (1)->is<PyInt>()) {
             UUNCLinkExist uuncle;
             if (!uuncle.Decode(nc.command_data)) {
                 _log(SERVICE__ERROR, "Failed to decode args for UUNCLinkExist");
-                nc.command_data->Dump(PLANET__WARNING, "      ");
+                nc.command_data->dump(PLANET__WARNING, "      ");
                 m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
                 return;
             }
@@ -276,7 +276,7 @@ void PlanetMgr::CreateLink(UUNCommand& nc) {
             UUNCLinkCommand uunclc;
             if (!uunclc.Decode(nc.command_data)) {
                 _log(SERVICE__ERROR, "Failed to decode args for UUNCLinkCommand");
-                nc.command_data->Dump(PLANET__WARNING, "      ");
+                nc.command_data->dump(PLANET__WARNING, "      ");
                 m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
                 return;
             }
@@ -284,11 +284,11 @@ void PlanetMgr::CreateLink(UUNCommand& nc) {
             dest = uunclc.dest2;
             level = uunclc.level;
         }
-    } else if (nc.command_data->GetItem(0)->IsTuple()) {
+    } else if (nc.command_data->at (0)->is<PyTuple>()) {
         UUNCLinkStandard uuncls;
         if (!uuncls.Decode(nc.command_data)) {
             _log(SERVICE__ERROR, "Failed to decode args for UUNCLinkStandard");
-            nc.command_data->Dump(PLANET__WARNING, "      ");
+            nc.command_data->dump(PLANET__WARNING, "      ");
             m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
             return;
         }
@@ -297,7 +297,7 @@ void PlanetMgr::CreateLink(UUNCommand& nc) {
         level = uuncls.level;
     } else {
         //Invalid...
-        _log(PLANET__ERROR, "PlanetMgr::UserUpdateNetwork::CreateLink() command_data type unrecognized: %s", nc.command_data->GetItem(0)->TypeString());
+        _log(PLANET__ERROR, "PlanetMgr::UserUpdateNetwork::CreateLink() command_data type unrecognized: %s", nc.command_data->at (0)->TypeString());
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04508.");
         return;
     }
@@ -309,7 +309,7 @@ void PlanetMgr::CreateRoute(UUNCommand& nc)
     Call_CreateRoute args;
     if (!args.Decode(nc.command_data)) {
         _log(SERVICE__ERROR, "Failed to decode args for Call_CreateRoute");
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
         return;
     }
@@ -321,14 +321,14 @@ void PlanetMgr::CreateRoute(UUNCommand& nc)
 void PlanetMgr::RemovePin(UUNCommand& nc)
 {
     uint32 pinID = 0;
-    if (nc.command_data->GetItem(0)->IsInt()) {
-        pinID = PyRep::IntegerValue(nc.command_data->GetItem(0));
-    } else if (nc.command_data->GetItem(0)->IsTuple()) {
-        pinID = PyRep::IntegerValue(nc.command_data->GetItem(0)->AsTuple()->GetItem(1));
+    if (nc.command_data->at (0)->is<PyInt>()) {
+        pinID = nc.command_data->at (0)->i64();
+    } else if (nc.command_data->at (0)->is<PyTuple>()) {
+        pinID = nc.command_data->at (0)->as<PyTuple>()->at (1)->i64();
     } else {
         //Invalid...
-        _log(PLANET__ERROR, "PlanetMgr::UserUpdateNetwork::RemovePin() command_data type unrecognized: %s", nc.command_data->GetItem(0)->TypeString());
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        _log(PLANET__ERROR, "PlanetMgr::UserUpdateNetwork::RemovePin() command_data type unrecognized: %s", nc.command_data->at (0)->TypeString());
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04508.");
         return;
     }
@@ -340,20 +340,20 @@ void PlanetMgr::RemoveLink(UUNCommand& nc)
     _log(PLANET__TRACE, "PlanetMgr::UserUpdateNetwork::RemoveLink()");
     nc.Dump(PLANET__WARNING, "      ");
 
-    m_colony->RemoveLink(PyRep::IntegerValue(nc.command_data->GetItem(0)), PyRep::IntegerValue(nc.command_data->GetItem(1)));
+    m_colony->RemoveLink(nc.command_data->at (0)->i64(), nc.command_data->at (1)->i64());
 }
 
 void PlanetMgr::RemoveRoute(UUNCommand& nc)
 {
     uint32 routeID = 0;
-    if (nc.command_data->GetItem(0)->IsInt()) {
-        routeID = PyRep::IntegerValue(nc.command_data->GetItem(0));
-    } else if (nc.command_data->GetItem(0)->IsTuple()) {
-        routeID = PyRep::IntegerValue(nc.command_data->GetItem(0)->AsTuple()->GetItem(1));
+    if (nc.command_data->at (0)->is<PyInt>()) {
+        routeID = nc.command_data->at (0)->i64();
+    } else if (nc.command_data->at (0)->is<PyTuple>()) {
+        routeID = nc.command_data->at (0)->as<PyTuple>()->at (1)->i64();
     } else {
         //Invalid...
-        _log(PLANET__ERROR, "PlanetMgr::UserUpdateNetwork::RemoveRoute() command_data type unrecognized: %s", nc.command_data->GetItem(0)->TypeString());
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        _log(PLANET__ERROR, "PlanetMgr::UserUpdateNetwork::RemoveRoute() command_data type unrecognized: %s", nc.command_data->at (0)->TypeString());
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04508.");
         return;
     }
@@ -362,20 +362,20 @@ void PlanetMgr::RemoveRoute(UUNCommand& nc)
 
 void PlanetMgr::SetLinkLevel(UUNCommand& nc)
 {
-    m_colony->UpgradeLink(PyRep::IntegerValue(nc.command_data->GetItem(0)),
-                          PyRep::IntegerValue(nc.command_data->GetItem(1)),
-                          PyRep::IntegerValue(nc.command_data->GetItem(2)));
+    m_colony->UpgradeLink(nc.command_data->at (0)->i64(),
+                          nc.command_data->at (1)->i64(),
+                          nc.command_data->at (2)->i64());
 }
 
 void PlanetMgr::SetSchematic(UUNCommand& nc)
 {
     uint32 pinID = 0;
-    if (nc.command_data->GetItem(0)->IsTuple()) {
-        pinID = PyRep::IntegerValue(nc.command_data->GetItem(0)->AsTuple()->GetItem(1));
-    } else if (nc.command_data->GetItem(0)->IsInt()) {
-        pinID = PyRep::IntegerValue(nc.command_data->GetItem(0));
+    if (nc.command_data->at (0)->is<PyTuple>()) {
+        pinID = nc.command_data->at (0)->as<PyTuple>()->at (1)->i64();
+    } else if (nc.command_data->at (0)->is<PyInt>()) {
+        pinID = nc.command_data->at (0)->i64();
     }
-    m_colony->SetSchematic(pinID, PyRep::IntegerValue(nc.command_data->GetItem(1))); // 65 - 137
+    m_colony->SetSchematic(pinID, nc.command_data->at (1)->i64()); // 65 - 137
 }
 
 void PlanetMgr::AddExtractorHead(UUNCommand& nc)
@@ -383,7 +383,7 @@ void PlanetMgr::AddExtractorHead(UUNCommand& nc)
     Call_AddMoveExtractorHead args;
     if (!args.Decode(nc.command_data)) {
         _log(SERVICE__ERROR, "Failed to decode args for Call_AddMoveExtractorHead");
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
         return;
     }
@@ -396,7 +396,7 @@ void PlanetMgr::MoveExtractorHead(UUNCommand& nc)
     Call_AddMoveExtractorHead args;
     if (!args.Decode(nc.command_data)) {
         _log(SERVICE__ERROR, "Failed to decode args for Call_AddMoveExtractorHead");
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
         return;
     }
@@ -409,7 +409,7 @@ void PlanetMgr::InstallProgram(UUNCommand& nc)
     Call_InstallProgram args;
     if (!args.Decode(nc.command_data)) {
         _log(SERVICE__ERROR, "Failed to decode args for Call_InstallProgram");
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
         return;
     }
@@ -419,7 +419,7 @@ void PlanetMgr::InstallProgram(UUNCommand& nc)
 
 void PlanetMgr::KillExtractorHead(UUNCommand& nc)
 {
-    m_colony->KillExtractorHead(PyRep::IntegerValue(nc.command_data->GetItem(0)), PyRep::IntegerValue(nc.command_data->GetItem(1)));
+    m_colony->KillExtractorHead(nc.command_data->at (0)->i64(), nc.command_data->at (1)->i64());
 }
 
 void PlanetMgr::PrioritizeRoute(UUNCommand& nc)
@@ -430,7 +430,7 @@ void PlanetMgr::PrioritizeRoute(UUNCommand& nc)
     Call_PrioritizeRoute args;
     if (!args.Decode(nc.command_data)) {
         _log(SERVICE__ERROR, "Failed to decode args for Call_PrioritizeRoute");
-        nc.command_data->Dump(PLANET__WARNING, "      ");
+        nc.command_data->dump(PLANET__WARNING, "      ");
         m_client->SendErrorMsg("Internal Server Error.  Ref: ServerError 04588.");
         return;
     }

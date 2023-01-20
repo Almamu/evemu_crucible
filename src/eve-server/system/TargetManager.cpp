@@ -32,8 +32,8 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
-#include "Profiler.h"
+#include "config/EVEServerConfig.h"
+#include "log/Profiler.h"
 #include "Client.h"
 #include "inventory/AttributeEnum.h"
 #include "npc/NPC.h"
@@ -355,8 +355,9 @@ void TargetManager::TargetLost(SystemEntity *tSE) {
         te.targetID = tSE->GetID();
         //te.reason = "Docking";
     Notify_OnMultiEvent multi;
-        multi.events = new PyList();
-        multi.events->AddItem(te.Encode());
+    multi.events = new PyList {
+        te.Encode ()
+    };
     PyTuple* tmp = multi.Encode();   //this is consumed below
     mySE->GetPilot()->SendNotification("OnMultiEvent", "clientID", &tmp);
 }
@@ -437,8 +438,9 @@ void TargetManager::TargetedAdd(SystemEntity *tSE) {
         te.mode = "otheradd";
         te.targetID = tSE->GetID();
     Notify_OnMultiEvent multi;
-        multi.events = new PyList();
-        multi.events->AddItem(te.Encode());
+    multi.events = new PyList {
+        te.Encode()
+    };
     PyTuple* tmp = multi.Encode();
     mySE->GetPilot()->SendNotification("OnMultiEvent", "clientID", &tmp);
 }
@@ -454,8 +456,9 @@ void TargetManager::TargetedLost(SystemEntity *tSE) {
        // te.reason = "WarpingOut";
        // te.reason = "StoppedTargeting";
     Notify_OnMultiEvent multi;
-        multi.events = new PyList();
-        multi.events->AddItem(te.Encode());
+    multi.events = new PyList {
+        te.Encode ()
+    };
     PyTuple* tmp = multi.Encode();
     mySE->GetPilot()->SendNotification("OnMultiEvent", "clientID", &tmp);
 }
@@ -468,8 +471,9 @@ void TargetManager::TargetsCleared() {
         te.mode = "clear";
         te.targetID = 0;
     Notify_OnMultiEvent multi;
-        multi.events = new PyList();
-        multi.events->AddItem(te.Encode());
+    multi.events = new PyList {
+        te.Encode ()
+    };
     PyTuple* tmp = multi.Encode();
     mySE->GetPilot()->SendNotification("OnMultiEvent", "clientID", &tmp);
 }
@@ -501,7 +505,7 @@ PyList* TargetManager::GetTargets() const {
 
     std::map<SystemEntity *, TargetEntry *>::const_iterator itr = m_targets.begin();
     for (; itr != m_targets.end(); ++itr)
-        result->AddItemInt( itr->first->GetID() );
+        result->add( new PyInt (itr->first->GetID()) );
 
     return result;
 }
@@ -513,7 +517,7 @@ PyList* TargetManager::GetTargeters() const {
 
     std::map<SystemEntity*, TargetedByEntry*>::const_iterator itr = m_targetedBy.begin();
     for(; itr != m_targetedBy.end(); ++itr)
-        result->AddItemInt( itr->first->GetID() );
+        result->add( new PyInt (itr->first->GetID()) );
 
     return result;
 }

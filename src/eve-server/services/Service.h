@@ -53,7 +53,7 @@ public:
     /**
      * @brief Handles dispatching a call to this service
      */
-    virtual PyResult Dispatch(const std::string& name, PyCallArgs& args) = 0;
+    virtual EVEResult Dispatch(const std::string& name, EVECallArgs& args) = 0;
     /**
      * @brief Builds a string with information about calling a method in this service
      */
@@ -78,7 +78,7 @@ protected:
      * @brief Registers a method handler
      */
     template <class H, class... Args>
-    void Add(const std::string& name, PyResult(H::*callHandler)(PyCallArgs&, Args...)) {
+    void Add(const std::string& name, EVEResult (H::*callHandler)(EVECallArgs&, Args...)) {
         this->mHandlers.push_back(std::make_pair(std::string(name), new CallHandler <H> (callHandler)));
     }
 
@@ -91,7 +91,7 @@ public:
     /**
      * @brief Handles dispatching a call to this service
      */
-    PyResult Dispatch(const std::string& name, PyCallArgs& args) override {
+    EVEResult Dispatch(const std::string& name, EVECallArgs& args) override {
         for (auto handler : this->mHandlers) {
             if (handler.first != name)
                 continue;

@@ -234,9 +234,9 @@ void Agent::DeleteOffer(uint32 charID)
 
 PyDict* Agent::GetLocationWrap() {
     PyDict *res = new PyDict();
-        res->SetItemString("typeID", new PyInt(m_agentData.locationTypeID) );
-        res->SetItemString("locationID", new PyInt(m_agentData.locationID) );
-        res->SetItemString("solarsystemID", new PyInt(m_agentData.solarSystemID) );
+        res->set ("typeID", new PyInt(m_agentData.locationTypeID) );
+        res->set ("locationID", new PyInt(m_agentData.locationID) );
+        res->set ("solarsystemID", new PyInt(m_agentData.solarSystemID) );
     return res;
 
     /* other location data types to put in dict for agents in space
@@ -294,10 +294,6 @@ PyDict* Agent::GetLocationWrap() {
 PyObject* Agent::GetInfoServiceDetails()
 {
     // can this be static data created when agent is loaded?  avoid creating this everytime it's called.
-    PyDict* res = new PyDict();
-        res->SetItemString("stationID", new PyInt(m_agentData.stationID) );
-        res->SetItemString("level", new PyInt(m_agentData.level) );
-
     // 'services' is a tuple of dicts containing data for [research], [locate], and [mission] services this agent offers
 
     /*  for research agents....
@@ -311,42 +307,48 @@ PyObject* Agent::GetInfoServiceDetails()
      */
 
     /**  @todo  finish this..... */
-    PyDict* research = new PyDict();
+    PyDict* research;
     if (m_agentData.research) {
-        PyTuple* skill1 = new PyTuple(2);
-            skill1->SetItem(0, new PyInt(11452)); // Mechanical Engineering
-            skill1->SetItem(1, new PyInt(4));
-        PyTuple* skill2 = new PyTuple(2);
-            skill2->SetItem(0, new PyInt(11453));  //Electronic Engineering
-            skill2->SetItem(1, new PyInt(3));
-        PyList* skillList = new PyList();
-            skillList->AddItem(skill1);
-            skillList->AddItem(skill2);
-        PyDict* researchData = new PyDict();
-            researchData->SetItemString("rpMultiplier", new PyInt(2));
-            researchData->SetItemString("skillTypeID", new PyInt(11452));   // this is player research field with this agent.  not sure how to make "none" yet
-            researchData->SetItemString("points", new PyInt(150));
-            researchData->SetItemString("pointsPerDay", new PyInt(30));
-        PyTuple* patent1 = new PyTuple(2);
-            patent1->SetItem(0, new PyInt(11452));
-        PyList* patentlist1 = new PyList();
-            patentlist1->AddItem(new PyInt(692));
-            patent1->SetItem(1, patentlist1);
-        PyTuple* patent2 = new PyTuple(2);
-            patent2->SetItem(0, new PyInt(11453));
-        PyList* patentlist2 = new PyList();
-            patentlist2->AddItem(new PyInt(1196));
-            patent2->SetItem(1, patentlist2);
-        PyList* patentList = new PyList();
-            patentList->AddItem(patent1);
-            patentList->AddItem(patent2);
-
-        research->SetItemString("agentServiceType", new PyString("research"));
-        research->SetItemString("skills", skillList);
-        research->SetItemString("researchSummary", patentList);
-        research->SetItemString("researchData", researchData);
+        research = new PyDict {
+            {"agentServiceType", new PyString ("research")},
+            {"skills", new PyList {
+                    new PyTuple {
+                        new PyInt (11452), // Mechanical Engineering
+                        new PyInt (4),
+                    },
+                    new PyTuple {
+                        new PyInt (11453), // Electronic Engineering
+                        new PyInt (3)
+                    }
+                }
+            },
+            {"researchSummary", new PyList {
+                    new PyTuple {
+                        new PyInt (11452),
+                        new PyList {
+                            new PyInt(692)
+                        }
+                    },
+                    new PyTuple {
+                        new PyInt (11453),
+                        new PyList {
+                            new PyInt(1196)
+                        }
+                    }
+                }
+            },
+            {"researchData", new PyDict {
+                    {"rpMultiplier", new PyInt (2)},
+                    {"skillTypeID", new PyInt (11452)}, // this is player research field with this agent.  not sure how to make "none" yet
+                    {"points", new PyInt (150)},
+                    {"pointsPerDay", new PyInt (30)}
+                }
+            }
+        };
     } else {
-        research->SetItemString("agentServiceType", PyStatic.NewNone());
+        research = new PyDict {
+            {"agentServiceType", PyStatic.NewNone()}
+        };
     }
 
     /* for location agents....
@@ -376,73 +378,80 @@ PyObject* Agent::GetInfoServiceDetails()
      (235850, `{[character]charID.gender -> "He", "She"} is at {stationName} station in the {systemName} system, {constellationName} constellation of {regionName} region.`)
      (235851, `{[character]charID.gender -> "He", "She"} is in the {systemName} system.`)
      */
-    PyDict* locate = new PyDict();
+    PyDict* locate;
     if (m_agentData.locator) {
-        PyTuple* sameSystem = new PyTuple(3);
-            sameSystem->SetItem(0, new PyInt(0));
-            sameSystem->SetItem(1, new PyInt(10));
-            sameSystem->SetItem(2, new PyInt(20000));
-        PyTuple* sameConst = new PyTuple(3);
-            sameConst->SetItem(0, PyStatic.NewOne());
-            sameConst->SetItem(1, new PyInt(30));
-            sameConst->SetItem(2, new PyInt(200000));
-        PyTuple* sameRegion = new PyTuple(3);
-            sameRegion->SetItem(0, new PyInt(2));
-            sameRegion->SetItem(1, new PyInt(60));
-            sameRegion->SetItem(2, new PyInt(2000000));
-        PyTuple* otherRegion = new PyTuple(3);
-            otherRegion->SetItem(0, new PyInt(3));
-            otherRegion->SetItem(1, new PyInt(120));
-            otherRegion->SetItem(2, new PyInt(20000000));
-        PyTuple* delays = new PyTuple(4);
-            delays->SetItem(0, sameSystem);
-            delays->SetItem(1, sameConst);
-            delays->SetItem(2, sameRegion);
-            delays->SetItem(3, otherRegion);
-
-        locate->SetItemString("agentServiceType", new PyString("locate"));
-        locate->SetItemString("frequency", new PyInt(1200));  // if this is PyNone (or 0?) agent location isnt avalible (client parsed msg)
-        locate->SetItemString("delays", delays);
-        locate->SetItemString("callbackID", new PyInt(2));
-        locate->SetItemString("lastUsed", new PyInt(0));
+        locate = new PyDict {
+            {"agentServiceType", new PyString ("locate")},
+            {"frequency", new PyInt (1200)}, // if this is PyNone (or 0?) agent location isnt avalible (client parsed msg)
+            {"delays", new PyTuple {
+                    new PyTuple {
+                        new PyInt (0),
+                        new PyInt (10),
+                        new PyInt (20000)
+                    },
+                    new PyTuple {
+                        PyStatic.NewNone(),
+                        new PyInt (30),
+                        new PyInt (200000)
+                    },
+                    new PyTuple {
+                        new PyInt (2),
+                        new PyInt (60),
+                        new PyInt (2000000)
+                    },
+                    new PyTuple {
+                        new PyInt (3),
+                        new PyInt (120),
+                        new PyInt (20000000)
+                    }
+                }
+            },
+            {"callbackID", new PyInt (2)},
+            {"lastUsed", new PyInt (0)}
+        };
     } else {
-        locate->SetItemString("agentServiceType", PyStatic.NewNone());
+        locate = new PyDict {
+            {"agentServiceType", PyStatic.NewNone()}
+        };
     }
-
-    // for mission agents....
-    PyDict* mission = new PyDict();
-        mission->SetItemString("agentServiceType", new PyString("mission"));
-        // will need to check standings vs agent level to determine this boolean
-        mission->SetItemString("available", new PyBool(true));
-
-    PyTuple* services = new PyTuple(3);
-        services->SetItem(0, new PyObject("util.KeyVal", research));
-        services->SetItem(1, new PyObject("util.KeyVal", locate));
-        services->SetItem(2, new PyObject("util.KeyVal", mission));
-    res->SetItemString("services", services);
 
     // standings info for this agent.
     /** @todo  finish this.... */
     std::string msg = "Your personal standings must be ";
     msg += GetMinReqStanding(m_agentData.level);
     msg += " or higher toward this agent, its faction, or its corporation in order to use this agent's services.";
-    res->SetItemString("incompatible", new PyString(msg));
+
+    PyDict* res = new PyDict {
+        {"stationID", new PyInt (m_agentData.stationID)},
+        {"level", new PyInt (m_agentData.level)},
+        {"services", new PyTuple {
+                new PyObject ("util.KeyVal", research),
+                new PyObject ("util.KeyVal", locate),
+                new PyObject ("util.KeyVal", new PyDict {
+                        {"agentServiceType", new PyString ("mission")},
+                        {"available", new PyBool (true)} // will need to check standings vs agent level to determine this boolean
+                    }
+                 )
+            }
+        },
+        {"incompatible", new PyString (msg)}
+    };
 
     /* can also use locale labelIDs for this using a tuple to define minStandings, minEffective, corpMinStandings, mainEffective, effectiveMinStandings in other msgIDs
      * this will take char, corp, faction, agent, and some other shit into account to determine msg and data sent using the tuple system
     //  note:  this is kinda hacked right now.
     PyDict* dict = new PyDict();
-        dict->SetItemString("minStandings", new PyFloat(GetMinReqStanding(m_agentData.level)));
-       // dict->SetItemString("mainEffective", new PyFloat(GetMinReqStanding(m_agentData.level +10)));
+        dict->set ("minStandings", new PyFloat(GetMinReqStanding(m_agentData.level)));
+       // dict->set ("mainEffective", new PyFloat(GetMinReqStanding(m_agentData.level +10)));
     PyTuple* tuple = new PyTuple(2);
         tuple->SetItem(0, new PyInt(235465));
         tuple->SetItem(1, dict);
-    res->SetItemString("incompatible", tuple);
+    res->set ("incompatible", tuple);
     */
 
     if (is_log_enabled(AGENT__RSP_DUMP)) {
         _log(AGENT__RSP_DUMP, "Agent::GetInfoServiceDetails() Dump:" );
-        res->Dump(AGENT__RSP_DUMP, "    ");
+        res->dump(AGENT__RSP_DUMP, "    ");
     }
 
     return new PyObject("util.KeyVal", res);
@@ -639,17 +648,22 @@ void Agent::UpdateStandings(Client* pClient, uint8 eventID, bool important/*fals
         sFltSvc.GetFleetClientsInSystem(pClient, clientVec);
         for (auto cur : clientVec) {
             sStandingMgr.UpdateStandings(m_agentID, cur->GetCharacterID(), eventID, fleetStanding, msg);
-            PyTuple* agent = new PyTuple(5);
-                agent->SetItem(0, new PyInt(m_agentID));
-                agent->SetItem(1, new PyInt(cur->GetCharacterID()));
-                agent->SetItem(2, new PyFloat(fleetStanding));
-                agent->SetItem(3, new PyInt(-1));
-                agent->SetItem(4, PyStatic.NewOne());
-            PyList* list = new PyList();
-                list->AddItem(agent);
-            PyTuple* payload = new PyTuple(1);
-                payload->SetItem(0, list);
-            cur->SendNotification("OnStandingsModified", "charid", payload, false);
+            cur->SendNotification(
+                "OnStandingsModified",
+                "charid",
+                new PyTuple {
+                    new PyList {
+                        new PyTuple {
+                            new PyInt (m_agentID),
+                            new PyInt (cur->GetCharacterID()),
+                            new PyFloat (fleetStanding),
+                            new PyInt (-1),
+                            PyStatic.NewNone()
+                        }
+                    }
+                },
+                false
+            );
             // fleet will share corp standings on some missions.  fix later.
         }
     }
@@ -664,34 +678,34 @@ void Agent::UpdateStandings(Client* pClient, uint8 eventID, bool important/*fals
         sStandingMgr.UpdateStandings(m_agentData.factionID, pClient->GetCorporationID(), eventID, newStanding * sConfig.standings.AFaction2PCorpMissionMultiplier, msg);
     }
 
-    PyTuple* agent = new PyTuple(5);
-        agent->SetItem(0, new PyInt(m_agentID));
-        agent->SetItem(1, new PyInt(charID));
-        agent->SetItem(2, new PyFloat(newStanding));
-        agent->SetItem(3, new PyInt(-1));
-        agent->SetItem(4, PyStatic.NewOne());
-    PyTuple* corp = new PyTuple(5);
-        corp->SetItem(0, new PyInt(m_agentData.corporationID));
-        corp->SetItem(1, new PyInt(charID));
-        corp->SetItem(2, new PyFloat(newStanding /4));
-        corp->SetItem(3, new PyInt(-1));
-        corp->SetItem(4, PyStatic.NewOne());
-    PyTuple* faction = new PyTuple(5);
-        faction->SetItem(0, new PyInt(m_agentData.factionID));
-        faction->SetItem(1, new PyInt(charID));
-        faction->SetItem(2, new PyFloat(newStanding /8));
-        faction->SetItem(3, new PyInt(-1));
-        faction->SetItem(4, PyStatic.NewOne());
-    PyList* list = new PyList();
-        list->AddItem(agent);
-        list->AddItem(corp);
-        list->AddItem(faction);
-    PyTuple* payload = new PyTuple(1);
-        payload->SetItem(0, list);
-
+    PyTuple* payload = new PyTuple {
+        new PyList {
+            new PyTuple {
+                new PyInt (m_agentID),
+                new PyInt (charID),
+                new PyFloat (newStanding),
+                new PyInt (-1),
+                PyStatic.NewNone()
+            },
+            new PyTuple {
+                new PyInt (m_agentData.corporationID),
+                new PyInt (charID),
+                new PyFloat (newStanding / 4),
+                new PyInt (-1),
+                PyStatic.NewNone()
+            },
+            new PyTuple {
+                new PyInt (m_agentData.factionID),
+                new PyInt (charID),
+                new PyFloat (newStanding / 8),
+                new PyInt (-1),
+                PyStatic.NewNone()
+            }
+        }
+    };
     if (is_log_enabled(STANDING__RSPDUMP)) {
         _log(STANDING__RSPDUMP, "Agent::UpdateStandings RSP:" );
-        payload->Dump(STANDING__RSPDUMP, "    ");
+        payload->dump(STANDING__RSPDUMP, "    ");
     }
 
     pClient->SendNotification("OnStandingsModified", "charid", payload, false);    // i *think* this is unsequenced
@@ -721,11 +735,16 @@ void Agent::SendMissionUpdate(Client* pClient, std::string action)
     agentMissionFailed = 'failed'
     */
 
-    PyTuple* payload = new PyTuple(3);
-        payload->SetItem(0, new PyString(action));
-        payload->SetItem(1, new PyInt(m_agentID));
-        payload->SetItem(2, PyStatic.NewNone());    // NOTE if we ever get tutorials working, this will need to be fixed.
-    pClient->SendNotification("OnAgentMissionChange", "charid", payload, false);    // i *think* this is unsequenced
+    pClient->SendNotification(
+        "OnAgentMissionChange",
+        "charid",
+        new PyTuple {
+            new PyString (action),
+            new PyInt (m_agentID),
+            PyStatic.NewNone() // NOTE if we ever get tutorials working, this will need to be fixed.
+        },
+        false
+    );    // i *think* this is unsequenced
 }
     //specific to the calling action
     //OnInteractWith(agentID)       (force agent convo)

@@ -33,9 +33,9 @@ public:
     PetitionerService();
 
 protected:
-    PyResult GetCategories(PyCallArgs& call);
-    PyResult GetCategoryHierarchicalInfo(PyCallArgs& call);
-    PyResult GetUnreadMessages(PyCallArgs& call);
+  EVEResult GetCategories(EVECallArgs& call);
+  EVEResult GetCategoryHierarchicalInfo(EVECallArgs& call);
+  EVEResult GetUnreadMessages(EVECallArgs& call);
 };
 
 #endif

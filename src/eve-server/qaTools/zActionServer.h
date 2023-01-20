@@ -21,8 +21,8 @@ public:
     zActionServer();
 
 protected:
-    PyResult RequestActionStart(PyCallArgs& call, PyInt* entityID, PyInt* actionID, PyBool* interrupt, PyDict* clientProps);
-    PyResult QA_RequestForceActionStart(PyCallArgs& call, PyInt* entityID, PyInt* actionID);
+  EVEResult RequestActionStart(EVECallArgs& call, PyInt* entityID, PyInt* actionID, PyBool* interrupt, PyDict* clientProps);
+  EVEResult QA_RequestForceActionStart(EVECallArgs& call, PyInt* entityID, PyInt* actionID);
 
 };
 

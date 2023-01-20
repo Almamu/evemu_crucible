@@ -53,10 +53,8 @@ class PySubStream;
 class InventoryItem;
 class SystemManager;
 class EVEServiceManager;
-class PyCallStream;
 class PyTuple;
 class LSCChannel;
-class PyAddress;
 class PyList;
 class PyDict;
 class PyPacket;
@@ -105,41 +103,41 @@ public:
     bool IsValidSession()                               { return m_validSession; }
     ClientSession* GetSession()                         { return pSession; }
     // these dont always work...still dont know why.  fixed.  was bad _comp method in PyDict
-    std::string GetAddress() const                      { return pSession->GetCurrentString( "address" ); }
-    std::string GetLanguageID() const                   { return pSession->GetCurrentString( "languageID" ); }
+    std::string GetAddress() const                      { return pSession->string( "address" ); }
+    std::string GetLanguageID() const                   { return pSession->string( "languageID" ); }
 
-    int32 GetUserID() const                             { return pSession->GetCurrentInt( "userid" ); }
-    int32 GetAccountType() const                        { return pSession->GetCurrentInt( "userType" ); }
+    int32 GetUserID() const                             { return pSession->i64( "userid" ); }
+    int32 GetAccountType() const                        { return pSession->i64( "userType" ); }
 
     // these below need Session initialized before use (which we dont do for char creation due to errors)
-    int32 GetCharacterID() const                        { return pSession->GetCurrentInt( "charid" ); }
-    int32 GetStationID() const                          { return pSession->GetCurrentInt( "stationid" ); }
-    int32 GetStationID2() const                         { return pSession->GetCurrentInt( "stationid2" ); }
-    int32 GetCloneStationID() const                     { return pSession->GetCurrentInt( "cloneStationID" ); }
+    int32 GetCharacterID() const                        { return pSession->i64( "charid" ); }
+    int32 GetStationID() const                          { return pSession->i64( "stationid" ); }
+    int32 GetStationID2() const                         { return pSession->i64( "stationid2" ); }
+    int32 GetCloneStationID() const                     { return pSession->i64( "cloneStationID" ); }
 
-    int64 GetAccountRole() const                        { return pSession->GetCurrentLong( "role" ); }
-    int64 GetClientID() const                           { return pSession->GetCurrentLong( "clientID" ); }
+    int64 GetAccountRole() const                        { return pSession->i64( "role" ); }
+    int64 GetClientID() const                           { return pSession->i64( "clientID" ); }
     //int64 GetSessionID() const                          { return pSession->GetCurrentLong( "sessionID" ); }
 
     double GetCorpTaxRate()                             { return (m_char.get() != nullptr ? m_char->corpTaxRate() : 0.0); }
-    int32 GetCorporationID() const                      { return pSession->GetCurrentInt( "corpid" ); }
-    int32 GetCorpHQ() const                             { return pSession->GetCurrentInt( "hqID" ); }
-    int32 GetAllianceID() const                         { return pSession->GetCurrentInt( "allianceid" ); }
-    int32 GetWarFactionID() const                       { return pSession->GetCurrentInt( "warfactionid" ); }
-    int32 GetCorpAccountKey() const                     { return pSession->GetCurrentInt( "corpAccountKey" ); }
+    int32 GetCorporationID() const                      { return pSession->i64( "corpid" ); }
+    int32 GetCorpHQ() const                             { return pSession->i64( "hqID" ); }
+    int32 GetAllianceID() const                         { return pSession->i64( "allianceid" ); }
+    int32 GetWarFactionID() const                       { return pSession->i64( "warfactionid" ); }
+    int32 GetCorpAccountKey() const                     { return pSession->i64( "corpAccountKey" ); }
     // corporation management-type roles (manager, officer, trader)  also has container roles
-    int64 GetCorpRole() const                           { return pSession->GetCurrentLong( "corprole" ); }
+    int64 GetCorpRole() const                           { return pSession->i64( "corprole" ); }
     // access roles everywhere.  is joined with other access roles
-    int64 GetRolesAtAll() const                         { return pSession->GetCurrentLong( "rolesAtAll" ); }
+    int64 GetRolesAtAll() const                         { return pSession->i64( "rolesAtAll" ); }
     // access roles at base. overrides hq if same location
-    int64 GetRolesAtBase() const                        { return pSession->GetCurrentLong( "rolesAtBase" ); }
+    int64 GetRolesAtBase() const                        { return pSession->i64( "rolesAtBase" ); }
     // access roles at corp HQ.
-    int64 GetRolesAtHQ() const                          { return pSession->GetCurrentLong( "rolesAtHQ" ); }
+    int64 GetRolesAtHQ() const                          { return pSession->i64( "rolesAtHQ" ); }
     // access roles for non-station containers with corp hangars
-    int64 GetRolesAtOther() const                       { return pSession->GetCurrentLong( "rolesAtOther" ); }
+    int64 GetRolesAtOther() const                       { return pSession->i64( "rolesAtOther" ); }
 
     // fleet data
-    int8 GetFleetRole()                                 { return pSession->GetCurrentInt("fleetrole"); }
+    int8 GetFleetRole()                                 { return pSession->i64("fleetrole"); }
 
     bool InFleet()                                      { return IsFleetID(m_fleet); }
     bool IsFleetBoss()                                  { return (IsFleetID(m_fleet) ? ((GetFleetRole() == Fleet::Role::FleetLeader) ? true : false) : false); }
@@ -297,7 +295,7 @@ public:
     void ChannelLeft(LSCChannel *chan);
     void UpdateSessionInt( const char *sessionType, int value );
 
-    PyRep *GetAggressors() const;
+    PyDataType *GetAggressors() const;
     void QueueDestinyUpdate(PyTuple** update, bool DoPackage=false, bool IsSetState=false);
     void QueueDestinyEvent(PyTuple** multiEvent);
     void FlushQueue();
@@ -420,7 +418,7 @@ protected:
     /********************************************************************/
     /* EVEClientSession interface                                       */
     /********************************************************************/
-    void _GetVersion( VersionExchangeServer& version );
+    void _GetVersion( EVELowLevelVersionExchange& version );
     uint32 GetUserCount();
     uint32 _GetQueuePosition()                          { /* hack */ return 1; }
 
@@ -428,18 +426,18 @@ protected:
     /* EVEClientLogin statemachine                                      */
     /********************************************************************/
     bool _LoginFail(std::string fail_msg);
-    bool _VerifyVersion( VersionExchangeClient& version );
-    bool _VerifyCrypto( CryptoRequestPacket& cr );
-    bool _VerifyLogin( CryptoChallengePacket& ccp );
+    bool _VerifyVersion( EVELowLevelVersionExchange& version );
+    bool _VerifyCrypto( const std::string& keyVersion, PyDict* keyParams );
+    bool _VerifyLogin( EVESecureClientHandshake& ccp );
     bool _VerifyVIPKey( const std::string& vipKey )     { /* do nothing */ return true; }
-    bool _VerifyFuncResult( CryptoHandshakeResult& result );
+    bool _VerifyFuncResult( const std::string& challenge_responsehash, const std::string& func_output );
 
     /********************************************************************/
     /* EVEPacketDispatcher interface                                    */
     /********************************************************************/
 public:
     void SendSessionChange();
-    void SendNotification(const PyAddress &dest, EVENotificationStream &noti, bool seq=true);
+    void SendNotification(const EVEPacketAddress &dest, EVENotificationStream &noti, bool seq=true);
     void SendNotification(const char *notifyType, const char *idType, PyTuple *payload, bool seq=true);
     void SendNotification(const char *notifyType, const char *idType, PyTuple **payload, bool seq=true);
 
@@ -462,14 +460,14 @@ protected:
     void SendInitialSessionStatus ();
     void UpdateSession();
     void _SendPingRequest();
-    void _SendException( const PyAddress& source, int64 callID, MACHONETMSG_TYPE in_response_to, MACHONETERR_TYPE exception_type, PyRep** payload );
-    void _SendCallReturn( const PyAddress& source, int64 callID, PyResult& rsp);
-    void _SendPingResponse( const PyAddress& source, int64 callID );
+    void _SendException( const EVEPacketAddress& source, int64 callID, MACHONETMSG_TYPE in_response_to, MACHONETERR_TYPE exception_type, PyDataType** payload );
+    void _SendCallReturn (const EVEPacketAddress& source, int64 callID, EVEResult& rsp, PythonArena& arena, bool checkArenaOwnership = true);
+    void _SendPingResponse( const EVEPacketAddress& source, int64 callID );
 
-    bool Handle_CallReq( PyPacket* packet, PyCallStream& req );
-    bool Handle_Notify( PyPacket* packet );
-    bool Handle_PingReq( PyPacket* packet )             { _SendPingResponse( packet->dest, packet->source.callID ); return true; }
-    bool Handle_PingRsp( PyPacket* packet )             { /* do nothing */ return true; }
+    bool Handle_CallReq (EVEPacket& packet, EVECallStream& req);
+    bool Handle_Notify (EVEPacket& packet);
+    bool Handle_PingReq (EVEPacket& packet)             { _SendPingResponse( packet.dest, packet.source.callID ); return true; }
+    bool Handle_PingRsp (EVEPacket& packet)             { /* do nothing */ return true; }
 
 private:
     //queues for destiny updates:

@@ -31,6 +31,7 @@
 
 #include "eve-compat.h"
 
+#include "python/memory/PythonArena.h"
 
 // this file should have all stuff regarding attribute caching..
 enum EVIL_NUMBER_TYPE
@@ -40,8 +41,8 @@ enum EVIL_NUMBER_TYPE
     evil_number_float,
 };
 
-
-class PyRep;
+class PyDataType;
+class PythonArena;
 
 /**
  * @class EvilNumber
@@ -371,7 +372,8 @@ public:
      *
      * @return the python object of the EvilNumber.
      */
-    PyRep* GetPyObject();
+     // TODO: REMOVE THIS DEFAULT PARAMETER ONCE THE MIGRATION IS COMPLETED
+    PyDataType* GetPyObject(PythonArena* arena = HeapPythonArena::instance);
 
     EVIL_NUMBER_TYPE get_type()                         { return mType; }
 

@@ -32,15 +32,15 @@
 
 class PyRep;
 class PyTuple;
-class PyResult;
+class EVEResult;
 
 class ShipDB
 : public ServiceDB
 {
 public:
     // insurance functions  -allan  21Jul14
-    PyRep *GetInsuranceByShipID(uint32 shipID);
-    PyRep *GetInsuranceByOwnerID(uint32 ownerID);
+    PyDataType *GetInsuranceByShipID(uint32 shipID);
+    PyDataType *GetInsuranceByOwnerID(uint32 ownerID);
     bool InsertInsuranceByShipID(uint32 shipID, std::string name, uint32 ownerID, float level, double payOut, bool isCorpItem = false, uint8 numWeeks = 12);
 	static void DeleteInsuranceByShipID(uint32 shipID);
 

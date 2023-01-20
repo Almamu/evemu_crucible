@@ -71,7 +71,7 @@ public:
     void RepairModule(GenericModule* pMod, EvilNumber amount);
     void RepairModules();
     // this is for repairing modules with nanite paste
-    PyRep* ModuleRepair(uint32 modID);
+    PyDataType* ModuleRepair(uint32 modID);
     void StopModuleRepair(uint32 modID);
     // this will move charge item to module and split stack if needed
     // must NOT throw

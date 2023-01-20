@@ -95,12 +95,12 @@ CharacterType *CharacterType::Load(uint16 typeID) {
  */
 void CharacterAppearance::Build(uint32 ownerID, PyDict* data)
 {
-    PyList* colors = data->GetItemString("colors")->AsList();
+    PyList* colors = data->get("colors")->as<PyList>();
     PyList::const_iterator color_cur = colors->begin();
     for (; color_cur != colors->end(); ++color_cur) {
-        if ((*color_cur)->IsObjectEx()) {
-            PyObjectEx_Type2* color_obj = (PyObjectEx_Type2*)(*color_cur)->AsObjectEx();
-            PyTuple* color_tuple = color_obj->GetArgs()->AsTuple();
+        if ((*color_cur)->is<PyObjectEx>()) {
+            PyObjectEx_Type2* color_obj = (PyObjectEx_Type2*)(*color_cur)->as<PyObjectEx>();
+            PyTuple* color_tuple = color_obj->args();
             //color tuple data structure
             //[0] PyToken
             //[1] colorID
@@ -110,26 +110,26 @@ void CharacterAppearance::Build(uint32 ownerID, PyDict* data)
             //[5] gloss
 
             m_db.SetAvatarColors(ownerID,
-                                 PyRep::IntegerValue(color_tuple->GetItem(1)),
-                                 PyRep::IntegerValue(color_tuple->GetItem(2)),
-                                 PyRep::IntegerValue(color_tuple->GetItem(3)),
-                                 color_tuple->GetItem(4)->AsFloat()->value(),
-                                 color_tuple->GetItem(5)->AsFloat()->value());
+                                 color_tuple->at (1)->i64(),
+                                 color_tuple->at (2)->i64(),
+                                 color_tuple->at (3)->i64(),
+                                 color_tuple->at (4)->as<PyFloat>()->value(),
+                                 color_tuple->at (5)->as<PyFloat>()->value());
         }
     }
 
-    PyObjectEx* appearance = data->GetItemString("appearance")->AsObjectEx();
+    PyObjectEx* appearance = data->get("appearance")->as<PyObjectEx>();
     PyObjectEx_Type2* app_obj = (PyObjectEx_Type2*)appearance;
-    PyTuple* app_tuple = app_obj->GetArgs()->AsTuple();
+    PyTuple* app_tuple = app_obj->args();
 
-    m_db.SetAvatar(ownerID, app_tuple->GetItem(1));
+    m_db.SetAvatar(ownerID, app_tuple->at (1));
 
-    PyList* modifiers = data->GetItemString("modifiers")->AsList();
+    PyList* modifiers = data->get("modifiers")->as<PyList>();
     PyList::const_iterator modif_cur = modifiers->begin();
     for (; modif_cur != modifiers->end(); ++modif_cur) {
-        if ((*modif_cur)->IsObjectEx()) {
-            PyObjectEx_Type2* modif_obj = (PyObjectEx_Type2*)(*modif_cur)->AsObjectEx();
-            PyTuple* modif_tuple = modif_obj->GetArgs()->AsTuple();
+        if ((*modif_cur)->is<PyObjectEx>()) {
+            PyObjectEx_Type2* modif_obj = (PyObjectEx_Type2*)(*modif_cur)->as<PyObjectEx>();
+            PyTuple* modif_tuple = modif_obj->args();
 
             //color tuple data structure
             //[0] PyToken
@@ -137,18 +137,18 @@ void CharacterAppearance::Build(uint32 ownerID, PyDict* data)
             //[2] paperdollResourceID
             //[3] paperdollResourceVariation
             m_db.SetAvatarModifiers(ownerID,
-                                    modif_tuple->GetItem(1),
-                                    modif_tuple->GetItem(2),
-                                    modif_tuple->GetItem(3));
+                                    modif_tuple->at (1),
+                                    modif_tuple->at (2),
+                                    modif_tuple->at (3));
         }
     }
 
-    PyList* sculpts = data->GetItemString("sculpts")->AsList();
+    PyList* sculpts = data->get("sculpts")->as<PyList>();
     PyList::const_iterator sculpt_cur = sculpts->begin();
     for (; sculpt_cur != sculpts->end(); sculpt_cur++) {
-        if ((*sculpt_cur)->IsObjectEx()) {
-            PyObjectEx_Type2* sculpt_obj = (PyObjectEx_Type2*)(*sculpt_cur)->AsObjectEx();
-            PyTuple* sculpt_tuple = sculpt_obj->GetArgs()->AsTuple();
+        if ((*sculpt_cur)->is<PyObjectEx>()) {
+            PyObjectEx_Type2* sculpt_obj = (PyObjectEx_Type2*)(*sculpt_cur)->as<PyObjectEx>();
+            PyTuple* sculpt_tuple = sculpt_obj->args();
 
             //sculpts tuple data structure
             //[0] PyToken
@@ -157,10 +157,10 @@ void CharacterAppearance::Build(uint32 ownerID, PyDict* data)
             //[3] weightLeftRight
             //[4] weightForwardBack
             m_db.SetAvatarSculpts(ownerID,
-                                sculpt_tuple->GetItem(1),
-                                sculpt_tuple->GetItem(2),
-                                sculpt_tuple->GetItem(3),
-                                sculpt_tuple->GetItem(4));
+                                sculpt_tuple->at (1),
+                                sculpt_tuple->at (2),
+                                sculpt_tuple->at (3),
+                                sculpt_tuple->at (4));
         }
     }
 }
@@ -174,52 +174,52 @@ void CharacterPortrait::Build(uint32 charID, PyDict* data)
 {
     PortraitInfo info = PortraitInfo();
 
-    info.backgroundID = PyRep::IntegerValue(data->GetItemString("backgroundID"));
-    info.lightColorID = PyRep::IntegerValue(data->GetItemString("lightColorID"));
-    info.lightID = PyRep::IntegerValue(data->GetItemString("lightID"));
+    info.backgroundID = data->get("backgroundID")->i64();
+    info.lightColorID = data->get("lightColorID")->i64();
+    info.lightID = data->get("lightID")->i64();
 
-    info.cameraFieldOfView = data->GetItemString("cameraFieldOfView")->AsFloat()->value();
-    info.lightIntensity = data->GetItemString("lightIntensity")->AsFloat()->value();
+    info.cameraFieldOfView = data->get("cameraFieldOfView")->as<PyFloat>()->value();
+    info.lightIntensity = data->get("lightIntensity")->as<PyFloat>()->value();
 
-    PyTuple* cameraPoi = data->GetItemString("cameraPoi")->AsTuple();
-    info.cameraPoiX = cameraPoi->GetItem(0)->AsFloat()->value();
-    info.cameraPoiY = cameraPoi->GetItem(1)->AsFloat()->value();
-    info.cameraPoiZ = cameraPoi->GetItem(2)->AsFloat()->value();
+    PyTuple* cameraPoi = data->get("cameraPoi")->as<PyTuple>();
+    info.cameraPoiX = cameraPoi->at (0)->as<PyFloat>()->value();
+    info.cameraPoiY = cameraPoi->at (1)->as<PyFloat>()->value();
+    info.cameraPoiZ = cameraPoi->at (2)->as<PyFloat>()->value();
 
-    PyTuple* cameraPosition = data->GetItemString("cameraPosition")->AsTuple();
-    info.cameraX = cameraPosition->GetItem(0)->AsFloat()->value();
-    info.cameraY = cameraPosition->GetItem(1)->AsFloat()->value();
-    info.cameraZ = cameraPosition->GetItem(2)->AsFloat()->value();
+    PyTuple* cameraPosition = data->get("cameraPosition")->as<PyTuple>();
+    info.cameraX = cameraPosition->at (0)->as<PyFloat>()->value();
+    info.cameraY = cameraPosition->at (1)->as<PyFloat>()->value();
+    info.cameraZ = cameraPosition->at (2)->as<PyFloat>()->value();
 
-    PyDict* poseData = data->GetItemString("poseData")->AsDict();
-    PyTuple* HeadLookTarget = poseData->GetItemString("HeadLookTarget")->AsTuple();
-    info.headLookTargetX = HeadLookTarget->GetItem(0)->AsFloat()->value();
-    info.headLookTargetY = HeadLookTarget->GetItem(1)->AsFloat()->value();
-    info.headLookTargetZ = HeadLookTarget->GetItem(2)->AsFloat()->value();
+    PyDict* poseData = data->get("poseData")->as<PyDict>();
+    PyTuple* HeadLookTarget = poseData->get("HeadLookTarget")->as<PyTuple>();
+    info.headLookTargetX = HeadLookTarget->at (0)->as<PyFloat>()->value();
+    info.headLookTargetY = HeadLookTarget->at (1)->as<PyFloat>()->value();
+    info.headLookTargetZ = HeadLookTarget->at (2)->as<PyFloat>()->value();
 
-    info.browLeftCurl = poseData->GetItemString("BrowLeftCurl")->AsFloat()->value();
-    info.browLeftUpDown = poseData->GetItemString("BrowLeftUpDown")->AsFloat()->value();
-    info.browLeftTighten = poseData->GetItemString("BrowLeftTighten")->AsFloat()->value();
-    info.browRightCurl = poseData->GetItemString("BrowRightCurl")->AsFloat()->value();
-    info.browRightUpDown = poseData->GetItemString("BrowRightUpDown")->AsFloat()->value();
-    info.browRightTighten = poseData->GetItemString("BrowRightTighten")->AsFloat()->value();
+    info.browLeftCurl = poseData->get("BrowLeftCurl")->as<PyFloat>()->value();
+    info.browLeftUpDown = poseData->get("BrowLeftUpDown")->as<PyFloat>()->value();
+    info.browLeftTighten = poseData->get("BrowLeftTighten")->as<PyFloat>()->value();
+    info.browRightCurl = poseData->get("BrowRightCurl")->as<PyFloat>()->value();
+    info.browRightUpDown = poseData->get("BrowRightUpDown")->as<PyFloat>()->value();
+    info.browRightTighten = poseData->get("BrowRightTighten")->as<PyFloat>()->value();
 
-    info.squintLeft = poseData->GetItemString("SquintLeft")->AsFloat()->value();
-    info.smileLeft = poseData->GetItemString("SmileLeft")->AsFloat()->value();
-    info.frownLeft = poseData->GetItemString("FrownLeft")->AsFloat()->value();
-    info.squintRight = poseData->GetItemString("SquintRight")->AsFloat()->value();
-    info.smileRight = poseData->GetItemString("SmileRight")->AsFloat()->value();
-    info.frownRight = poseData->GetItemString("FrownRight")->AsFloat()->value();
+    info.squintLeft = poseData->get("SquintLeft")->as<PyFloat>()->value();
+    info.smileLeft = poseData->get("SmileLeft")->as<PyFloat>()->value();
+    info.frownLeft = poseData->get("FrownLeft")->as<PyFloat>()->value();
+    info.squintRight = poseData->get("SquintRight")->as<PyFloat>()->value();
+    info.smileRight = poseData->get("SmileRight")->as<PyFloat>()->value();
+    info.frownRight = poseData->get("FrownRight")->as<PyFloat>()->value();
 
-    info.jawUp = poseData->GetItemString("JawUp")->AsFloat()->value();
-    info.jawSideways = poseData->GetItemString("JawSideways")->AsFloat()->value();
-    info.headTilt = poseData->GetItemString("HeadTilt")->AsFloat()->value();
-    info.eyeClose = poseData->GetItemString("EyeClose")->AsFloat()->value();
-    info.eyesLookHorizontal = poseData->GetItemString("EyesLookHorizontal")->AsFloat()->value();
-    info.eyesLookVertical = poseData->GetItemString("EyesLookVertical")->AsFloat()->value();
-    info.orientChar = poseData->GetItemString("OrientChar")->AsFloat()->value();
-    info.portraitPoseNumber = poseData->GetItemString("PortraitPoseNumber")->AsFloat()->value();
-    info.puckerLips = poseData->GetItemString("PuckerLips")->AsFloat()->value();
+    info.jawUp = poseData->get("JawUp")->as<PyFloat>()->value();
+    info.jawSideways = poseData->get("JawSideways")->as<PyFloat>()->value();
+    info.headTilt = poseData->get("HeadTilt")->as<PyFloat>()->value();
+    info.eyeClose = poseData->get("EyeClose")->as<PyFloat>()->value();
+    info.eyesLookHorizontal = poseData->get("EyesLookHorizontal")->as<PyFloat>()->value();
+    info.eyesLookVertical = poseData->get("EyesLookVertical")->as<PyFloat>()->value();
+    info.orientChar = poseData->get("OrientChar")->as<PyFloat>()->value();
+    info.portraitPoseNumber = poseData->get("PortraitPoseNumber")->as<PyFloat>()->value();
+    info.puckerLips = poseData->get("PuckerLips")->as<PyFloat>()->value();
 
     m_db.SetPortraitInfo(charID, info);
 }
@@ -378,7 +378,7 @@ bool Character::AlterBalance(float amount, uint8 type) {
 
     // amount can be negative.  check for funds to remove, if applicable
     if ((balance(type) + amount) < 0) {
-        std::map<std::string, PyRep *> args;
+        std::map<std::string, PyDataType *> args;
         args["amount"] = new PyFloat(-amount);
         args["balance"] = new PyFloat(balance(type));
         throw UserError ("NotEnoughMoney")
@@ -539,7 +539,7 @@ bool Character::HasSkill(uint16 skillTypeID) const {
     return (GetCharSkillRef(skillTypeID).get() != nullptr);
 }
 
-PyRep* Character::GetSkillHistory() {
+PyDataType* Character::GetSkillHistory() {
     return m_db.GetSkillHistory(m_itemID);
 }
 
@@ -592,7 +592,7 @@ bool Character::HasSkillTrainedToLevel(uint16 skillTypeID, uint8 skillLevel) con
     return true;
 }
 
-PyRep* Character::GetRAMSkills()
+PyDataType* Character::GetRAMSkills()
 {
     /*  this queries RAM skills and is used to display blueprints tab (S&I -> Blueprints)
      *      called by RamProxy::GetRelevantCharSkills()
@@ -605,20 +605,19 @@ PyRep* Character::GetRAMSkills()
      *            attributeValues  << this is a dict of max ram jobs
      */
 
-    PyDict* skillLevels = new PyDict();
-        skillLevels->SetItem(new PyInt(EVEDB::invTypes::ScientificNetworking), new PyInt(GetSkillLevel(EvESkill::ScientificNetworking)));
-        skillLevels->SetItem(new PyInt(EVEDB::invTypes::SupplyChainManagement), new PyInt(GetSkillLevel(EvESkill::SupplyChainManagement)));
-
     uint8 mLab = 1 + GetSkillLevel(EvESkill::LaboratoryOperation) + GetSkillLevel(EvESkill::AdvancedLaboratoryOperation);
     uint8 mSlot = 1 + GetSkillLevel(EvESkill::MassProduction) + GetSkillLevel(EvESkill::AdvancedMassProduction);
-    PyDict* attributeValues = new PyDict();
-        attributeValues->SetItem(new PyInt(AttrMaxLaborotorySlots), new PyInt(mLab));
-        attributeValues->SetItem(new PyInt(AttrManufactureSlotLimit), new PyInt(mSlot));
 
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, skillLevels);
-        tuple->SetItem(1, attributeValues);
-    return tuple;
+    return new PyTuple {
+        new PyDict {
+            {new PyInt(EVEDB::invTypes::ScientificNetworking), new PyInt(GetSkillLevel(EvESkill::ScientificNetworking))},
+            {new PyInt(EVEDB::invTypes::SupplyChainManagement), new PyInt(GetSkillLevel(EvESkill::SupplyChainManagement))}
+        },
+        new PyDict {
+            {new PyInt(AttrMaxLaborotorySlots), new PyInt(mLab)},
+            {new PyInt(AttrManufactureSlotLimit), new PyInt(mSlot)}
+        }
+    };
 }
 
 int64 Character::GetEndOfTraining() {
@@ -664,14 +663,14 @@ PyTuple *Character::SendSkillQueue() {
         SkillQueue_Element el;
         el.typeID = cur.typeID;
         el.level = cur.level;
-        list->AddItem( el.Encode() );
+        list->add( el.Encode() );
     }
 
     // and encapsulate it in a tuple with the free points
-    PyTuple *tuple = new PyTuple(2);
-        tuple->SetItem(0, list);
-        tuple->SetItem(1, new PyInt(m_freePoints));
-    return tuple;
+    return new PyTuple {
+        list,
+        new PyInt (m_freePoints)
+    };
 }
 
 uint32 Character::GetTotalSP() {
@@ -1092,7 +1091,7 @@ void Character::SkillQueueLoop(bool update/*true*/)
                 m_pClient->QueueDestinyEvent(&tmp);
             } else if (m_pClient->IsLogin())
                 // for login, use OnMultipleSkillsTrained[]
-                list->AddItemInt(skill->itemID());
+                list->add(new PyInt (skill->itemID()));
 
             if (m_pClient->IsInSpace() and update) {
                 switch (skill->groupID()) {
@@ -1182,7 +1181,7 @@ void Character::UpdateSkillQueueEndTime()
     SaveSkillQueue();
 }
 
-PyDict *Character::GetCharInfo() {
+PyDict *Character::GetCharInfo(PythonArena* arena) {
     // this is char, skills, implants, boosters.
     if (!pInventory->ContentsLoaded())
         if (!pInventory->LoadContents()) {
@@ -1191,11 +1190,13 @@ PyDict *Character::GetCharInfo() {
         }
 
     Rsp_CommonGetInfo_Entry entry1;
-    if (!Populate(entry1))
+    if (!Populate(entry1, arena))
         return nullptr;
 
-    PyDict *result = new PyDict();
-    result->SetItem(new PyInt(m_itemID), new PyObject("util.KeyVal", entry1.Encode()));
+    // TODO: REMOVE THIS CLONE ONCE THE STRUCTURE IS REWRITTEN
+    PyDict* result = arena->Dict ({
+        {arena->Int (m_itemID), arena->Object ("util.KeyVal", entry1.Encode()->clone (arena))}
+    });
 
     //now encode skills...
     std::vector<InventoryItemRef> skills;
@@ -1209,8 +1210,9 @@ PyDict *Character::GetCharInfo() {
     //encode an entry for each one.
     for (auto cur : skills) {
         Rsp_CommonGetInfo_Entry entry;
-        if (cur->Populate(entry)) {
-            result->SetItem(new PyInt(cur->itemID()), new PyObject("util.KeyVal", entry.Encode()));
+        if (cur->Populate(entry, arena)) {
+            // TODO: REMOVE THIS CLONE ONCE THE STRUCTURE IS REWRITTEN
+            result->set(arena->Int(cur->itemID()), arena->Object("util.KeyVal", entry.Encode()->clone (arena)));
         } else {
             codelog(CHARACTER__ERROR, "%s (%u): Failed to load character item %u for GetCharInfo", name(), m_itemID, cur->itemID());
         }
@@ -1223,9 +1225,12 @@ PyDict *Character::GetCharInfo() {
 
 PyObject *Character::GetDescription() const {
     util_Row row;
-        row.header.push_back("description");
-        row.line = new PyList();
-        row.line->AddItemString( description().c_str() );
+
+    row.header.push_back("description");
+    row.line = new PyList {
+        new PyString (description().c_str ())
+    };
+
     return row.Encode();
 }
 

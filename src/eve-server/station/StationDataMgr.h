@@ -8,10 +8,7 @@
   *
   */
 
-
-#ifndef _EVE_SERVER_STATION_DATAMANAGER_H__
-#define _EVE_SERVER_STATION_DATAMANAGER_H__
-
+#pragma once
 
 #include "../eve-server.h"
 #include "POD_containers.h"
@@ -38,7 +35,7 @@ public:
     bool                GetStationData(uint32 stationID, StationData& data);
     uint32              GetStationServiceMask(uint32 stationID) { auto it = m_stationData.find(stationID); return it->second.serviceMask; }
 
-    PyRep*              GetStationItemBits(uint32 stationID);
+    PyDataType*              GetStationItemBits(uint32 stationID, PythonArena* arena);
     PyObject*           GetStationPyData(uint32 stationID);
 
     uint32              GetOwnerID(uint32 stationID);
@@ -73,5 +70,3 @@ private:
 #define stDataMgr \
     ( StationDataMgr::get() )
 
-
-#endif  // _EVE_SERVER_STATION_DATAMANAGER_H__

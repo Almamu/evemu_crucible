@@ -48,7 +48,7 @@ InsuranceService::InsuranceService(EVEServiceManager& mgr) :
 	//SetSessionCheck?
 }
 
-BoundDispatcher* InsuranceService::BindObject(Client* client, PyRep* bindParameters) {
+BoundDispatcher* InsuranceService::BindObject(Client* client, PyDataType* bindParameters) {
     return new InsuranceBound(this->GetServiceManager(), *this, &m_db );
 }
 
@@ -56,11 +56,11 @@ void InsuranceService::BoundReleased (InsuranceBound* bound) {
 
 }
 
-PyResult InsuranceService::GetContractForShip(PyCallArgs& call, PyInt* shipID) {
+EVEResult InsuranceService::GetContractForShip(EVECallArgs& call, PyInt* shipID) {
     return m_db.GetInsuranceByShipID(shipID->value());
 }
 
-PyResult InsuranceService::GetInsurancePrice(PyCallArgs& call, PyInt* typeID) {
+EVEResult InsuranceService::GetInsurancePrice(EVECallArgs& call, PyInt* typeID) {
     /* called in space */
     const ItemType* type = sItemFactory.GetType(typeID->value());
     if (type != nullptr)
@@ -81,12 +81,12 @@ InsuranceBound::InsuranceBound(EVEServiceManager& mgr, InsuranceService& parent,
     this->m_lsc = this->GetServiceManager().Lookup <LSCService>("LSC");
 }
 
-PyResult InsuranceBound::UnInsureShip(PyCallArgs& call, PyInt* shipID) {
+EVEResult InsuranceBound::UnInsureShip(EVECallArgs& call, PyInt* shipID) {
     m_db->DeleteInsuranceByShipID(shipID->value());
     return PyStatic.NewNone();
 }
 
-PyResult InsuranceBound::GetInsurancePrice(PyCallArgs& call, PyInt* typeID) {
+EVEResult InsuranceBound::GetInsurancePrice(EVECallArgs& call, PyInt* typeID) {
     /* called when docked */
     const ItemType *type = sItemFactory.GetType(typeID->value());
     if (type != nullptr)
@@ -95,7 +95,7 @@ PyResult InsuranceBound::GetInsurancePrice(PyCallArgs& call, PyInt* typeID) {
     return PyStatic.NewZero();
 }
 
-PyResult InsuranceBound::GetContracts(PyCallArgs& call, std::optional<PyRep*> isCorporation) {
+EVEResult InsuranceBound::GetContracts(EVECallArgs& call, std::optional<PyDataType*> isCorporation) {
     if (isCorporation.has_value()) {
         return m_db->GetInsuranceByOwnerID(call.client->GetCorporationID());
     }
@@ -103,8 +103,8 @@ PyResult InsuranceBound::GetContracts(PyCallArgs& call, std::optional<PyRep*> is
     return m_db->GetInsuranceByOwnerID(call.client->GetCharacterID());
 }
 
-PyResult InsuranceBound::InsureShip(PyCallArgs& call, PyInt* shipID, PyFloat* amount, std::optional<PyInt*> isCorporation) {
-    call.Dump(SERVICE__CALL_DUMP);
+EVEResult InsuranceBound::InsureShip(EVECallArgs& call, PyInt* shipID, PyFloat* amount, std::optional<PyInt*> isCorporation) {
+    call.dump(SERVICE__CALL_DUMP);
     InventoryItemRef shipRef = sItemFactory.GetItemRef(shipID->value());
     if (shipRef.get() == nullptr)       // make error here
         return nullptr;
@@ -158,7 +158,7 @@ PyResult InsuranceBound::InsureShip(PyCallArgs& call, PyInt* shipID, PyFloat* am
 
     if (m_db->IsShipInsured(shipID->value())) {     //this hits db...can you insure unloaded ship? (if no, make this a ship memobj)
         if (call.byname.find("voidOld") != call.byname.end()) {
-            if (call.byname.find("voidOld")->second->AsBool()->value())
+            if (call.byname.find("voidOld")->second->as<PyBool>()->value())
                 ShipDB::DeleteInsuranceByShipID(shipID->value());
         } else {  // this will send voidOld=true after asking player to cancel old insurance
             throw UserError ("InsureShipFailedSingleContract");

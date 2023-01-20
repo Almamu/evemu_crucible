@@ -27,36 +27,36 @@ public:
     uint32 GetFleetID() { return this->m_fleetID; }
 
 protected:
-    PyResult Init(PyCallArgs& call, std::optional <PyInt*> shipTypeID);
-    PyResult GetInitState(PyCallArgs& call);
-    PyResult GetFleetID(PyCallArgs& call);
-    PyResult Invite(PyCallArgs& call, PyInt* characterID, std::optional<PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyLong*> role);
-    PyResult AcceptInvite(PyCallArgs& call, std::optional <PyInt*> shipTypeID);
-    PyResult RejectInvite(PyCallArgs& call);
-    PyResult ChangeWingName(PyCallArgs& call, PyInt* wingID, PyRep* name);
-    PyResult ChangeSquadName(PyCallArgs& call, PyInt* squadID, PyRep* name);
-    PyResult SetOptions(PyCallArgs& call, PyObject* options);
-    PyResult GetJoinRequests(PyCallArgs& call);
-    PyResult RejectJoinRequest(PyCallArgs& call, PyInt* characterID);
-    PyResult AddToVoiceChat(PyCallArgs& call, PyRep* channelName);
-    PyResult SetVoiceMuteStatus(PyCallArgs& call, PyRep* status, PyRep* channel);
-    PyResult ExcludeFromVoiceMute(PyCallArgs& call, PyInt* characterID, PyRep* channel);
-    PyResult GetFleetComposition(PyCallArgs& call);
-    PyResult GetWings(PyCallArgs& call);
-    PyResult SendBroadcast(PyCallArgs& call, PyRep* message, PyInt* group, PyInt* itemID);
-    PyResult UpdateMemberInfo(PyCallArgs& call, std::optional <PyInt*> shipTypeID);
-    PyResult SetMotdEx(PyCallArgs& call, PyRep* motd);
-    PyResult GetMotd(PyCallArgs& call);
-    PyResult LeaveFleet(PyCallArgs& call);
-    PyResult MakeLeader(PyCallArgs& call, PyInt* characterID);
-    PyResult SetBooster(PyCallArgs& call, PyInt* characterID, std::optional <PyInt*> roleBooster);
-    PyResult MoveMember(PyCallArgs& call, PyInt* characterID, std::optional <PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyInt*> role, std::optional <PyInt*> booster);
-    PyResult KickMember(PyCallArgs& call, PyInt* characterID);
-    PyResult CreateWing(PyCallArgs& call);
-    PyResult CreateSquad(PyCallArgs& call, PyInt* wingID);
-    PyResult DeleteWing(PyCallArgs& call, PyInt* wingID);
-    PyResult DeleteSquad(PyCallArgs& call, PyInt* squadID);
-    PyResult Reconnect(PyCallArgs& call);
+  EVEResult Init(EVECallArgs& call, std::optional <PyInt*> shipTypeID);
+  EVEResult GetInitState(EVECallArgs& call);
+  EVEResult GetFleetID(EVECallArgs& call);
+  EVEResult Invite(EVECallArgs& call, PyInt* characterID, std::optional<PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyInt*> role);
+  EVEResult AcceptInvite(EVECallArgs& call, std::optional <PyInt*> shipTypeID);
+  EVEResult RejectInvite(EVECallArgs& call);
+  EVEResult ChangeWingName(EVECallArgs& call, PyInt* wingID, PyDataType* name);
+  EVEResult ChangeSquadName(EVECallArgs& call, PyInt* squadID, PyDataType* name);
+  EVEResult SetOptions(EVECallArgs& call, PyObject* options);
+  EVEResult GetJoinRequests(EVECallArgs& call);
+  EVEResult RejectJoinRequest(EVECallArgs& call, PyInt* characterID);
+  EVEResult AddToVoiceChat(EVECallArgs& call, PyDataType* channelName);
+  EVEResult SetVoiceMuteStatus(EVECallArgs& call, PyDataType* status, PyDataType* channel);
+  EVEResult ExcludeFromVoiceMute(EVECallArgs& call, PyInt* characterID, PyDataType* channel);
+  EVEResult GetFleetComposition(EVECallArgs& call);
+  EVEResult GetWings(EVECallArgs& call);
+  EVEResult SendBroadcast(EVECallArgs& call, PyDataType* message, PyInt* group, PyInt* itemID);
+  EVEResult UpdateMemberInfo(EVECallArgs& call, std::optional <PyInt*> shipTypeID);
+  EVEResult SetMotdEx(EVECallArgs& call, PyDataType* motd);
+  EVEResult GetMotd(EVECallArgs& call);
+  EVEResult LeaveFleet(EVECallArgs& call);
+  EVEResult MakeLeader(EVECallArgs& call, PyInt* characterID);
+  EVEResult SetBooster(EVECallArgs& call, PyInt* characterID, std::optional <PyInt*> roleBooster);
+  EVEResult MoveMember(EVECallArgs& call, PyInt* characterID, std::optional <PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyInt*> role, std::optional <PyInt*> booster);
+  EVEResult KickMember(EVECallArgs& call, PyInt* characterID);
+  EVEResult CreateWing(EVECallArgs& call);
+  EVEResult CreateSquad(EVECallArgs& call, PyInt* wingID);
+  EVEResult DeleteWing(EVECallArgs& call, PyInt* wingID);
+  EVEResult DeleteSquad(EVECallArgs& call, PyInt* squadID);
+  EVEResult Reconnect(EVECallArgs& call);
 
 private:
     uint32 m_fleetID;

@@ -33,14 +33,14 @@ public:
     NotificationMgrService();
 
 private:
-    PyResult GetByGroupID(PyCallArgs& call, PyInt* groupID);
-    PyResult GetUnprocessed(PyCallArgs& call);
-    PyResult MarkGroupAsProcessed(PyCallArgs& call, PyInt* groupID);
-    PyResult MarkAllAsProcessed(PyCallArgs& call);
-    PyResult MarkAsProcessed(PyCallArgs& call, PyList* notificationIDsToMarkAsRead);
-    PyResult DeleteGroupNotifications(PyCallArgs& call, PyInt* groupID);
-    PyResult DeleteAllNotifications(PyCallArgs& call);
-    PyResult DeleteNotifications(PyCallArgs& call, PyList* notificatinIDs);
+  EVEResult GetByGroupID(EVECallArgs& call, PyInt* groupID);
+  EVEResult GetUnprocessed(EVECallArgs& call);
+  EVEResult MarkGroupAsProcessed(EVECallArgs& call, PyInt* groupID);
+  EVEResult MarkAllAsProcessed(EVECallArgs& call);
+  EVEResult MarkAsProcessed(EVECallArgs& call, PyList* notificationIDsToMarkAsRead);
+  EVEResult DeleteGroupNotifications(EVECallArgs& call, PyInt* groupID);
+  EVEResult DeleteAllNotifications(EVECallArgs& call);
+  EVEResult DeleteNotifications(EVECallArgs& call, PyList* notificatinIDs);
 };
 
 #endif

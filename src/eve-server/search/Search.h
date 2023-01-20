@@ -37,8 +37,8 @@ public:
     Search();
 
 protected:
-      PyResult Query(PyCallArgs& call, PyWString* str, PyList* data);
-      PyResult QuickQuery(PyCallArgs& call, PyWString* filter, PyList* data);
+  EVEResult Query(EVECallArgs& call, PyString* str, PyList* data);
+  EVEResult QuickQuery(EVECallArgs& call, PyString* filter, PyList* data);
 
   private:
     SearchDB* m_db;

@@ -29,7 +29,7 @@
 #include "ConsoleCommands.h"
 #include "Client.h"
 #include "Container.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 #include "StatisticMgr.h"
 #include "account/AccountService.h"
@@ -118,9 +118,9 @@ void SystemEntity::MakeDamageState(DoDestinyDamageState &into) {
 PyDict* SystemEntity::MakeSlimItem() {
     _log(SE__SLIMITEM, "MakeSlimItem for SE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("typeID",       new PyInt(m_self->typeID()));
-        slim->SetItemString("ownerID",      new PyInt(m_ownerID));
-        slim->SetItemString("itemID",       new PyLong(m_self->itemID()));
+        slim->set ("typeID",       new PyInt(m_self->typeID()));
+        slim->set ("ownerID",      new PyInt(m_ownerID));
+        slim->set ("itemID",       new PyInt(m_self->itemID()));
     return slim;
 }
 
@@ -290,11 +290,11 @@ bool StaticSystemEntity::LoadExtras() {
 PyDict* StaticSystemEntity::MakeSlimItem() {
     _log(SE__SLIMITEM, "MakeSlimItem for SSE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",       new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",       new PyInt(m_self->typeID()));
-        slim->SetItemString("name",         new PyString(m_self->itemName()));
-        slim->SetItemString("nameID",       PyStatic.NewNone());
-        slim->SetItemString("ownerID",      PyStatic.NewOne());
+        slim->set ("itemID",       new PyInt(m_self->itemID()));
+        slim->set ("typeID",       new PyInt(m_self->typeID()));
+        slim->set ("name",         new PyString(m_self->itemName()));
+        slim->set ("nameID",       PyStatic.NewNone());
+        slim->set ("ownerID",      PyStatic.NewOne());
     return slim;
 }
 
@@ -378,16 +378,16 @@ PyDict* StargateSE::MakeSlimItem() {
         rotation->SetItem(1, new PyFloat(0));
         rotation->SetItem(2, new PyFloat(0));*/
     PyDict *slim = new PyDict();
-        //slim->SetItemString("dunRotation", rotation);
-        slim->SetItemString("typeID",       new PyInt(m_self->typeID()));
+        //slim->set ("dunRotation", rotation);
+        slim->set ("typeID",       new PyInt(m_self->typeID()));
         /** @todo (allan) make function to lookup controlling faction id for this */
         //  NOTE:  maybe not...logs show this is "1" for all items.
-        slim->SetItemString("ownerID",      PyStatic.NewOne());
-        slim->SetItemString("itemID",       new PyLong(m_self->itemID()));
-        slim->SetItemString("name",         new PyString(m_self->itemName()));
-        slim->SetItemString("nameID",       PyStatic.NewNone());
+        slim->set ("ownerID",      PyStatic.NewOne());
+        slim->set ("itemID",       new PyInt(m_self->itemID()));
+        slim->set ("name",         new PyString(m_self->itemName()));
+        slim->set ("nameID",       PyStatic.NewNone());
     if (m_jumps != nullptr)
-        slim->SetItemString("jumps", m_jumps->Clone());
+        slim->set ("jumps", m_jumps->clone());
     return slim;
 }
 
@@ -410,39 +410,41 @@ ItemSystemEntity::ItemSystemEntity(const ItemSystemEntity* oth)
 PyDict* ItemSystemEntity::MakeSlimItem() {
     _log(SE__SLIMITEM, "MakeSlimItem for ISE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",       new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",       new PyInt(m_self->typeID()));
-        slim->SetItemString("ownerID",      new PyInt(m_ownerID));
+        slim->set ("itemID",       new PyInt(m_self->itemID()));
+        slim->set ("typeID",       new PyInt(m_self->typeID()));
+        slim->set ("ownerID",      new PyInt(m_ownerID));
         if (m_self->groupID() == EVEDB::invGroups::Warp_Gate) {
             // this is incomplete........
-            slim->SetItemString("dunSkillLevel", PyStatic.NewNone());   //?
-            slim->SetItemString("dunSkillTypeID", PyStatic.NewNone());   //?
-            slim->SetItemString("dunObjectID", new PyInt(160449));  //?   902139
-            slim->SetItemString("dunToGateID", new PyInt(160484));  //?   902140
-            slim->SetItemString("dunCloaked", new PyBool(0));   //?
-            slim->SetItemString("dunScenarioID", new PyInt(23));    //?  3347
-            slim->SetItemString("dunSpawnID", new PyInt(1572));  //?
-            slim->SetItemString("dunAmount", new PyFloat(0.0));  //?
-            PyList* classList = new PyList();
-                classList->AddItem( new PyInt(324));
-                classList->AddItem( new PyInt(420));
-                classList->AddItem( new PyInt(541));
-                classList->AddItem( new PyInt(834));
-                classList->AddItem( new PyInt(25));
-                classList->AddItem( new PyInt(830));
-            slim->SetItemString("dunShipClasses", classList);   //?
-            PyList* dirList = new PyList();
-                dirList->AddItem(new PyInt(5));     //234
-                dirList->AddItem(new PyInt(-1));
-                dirList->AddItem(PyStatic.NewZero());
-            slim->SetItemString("dunDirection", dirList);
-            slim->SetItemString("dunKeyLock", PyStatic.NewNone());   //?
-            slim->SetItemString("dunWipeNPC", new PyBool(0));   //?
-            slim->SetItemString("dunKeyQuantity", PyStatic.NewOne());   //?
-            slim->SetItemString("dunKeyTypeID", new PyInt(m_keyType));   //Training Complex Passkey   group Acceleration_Gate_Keys
-            slim->SetItemString("dunOpenUntil", new PyInt(Win32TimeNow()+EvE::Time::Hour));   //?
-            slim->SetItemString("dunRoomName", new PyString("Lobby"));   //?
-            slim->SetItemString("dunMusicUrl", new PyString("res:/Sound/Music/Ambient031combat.ogg"));
+            slim->set ("dunSkillLevel", PyStatic.NewNone());   //?
+            slim->set ("dunSkillTypeID", PyStatic.NewNone());   //?
+            slim->set ("dunObjectID", new PyInt(160449));  //?   902139
+            slim->set ("dunToGateID", new PyInt(160484));  //?   902140
+            slim->set ("dunCloaked", new PyBool(0));   //?
+            slim->set ("dunScenarioID", new PyInt(23));    //?  3347
+            slim->set ("dunSpawnID", new PyInt(1572));  //?
+            slim->set ("dunAmount", new PyFloat(0.0));  //?
+            PyList* classList = new PyList {
+                new PyInt (324),
+                new PyInt (420),
+                new PyInt (541),
+                new PyInt (834),
+                new PyInt (25),
+                new PyInt (830)
+            };
+            slim->set ("dunShipClasses", classList);   //?
+            PyList* dirList = new PyList {
+                new PyInt (5),
+                new PyInt (-1),
+                PyStatic.NewZero()
+            };
+            slim->set ("dunDirection", dirList);
+            slim->set ("dunKeyLock", PyStatic.NewNone());   //?
+            slim->set ("dunWipeNPC", new PyBool(0));   //?
+            slim->set ("dunKeyQuantity", PyStatic.NewOne());   //?
+            slim->set ("dunKeyTypeID", new PyInt(m_keyType));   //Training Complex Passkey   group Acceleration_Gate_Keys
+            slim->set ("dunOpenUntil", new PyInt(Win32TimeNow()+EvE::Time::Hour));   //?
+            slim->set ("dunRoomName", new PyString("Lobby"));   //?
+            slim->set ("dunMusicUrl", new PyString("res:/Sound/Music/Ambient031combat.ogg"));
         }
     /** @todo  finish rotation data
     Large_Collidable_Structure
@@ -452,7 +454,7 @@ PyDict* ItemSystemEntity::MakeSlimItem() {
         rotation->SetItem(0, new PyFloat(0));
         rotation->SetItem(1, new PyFloat(0));
         rotation->SetItem(2, new PyFloat(0));
-    slim->SetItemString("dunRotation", rotation);
+    slim->set ("dunRotation", rotation);
     */
     return slim;
 }
@@ -598,15 +600,15 @@ void ObjectSystemEntity::EncodeDestiny( Buffer& into )
 PyDict* ObjectSystemEntity::MakeSlimItem() {
     _log(SE__SLIMITEM, "MakeSlimItem for OSE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",           new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",           new PyInt(GetTypeID()));
-        slim->SetItemString("ownerID",          new PyInt(m_ownerID));
-        slim->SetItemString("categoryID",       new PyInt(m_self->categoryID()));
-        slim->SetItemString("groupID",          new PyInt(m_self->groupID()));
-        slim->SetItemString("name",             new PyString(m_self->itemName()));
-        slim->SetItemString("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-        slim->SetItemString("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-        slim->SetItemString("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+        slim->set ("itemID",           new PyInt(m_self->itemID()));
+        slim->set ("typeID",           new PyInt(GetTypeID()));
+        slim->set ("ownerID",          new PyInt(m_ownerID));
+        slim->set ("categoryID",       new PyInt(m_self->categoryID()));
+        slim->set ("groupID",          new PyInt(m_self->groupID()));
+        slim->set ("name",             new PyString(m_self->itemName()));
+        slim->set ("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+        slim->set ("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+        slim->set ("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
     return slim;
 }
 
@@ -708,15 +710,15 @@ PyDict *DynamicSystemEntity::MakeSlimItem() {
 
     _log(SE__SLIMITEM, "MakeSlimItem for DSE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",           new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",           new PyInt(m_self->typeID()));
-        slim->SetItemString("ownerID",          new PyInt(m_ownerID));
-        //slim->SetItemString("categoryID",       new PyInt(m_self->categoryID()));
-        //slim->SetItemString("groupID",          new PyInt(m_self->groupID()));
-        slim->SetItemString("name",             new PyString(m_self->itemName()));
-        slim->SetItemString("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-        slim->SetItemString("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-        slim->SetItemString("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+        slim->set ("itemID",           new PyInt(m_self->itemID()));
+        slim->set ("typeID",           new PyInt(m_self->typeID()));
+        slim->set ("ownerID",          new PyInt(m_ownerID));
+        //slim->set ("categoryID",       new PyInt(m_self->categoryID()));
+        //slim->set ("groupID",          new PyInt(m_self->groupID()));
+        slim->set ("name",             new PyString(m_self->itemName()));
+        slim->set ("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+        slim->set ("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+        slim->set ("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
     return (slim);
 }
 
@@ -841,15 +843,15 @@ PyDict* DungeonEditSE::MakeSlimItem()
 {
     _log(SE__SLIMITEM, "MakeSlimItem for DungeonEditSE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID", new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID", new PyInt(m_self->typeID()));
-        slim->SetItemString("groupID", new PyInt(m_self->groupID()));
-        slim->SetItemString("dunObjectID", new PyInt(m_self->itemID()));
-        slim->SetItemString("dunRadius", new PyFloat(m_data.radius));
-        slim->SetItemString("dunRoomID", new PyInt(m_data.roomID));
-        slim->SetItemString("dunX", new PyFloat(m_data.x));
-        slim->SetItemString("dunY", new PyFloat(m_data.y));
-        slim->SetItemString("dunZ", new PyFloat(m_data.z));
+        slim->set ("itemID", new PyInt(m_self->itemID()));
+        slim->set ("typeID", new PyInt(m_self->typeID()));
+        slim->set ("groupID", new PyInt(m_self->groupID()));
+        slim->set ("dunObjectID", new PyInt(m_self->itemID()));
+        slim->set ("dunRadius", new PyFloat(m_data.radius));
+        slim->set ("dunRoomID", new PyInt(m_data.roomID));
+        slim->set ("dunX", new PyFloat(m_data.x));
+        slim->set ("dunY", new PyFloat(m_data.y));
+        slim->set ("dunZ", new PyFloat(m_data.z));
 
     return slim;
 }

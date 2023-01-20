@@ -44,16 +44,16 @@ protected:
 
     BookmarkDB m_db;
 
-    PyResult GetBookmarks(PyCallArgs& call);
-    PyResult BookmarkLocation(PyCallArgs& call, PyInt* itemID, PyInt* ownerID, PyRep* memo, PyRep* comment, std::optional<PyInt*> folderID);
-    PyResult DeleteBookmarks(PyCallArgs& call, std::optional <PyObjectEx*> bookmarks);
-    PyResult CreateFolder(PyCallArgs& call, PyRep* name);
-    PyResult UpdateFolder(PyCallArgs& call, PyInt* folderID, PyRep* folderName);
-    PyResult DeleteFolder(PyCallArgs& call, PyInt* folderID);
-    PyResult MoveBookmarksToFolder(PyCallArgs& call, PyInt* folderID, std::optional <PyObjectEx*> bookmarkIDs);
-    PyResult CopyBookmarks(PyCallArgs& call, std::optional <PyObjectEx*> bookmarksToCopy, std::optional <PyInt*> folderID);
-    PyResult AddBookmarkFromVoucher(PyCallArgs& call, PyInt* itemID, PyInt* ownerID, std::optional <PyInt*> folderID);
-    PyResult BookmarkScanResult(PyCallArgs& call, PyInt* locationID, PyRep* memo, PyRep* comment, PyString* resultID, PyInt* ownerID, std::optional<PyInt*> folderID);
+    EVEResult GetBookmarks(EVECallArgs& call);
+    EVEResult BookmarkLocation(EVECallArgs& call, PyInt* itemID, PyInt* ownerID, PyDataType* memo, PyDataType* comment, std::optional<PyInt*> folderID);
+    EVEResult DeleteBookmarks(EVECallArgs& call, std::optional <PyObjectEx*> bookmarks);
+    EVEResult CreateFolder(EVECallArgs& call, PyDataType* name);
+    EVEResult UpdateFolder(EVECallArgs& call, PyInt* folderID, PyDataType* folderName);
+    EVEResult DeleteFolder(EVECallArgs& call, PyInt* folderID);
+    EVEResult MoveBookmarksToFolder(EVECallArgs& call, PyInt* folderID, std::optional <PyObjectEx*> bookmarkIDs);
+    EVEResult CopyBookmarks(EVECallArgs& call, std::optional <PyObjectEx*> bookmarksToCopy, std::optional <PyInt*> folderID);
+    EVEResult AddBookmarkFromVoucher(EVECallArgs& call, PyInt* itemID, PyInt* ownerID, std::optional <PyInt*> folderID);
+    EVEResult BookmarkScanResult(EVECallArgs& call, PyInt* locationID, PyDataType* memo, PyDataType* comment, PyString* resultID, PyInt* ownerID, std::optional<PyInt*> folderID);
 };
 
 #endif

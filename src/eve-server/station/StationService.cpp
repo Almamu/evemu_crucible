@@ -36,24 +36,24 @@ StationService::StationService() :
     this->Add("GetGuests", &StationService::GetGuests);
 }
 
-PyResult StationService::GetSolarSystem(PyCallArgs &call, PyInt* solarSystemID) {
+EVEResult StationService::GetSolarSystem(EVECallArgs&call, PyInt* solarSystemID) {
     // this needs to return some cache status?
     return new PyObject("util.CachedObject", solarSystemID);
 }
 
-PyResult StationService::GetGuests(PyCallArgs &call) {
+EVEResult StationService::GetGuests(EVECallArgs&call) {
     std::vector<Client*> clients;
     clients.clear();
     sEntityList.GetStationGuestList(call.client->GetStationID(), clients);
     PyList* res = new PyList();
     for (auto cur : clients) {
-        PyTuple* t = new PyTuple(4);
-			t->items[0] = new PyInt(cur->GetCharacterID());
-			t->items[1] = new PyInt(cur->GetCorporationID());
-			t->items[2] = new PyInt(cur->GetAllianceID());
-			t->items[3] = new PyInt(cur->GetWarFactionID());
-        res->AddItem(t);
+        res->add(new PyTuple {
+            new PyInt (cur->GetCharacterID()),
+            new PyInt (cur->GetCorporationID()),
+            new PyInt (cur->GetAllianceID()),
+            new PyInt (cur->GetWarFactionID())
+        });
     }
 
-	return res;
+    return res;
 }

@@ -39,12 +39,12 @@ class StandingDB
 {
 public:
     static PyObjectEx* GetFactionStandings();
-    PyRep* GetCorpStandings(Client* pClient);
-    PyRep* GetCharStandings(Client* pClient);
-    PyRep* PrimeCharStandings(uint32 charID);
-    PyRep* GetCharNPCStandings(uint32 charID);
-    PyRep* GetStandingTransactions(uint32 fromID, uint32 toID);
-    PyRep* GetStandingCompositions(uint32 fromID, uint32 toID);
+    PyDataType* GetCorpStandings(Client* pClient);
+    PyDataType* GetCharStandings(Client* pClient);
+    PyDataType* PrimeCharStandings(uint32 charID);
+    PyDataType* GetCharNPCStandings(uint32 charID);
+    PyDataType* GetStandingTransactions(uint32 fromID, uint32 toID);
+    PyDataType* GetStandingCompositions(uint32 fromID, uint32 toID);
 
 
     /*  all standings are in same table now, but follow identical rules
@@ -61,7 +61,7 @@ public:
     static void UpdateStanding(uint32 fromID, uint32 toID, float standing);
     static void SaveStandingChanges(uint32 fromID, uint32 toID, uint16 eventType, float amount, std::string msg);
 
-    static PyRep* GetMyStandings(uint32 charID);
+    static PyDataType* GetMyStandings(uint32 charID);
 };
 
 #endif

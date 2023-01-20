@@ -43,11 +43,11 @@ NotificationMgrService::NotificationMgrService() :
     this->Add("DeleteNotifications", &NotificationMgrService::DeleteNotifications);
 }
 
-PyResult NotificationMgrService::GetByGroupID(PyCallArgs &call, PyInt* groupID)
+EVEResult NotificationMgrService::GetByGroupID(EVECallArgs&call, PyInt* groupID)
 {
 
     sLog.White("NotificationMgrService", "Handle_GetByGroupID() size=%lli", call.tuple->size());
-    call.Dump(MAIL__DUMP);
+    call.dump(MAIL__DUMP);
     /*
             [PyString "GetByGroupID"]
             [PyTuple 1 items]
@@ -93,7 +93,7 @@ PyResult NotificationMgrService::GetByGroupID(PyCallArgs &call, PyInt* groupID)
     return new PyTuple(0);
 }
 
-PyResult NotificationMgrService::GetUnprocessed(PyCallArgs &call)
+EVEResult NotificationMgrService::GetUnprocessed(EVECallArgs&call)
 {
     // called when mail window's notifications tab opened
     // see /journal/GetUnprocessed for info..
@@ -101,32 +101,32 @@ PyResult NotificationMgrService::GetUnprocessed(PyCallArgs &call)
     return new PyTuple(0);
 }
 
-PyResult NotificationMgrService::MarkGroupAsProcessed(PyCallArgs &call, PyInt* groupID)
+EVEResult NotificationMgrService::MarkGroupAsProcessed(EVECallArgs&call, PyInt* groupID)
 {
     return nullptr;
 }
 
-PyResult NotificationMgrService::MarkAllAsProcessed(PyCallArgs &call)
+EVEResult NotificationMgrService::MarkAllAsProcessed(EVECallArgs&call)
 {
     return nullptr;
 }
 
-PyResult NotificationMgrService::MarkAsProcessed(PyCallArgs &call, PyList* notificationIDsToMarkAsRead)
+EVEResult NotificationMgrService::MarkAsProcessed(EVECallArgs&call, PyList* notificationIDsToMarkAsRead)
 {
     return nullptr;
 }
 
-PyResult NotificationMgrService::DeleteGroupNotifications(PyCallArgs &call, PyInt* groupID)
+EVEResult NotificationMgrService::DeleteGroupNotifications(EVECallArgs&call, PyInt* groupID)
 {
     return nullptr;
 }
 
-PyResult NotificationMgrService::DeleteAllNotifications(PyCallArgs &call)
+EVEResult NotificationMgrService::DeleteAllNotifications(EVECallArgs&call)
 {
     return nullptr;
 }
 
-PyResult NotificationMgrService::DeleteNotifications(PyCallArgs &call, PyList* notificatinIDs)
+EVEResult NotificationMgrService::DeleteNotifications(EVECallArgs&call, PyList* notificatinIDs)
 {
     return nullptr;
 }

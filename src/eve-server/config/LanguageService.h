@@ -39,8 +39,8 @@ public:
 protected:
     ConfigDB m_db;
 
-    PyResult GetLanguages(PyCallArgs& call);
-    PyResult GetTextsForGroup(PyCallArgs& call, PyInt* textGroup, PyString* languageID);
+    EVEResult GetLanguages(EVECallArgs& call);
+    EVEResult GetTextsForGroup(EVECallArgs& call, PyInt* textGroup, PyString* languageID);
 };
 
 #endif

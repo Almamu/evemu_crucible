@@ -12,7 +12,7 @@
   */
 
 #include "Client.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "StatisticMgr.h"
 #include "account/AccountService.h"
@@ -143,8 +143,8 @@ void MarketMgr::UpdatePriceHistory()
      */
 
 // there is a 1 day difference (from 0000UTC) between "Old" and "New" prices
-PyRep *MarketMgr::GetNewPriceHistory(uint32 regionID, uint32 typeID) {
-    PyRep* result(nullptr);
+PyDataType *MarketMgr::GetNewPriceHistory(uint32 regionID, uint32 typeID) {
+    PyDataType* result(nullptr);
     std::string method_name ("GetNewHistory_");
     method_name += std::to_string(regionID);
     method_name += "_";
@@ -181,12 +181,12 @@ PyRep *MarketMgr::GetNewPriceHistory(uint32 regionID, uint32 typeID) {
     result = this->m_cache->MakeObjectCachedMethodCallResult(method_id);
 
     if (is_log_enabled(MARKET__DB_TRACE))
-        result->Dump(MARKET__DB_TRACE, "    ");
+        result->dump(MARKET__DB_TRACE, "    ");
     return result;
 }
 
-PyRep *MarketMgr::GetOldPriceHistory(uint32 regionID, uint32 typeID) {
-    PyRep* result(nullptr);
+PyDataType *MarketMgr::GetOldPriceHistory(uint32 regionID, uint32 typeID) {
+    PyDataType* result(nullptr);
     std::string method_name ("GetOldHistory_");
     method_name += std::to_string(regionID);
     method_name += "_";
@@ -222,11 +222,11 @@ PyRep *MarketMgr::GetOldPriceHistory(uint32 regionID, uint32 typeID) {
     result = this->m_cache->MakeObjectCachedMethodCallResult(method_id);
 
     if (is_log_enabled(MARKET__DB_TRACE))
-        result->Dump(MARKET__DB_TRACE, "    ");
+        result->dump(MARKET__DB_TRACE, "    ");
     return result;
 }
 
-void MarketMgr::SendOnOwnOrderChanged(Client* pClient, uint32 orderID, uint8 action, bool isCorp/*false*/, PyRep* order/*nullptr*/) {
+void MarketMgr::SendOnOwnOrderChanged(Client* pClient, uint32 orderID, uint8 action, bool isCorp/*false*/, PyDataType* order/*nullptr*/) {
     if (pClient == nullptr)
         return;
     Notify_OnOwnOrderChanged ooc;
@@ -540,7 +540,7 @@ bool MarketMgr::ExecuteBuyOrder(Client* seller, uint32 orderID, InventoryItemRef
 
     _log(MARKET__TRACE, "ExecuteBuyOrder - Satisfied order #%u, deleting.", orderID);
 
-    PyRep* order = MarketDB::GetOrderRow(orderID);
+    PyDataType* order = MarketDB::GetOrderRow(orderID);
     if (!MarketDB::DeleteOrder(orderID)) {
         _log(MARKET__ERROR, "ExecuteBuyOrder - Failed to delete order #%u.", orderID);
         return false;
@@ -659,7 +659,7 @@ void MarketMgr::ExecuteSellOrder(Client* buyer, uint32 orderID, uint32 sellQuant
     if (orderConsumed) {
         _log(MARKET__TRACE, "ExecuteSellOrder - satisfied order #%u, deleting.", orderID);
 
-        PyRep* order = MarketDB::GetOrderRow(orderID);
+        PyDataType* order = MarketDB::GetOrderRow(orderID);
         if (!MarketDB::DeleteOrder(orderID)) {
             _log(MARKET__ERROR, "ExecuteSellOrder - Failed to delete order #%u.", orderID);
             return;

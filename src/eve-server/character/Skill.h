@@ -28,7 +28,7 @@
 #define EVE_SERVER_SKILLS_SKILL_H
 
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "../../eve-core/utils/misc.h"
 #include "inventory/InventoryItem.h"

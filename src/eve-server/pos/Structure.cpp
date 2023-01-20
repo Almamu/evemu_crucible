@@ -21,7 +21,7 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "manufacturing/Blueprint.h"
 #include "map/MapDB.h"
@@ -979,23 +979,25 @@ void StructureSE::SetUsageFlags(int8 view /*0*/, int8 take /*0*/, int8 use /*0*/
 void StructureSE::SendSlimUpdate()
 {
     PyDict *slim = new PyDict();
-    slim->SetItemString("name", new PyString(m_self->itemName()));
-    slim->SetItemString("itemID", new PyLong(m_data.itemID));
-    slim->SetItemString("typeID", new PyInt(m_self->typeID()));
-    slim->SetItemString("ownerID", new PyInt(m_ownerID));
-    slim->SetItemString("corpID", IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-    slim->SetItemString("allianceID", IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-    slim->SetItemString("warFactionID", IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
-    slim->SetItemString("posTimestamp", new PyLong(m_data.timestamp));
-    slim->SetItemString("posState", new PyInt(m_data.state));
-    slim->SetItemString("incapacitated", new PyInt(0));
-    slim->SetItemString("posDelayTime", new PyInt(m_delayTime));
-    PyTuple *shipData = new PyTuple(2);
-    shipData->SetItem(0, new PyLong(m_data.itemID));
-    shipData->SetItem(1, new PyObject("foo.SlimItem", slim));
-    PyTuple *sItem = new PyTuple(2);
-    sItem->SetItem(0, new PyString("OnSlimItemChange"));
-    sItem->SetItem(1, shipData);
+    PyTuple* sItem = new PyTuple {
+        new PyString ("OnSlimItemChange"),
+        new PyTuple {
+            new PyInt (m_data.itemID),
+            new PyObject ("foo.SlimItem", new PyDict {
+                {"name", new PyString(m_self->itemName())},
+                {"itemID", new PyInt(m_data.itemID)},
+                {"typeID", new PyInt(m_self->typeID())},
+                {"ownerID", new PyInt(m_ownerID)},
+                {"corpID", IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone()},
+                {"allianceID", IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone()},
+                {"warFactionID", IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone()},
+                {"posTimestamp", new PyInt(m_data.timestamp)},
+                {"posState", new PyInt(m_data.state)},
+                {"incapacitated", new PyInt(0)},
+                {"posDelayTime", new PyInt(m_delayTime)},
+            })
+        }
+    };
     m_destiny->SendSingleDestinyUpdate(&sItem); // consumed
 }
 
@@ -1020,10 +1022,11 @@ void StructureSE::SendEffectUpdate(int16 effectID, bool active)
     shipEff.duration = (active ? 0 : -1);
     shipEff.repeat = (active ? 1 : 0);
     shipEff.error = PyStatic.NewNone();
-    PyList *events = new PyList();
-    events->AddItem(shipEff.Encode());
-    PyTuple *event = new PyTuple(1);
-    event->SetItem(0, events);
+    PyTuple* event = new PyTuple {
+        new PyList {
+            shipEff.Encode()
+        }
+    };
     m_destiny->SendSingleDestinyEvent(&event); // consumed
 }
 
@@ -1128,49 +1131,49 @@ PyDict *StructureSE::MakeSlimItem()
     _log(POS__SLIMITEM, "MakeSlimItem for StructureSE %u", m_data.itemID);
     /** @todo (Allan) *Timestamp will need to be set to time current state is started. */
     PyDict *slim = new PyDict();
-    slim->SetItemString("name", new PyString(m_self->itemName()));
-    slim->SetItemString("itemID", new PyLong(m_data.itemID));
-    slim->SetItemString("typeID", new PyInt(m_self->typeID()));
-    slim->SetItemString("posState", new PyInt(m_data.state));
+    slim->set ("name", new PyString(m_self->itemName()));
+    slim->set ("itemID", new PyInt(m_data.itemID));
+    slim->set ("typeID", new PyInt(m_self->typeID()));
+    slim->set ("posState", new PyInt(m_data.state));
 
-    slim->SetItemString("ownerID", new PyInt(m_ownerID));
-    slim->SetItemString("corpID", IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-    slim->SetItemString("allianceID", IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-    slim->SetItemString("warFactionID", IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+    slim->set ("ownerID", new PyInt(m_ownerID));
+    slim->set ("corpID", IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+    slim->set ("allianceID", IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+    slim->set ("warFactionID", IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
 
     if (m_module or m_tower)
     { // for control towers and structures
-        slim->SetItemString("posTimestamp", new PyLong(m_data.timestamp));
-        slim->SetItemString("incapacitated", new PyInt(m_data.state == EVEPOS::StructureState::Incapacitated));
-        slim->SetItemString("posDelayTime", new PyInt(m_delayTime));
+        slim->set ("posTimestamp", new PyInt(m_data.timestamp));
+        slim->set ("incapacitated", new PyInt(m_data.state == EVEPOS::StructureState::Incapacitated));
+        slim->set ("posDelayTime", new PyInt(m_delayTime));
     }
     else if (m_tcu)
     {
-        slim->SetItemString("posDelayTime", new PyInt(m_delayTime));
-        slim->SetItemString("posTimestamp", PyStatic.NewNone());
+        slim->set ("posDelayTime", new PyInt(m_delayTime));
+        slim->set ("posTimestamp", PyStatic.NewNone());
     }
     else if (m_miner)
     {
-        PyTuple *tuple = new PyTuple(3);
-        tuple->SetItem(0, new PyFloat(m_rotation.x));
-        tuple->SetItem(1, new PyFloat(m_rotation.y));
-        tuple->SetItem(2, new PyFloat(m_rotation.z));
-        slim->SetItemString("dunRotation", tuple); // direction to moon
-        slim->SetItemString("controlTowerID", new PyLong(m_data.towerID));
+        slim->set ("dunRotation", new PyTuple {
+            new PyFloat (m_rotation.x),
+            new PyFloat (m_rotation.y),
+            new PyFloat (m_rotation.z)
+        }); // direction to moon
+        slim->set ("controlTowerID", new PyInt(m_data.towerID));
     }
     else if (m_cargo)
     {
-        slim->SetItemString("posDelayTime", new PyInt(m_delayTime));
-        slim->SetItemString("posTimestamp", PyStatic.NewNone());
+        slim->set ("posDelayTime", new PyInt(m_delayTime));
+        slim->set ("posTimestamp", PyStatic.NewNone());
     }
 
     if (m_module)
-        slim->SetItemString("controlTowerID", new PyLong(m_data.towerID));
+        slim->set ("controlTowerID", new PyInt(m_data.towerID));
 
     if (is_log_enabled(POS__SLIMITEM))
     {
         _log(POS__SLIMITEM, "StructureSE::MakeSlimItem() - %s(%u)", GetName(), m_data.itemID);
-        slim->Dump(POS__SLIMITEM, "     ");
+        slim->dump(POS__SLIMITEM, "     ");
     }
     return slim;
 }
@@ -1197,24 +1200,13 @@ void StructureSE::GetEffectState(PyList &into)
 {
     // update to include all states and correct packet structure -allan 16.10.21
     // new effect packet code
-    PyTuple* fxState = new PyTuple(14);
-    if (m_module) {
-        fxState->SetItemInt(0, m_data.towerID);      // towerID
-    } else {
-        fxState->SetItemInt(0, m_data.itemID);      // towerID
-    }
-
-    fxState->SetItemInt(1, m_data.itemID);      // moduleID
-    fxState->SetItemInt(2, m_self->typeID());      // moduleTypeID
-    fxState->SetItem(3, PyStatic.NewNone());         // targetID
-    fxState->SetItem(4, PyStatic.NewNone());         // chargeTypeID
-    fxState->SetItem(5, new PyList());         // area
+    std::optional<std::string> effectName = std::nullopt;
 
     // set guid here depending on tower state
     switch (m_data.state) {
         case EVEPOS::StructureState::Online:
         case EVEPOS::StructureState::Operating:
-            fxState->SetItemString(6, "effects.StructureOnline");
+            effectName = "effects.StructureOnline";
             break;
         case EVEPOS::StructureState::Incapacitated:
         case EVEPOS::StructureState::Unanchored:
@@ -1225,20 +1217,27 @@ void StructureSE::GetEffectState(PyList &into)
         case EVEPOS::StructureState::SheildReinforced:
         case EVEPOS::StructureState::ArmorReinforced:
         case EVEPOS::StructureState::Invulnerable:
-            fxState->SetItemString(6, "effects.StructureOffline");
+            effectName = "effects.StructureOffline";
             break;
     }
 
-    fxState->SetItem(7, PyStatic.NewFalse());         // isOffensive
-    fxState->SetItem(8, PyStatic.NewOne());      // start
-    fxState->SetItem(9, PyStatic.NewOne());      // active
-    fxState->SetItem(10, PyStatic.NewNegOne());      // duration
-    fxState->SetItem(11, PyStatic.NewZero());      // repeat
-    fxState->SetItem(12, new PyLong(m_data.timestamp));      // startTime
-    fxState->SetItem(13, PyStatic.NewNone());         // graphicInfo
-
     // add tuple directly to list.
-    into.AddItem(fxState);
+    into.add(new PyTuple {
+        new PyInt (m_module ? m_data.towerID : m_data.itemID),
+        new PyInt (m_data.itemID), // moduleID
+        new PyInt (m_self->typeID()), // moduleTypeID
+        PyStatic.NewNone(), // targetID
+        PyStatic.NewNone(), // chargeTypeID
+        new PyList (), // area
+        effectName.has_value () ? new PyString (effectName.value()) : PyStatic.NewNone(),
+        PyStatic.NewFalse(), // isOffensive
+        PyStatic.NewOne(), // start
+        PyStatic.NewOne(), // active
+        PyStatic.NewNegOne(), // duration
+        PyStatic.NewZero(), // repeat
+        new PyInt (m_data.timestamp), // startTime
+        PyStatic.NewNone()
+    });
 }
 
 void StructureSE::Killed(Damage &damage)

@@ -24,7 +24,12 @@ SET( INCLUDE
 SET( auth_SOURCE
      "auth/PasswordModuleTest.cpp" )
 SET( marshal_SOURCE
-     "marshal/EVEMarshalTest.cpp" )
+     "marshal/EVEMarshalTest.cpp"
+     "marshal/IntegerTest.cpp"
+     "marshal/FloatTest.cpp"
+     "marshal/BooleanTest.cpp"
+     "marshal/TupleTest.cpp"
+     "marshal/ListTest.cpp" )
 SET( utils_SOURCE
      "utils/EvilNumberTest.cpp" )
 
@@ -62,5 +67,15 @@ ADD_TEST( NAME "PasswordModuleTest"
           COMMAND "${TARGET_NAME}" "auth/PasswordModuleTest" )
 ADD_TEST( NAME "EVEMarshalTest"
           COMMAND "${TARGET_NAME}" "marshal/EVEMarshalTest" )
+ADD_TEST( NAME "MarshalIntegerTest"
+          COMMAND "${TARGET_NAME}" "marshal/IntegerTest" )
+ADD_TEST( NAME "MarshalFloatTest"
+          COMMAND "${TARGET_NAME}" "marshal/FloatTest" )
+ADD_TEST( NAME "MarshalBooleanTest"
+          COMMAND "${TARGET_NAME}" "marshal/BooleanTest" )
+ADD_TEST( NAME "MarshalTupleTest"
+          COMMAND "${TARGET_NAME}" "marshal/TupleTest" )
+ADD_TEST( NAME "MarshalListTest"
+          COMMAND "${TARGET_NAME}" "marshal/ListTest" )
 ADD_TEST( NAME "EvilNumberTest"
           COMMAND "${TARGET_NAME}" "utils/EvilNumberTest" )

@@ -34,8 +34,8 @@ typedef uint32_t BoundID;
 
 template<class T> class Service;
 class EVEServiceManager;
-class PyResult;
-class PyCallArgs;
+class EVEResult;
+class EVECallArgs;
 class Client;
 
 class BoundDispatcher {
@@ -43,13 +43,13 @@ public:
     /** @returns BoundID The id of the bound service */
     virtual BoundID GetBoundID() const = 0;
     /** @returns PyTuple* The OID of the bound object */
-    virtual PyTuple* GetOID() const = 0;
+    virtual PyTuple* GetOID(PythonArena* arena = HeapPythonArena::instance) const = 0;
     /** @returns The string ID */
     virtual const std::string& GetIDString() const = 0;
     /**
      * @brief Handles dispatching a call to this service
      */
-    virtual PyResult Dispatch(const std::string& name, PyCallArgs& args) = 0;
+    virtual EVEResult Dispatch(const std::string& name, EVECallArgs& args) = 0;
     /**
      * @brief Builds a string with information about calling a method in this service
      */
@@ -102,11 +102,11 @@ public:
         this->Add("MachoBindObject", &BindableService<Svc, Bound>::MachoBindObject);
     }
 
-    PyResult MachoResolveObject(PyCallArgs& args, PyRep* bindParameters, PyRep* justQuery) {
-        return new PyInt(this->GetServiceManager().GetNodeID());
+    EVEResult MachoResolveObject(EVECallArgs& args, PyDataType* bindParameters, PyDataType* justQuery) {
+        return args.arena.Int(this->GetServiceManager().GetNodeID());
     }
 
-    PyResult MachoBindObject(PyCallArgs& args, PyRep* bindParameters, std::optional<PyTuple*> call) {
+    EVEResult MachoBindObject(EVECallArgs& args, PyDataType* bindParameters, std::optional<PyTuple*> call) {
         // register the new instance in the service manager
         BoundDispatcher* bound = this->BindObject(args.client, bindParameters);
 
@@ -119,47 +119,65 @@ public:
         bound->NewReference (args.client);
 
         // build the bound service identifier
-        PyTuple* rsp = new PyTuple(2);
-        PyDict* byName = new PyDict();
+        PyDataType* response;
+        // TODO: CHECK THIS CHECK ARENA OWNERSHIP TO ENSURE IT'S ACTUALLY A GOOD THING TO IGNORE OR IF WE'RE BETTER JUST
+        // TODO: CLONING THE OID
+        PyDict* byName = args.arena.Dict({
+            {"OID+", bound->GetOID(&args.arena)}
+        });
 
-        byName->SetItem("OID+", bound->GetOID());
-
-        rsp->SetItem(0, new PySubStruct(new PySubStream(bound->GetOID())));
+        bool checkArenaOwnership = true;
 
         if (call.has_value() == false) {
-            rsp->SetItem(1, PyStatic.NewNone());
+            response = args.arena.None();
         } else {
-            // dispatch call
-            CallMachoBindObject_call boundcall;
+            auto tuple = call.value();
 
-            if (boundcall.Decode(&call.value()) == false) {
-                codelog(SERVICE__ERROR, "%s Service: Failed to decode boundcall arguments", this->GetName().c_str());
-                return nullptr;
+            if (tuple->size() != 3) {
+                throw std::runtime_error ("MachoBindObject - tuple is the wrong size, expected 3");
             }
 
-            _log(SERVICE__MESSAGE, "%s Service: MachoBindObject also contains call to %s", this->GetName().c_str(), boundcall.method_name.c_str());
+            auto method_name = tuple->at(0)->string();
+            auto arguments = tuple->at<PyTuple>(1);
+            auto dict_arguments = tuple->at<PyDict>(2);
 
-            PyCallArgs subArgs(args.client, boundcall.arguments, boundcall.dict_arguments);
+            _log(SERVICE__MESSAGE, "%s Service: MachoBindObject also contains call to %s", this->GetName().c_str(), method_name.c_str());
 
-            PyResult result = bound->Dispatch(boundcall.method_name, subArgs);
+            EVECallArgs subArgs(args.client, arguments, dict_arguments, args.arena);
+
+            EVEResult result = bound->Dispatch(method_name, subArgs);
 
             // set the tuple data
-            rsp->SetItem(1, result.ssResult);
+            response = result.result.has_value() ? result.result.value() : args.arena.None();
             // TODO: merge the dicts to return the full response data?
             // Py types are lacking lots of helper methods that could be useful
+
+            checkArenaOwnership = result.check_arena_owner;
+
+            if (result.check_arena_owner && response->arena() != &args.arena) {
+                throw std::runtime_error (
+                    "The result data does not belong to the right arena. Make sure to use args.arena to create result objects"
+                );
+            }
         }
 
         // return the response
-        return PyResult(rsp, byName);
+        return EVEResult (
+            args.arena.Tuple ({
+                args.arena.SubStruct(args.arena.SubStream(bound->GetOID(&args.arena))),
+                response
+            }, checkArenaOwnership),
+            byName
+        );
     }
 
 protected:
     /**
      * @brief Handles the creation of the bound service
      */
-    virtual BoundDispatcher* BindObject(Client* client, PyRep* bindParameters) = 0;
+    virtual BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters) = 0;
     /** @returns The service manager this service is registered in */
-    EVEServiceManager& GetServiceManager() const { return this->mManager; }
+    EVEServiceManager& GetServiceManager() const { return mManager; }
 private:
     EVEServiceManager& mManager;
 };
@@ -176,19 +194,20 @@ protected:
         mManager(mgr),
         mParent (parent)
     {
-        this->mBoundId = this->GetServiceManager().RegisterBoundService(this);
+        mBoundId = this->GetServiceManager().RegisterBoundService(this);
 
         // build the id string
         std::stringstream strBuilder;
-        strBuilder << "N=" << this->GetServiceManager().GetNodeID() << ":" << this->mBoundId;
+        strBuilder << "N=" << this->GetServiceManager().GetNodeID() << ":" << mBoundId;
 
         // store it
-        this->mIdString = strBuilder.str();
+        mIdString = strBuilder.str();
 
         // build the OID
-        this->mOID = new PyTuple(2);
-        this->mOID->SetItem (0, new PyString (this->mIdString));
-        this->mOID->SetItem (1, new PyLong(GetFileTimeNow())); // this isn't really the datetime, should be a unique ID
+        mOID = mArena.Tuple ({
+            mArena.String (mIdString),
+            mArena.Int (GetFileTimeNow()) // this isn't really the datetime, should be an unique ID
+        });
     }
 
     /**
@@ -201,28 +220,25 @@ protected:
      * @brief Registers a method handler
      */
     template <class H, class... Args>
-    void Add(const std::string& name, PyResult(H::*callHandler)(PyCallArgs&, Args...)) {
-        this->mHandlers.push_back(std::make_pair(std::string(name), new CallHandler <H> (callHandler)));
+    void Add(const std::string& name, EVEResult (H::*callHandler)(EVECallArgs&, Args...)) {
+        mHandlers.push_back(std::make_pair(std::string(name), new CallHandler <H> (callHandler)));
     }
 
 public:
     /**
      * @brief Handles dispatching a call to this service
      */
-    PyResult Dispatch(const std::string& name, PyCallArgs& args) override {
+  EVEResult Dispatch(const std::string& name, EVECallArgs& args) override {
         if (this->CanClientCall(args.client) == false)
             throw CustomError("This client is not allowed to call this bound service");
 
-        for (auto handler : this->mHandlers) {
+        for (auto handler : mHandlers) {
             if (handler.first != name)
                 continue;
 
-            try
-            {
+            try {
                 return (*handler.second)(reinterpret_cast <void*> (this), args);
-            }
-            catch (std::invalid_argument)
-            {
+            } catch (std::invalid_argument) {
                 // ignored, this just means the function does not match the possible calls
             }
         }
@@ -236,7 +252,7 @@ public:
     std::string DebugDispatch (const std::string& name) override {
         std::string result = name + " candidates: \n";
 
-        for (auto handler : this->mHandlers) {
+        for (auto handler : mHandlers) {
             if (handler.first != name)
                 continue;
 
@@ -252,14 +268,14 @@ public:
      */
     void NewReference (Client* client) override {
         // ensure the client is not there yet
-        auto it = this->mClients.find (client);
+        auto it = mClients.find (client);
 
-        if (it != this->mClients.end ())
+        if (it != mClients.end ())
             return;
 
         // the client didn't hold a reference to this service
         // so add it to the list and increase the RefCount
-        this->mClients.insert_or_assign (client, true);
+        mClients.insert_or_assign (client, true);
         // also add it to the bind list of the client
         client->AddBindID (this->GetBoundID ());
     }
@@ -268,16 +284,16 @@ public:
      * @returns Whether the bound object was destroyed or someone still has a reference to it
      */
     bool Release(Client* client) override {
-        auto it = this->mClients.find (client);
+        auto it = mClients.find (client);
 
         // the client doesn't have access to this bound service, so nothing has to be done
-        if (it == this->mClients.end ())
+        if (it == mClients.end ())
             return false;
 
         // remove the client for the list, and if that's the last one, free the service
-        this->mClients.erase (it);
+        mClients.erase (it);
 
-        if (this->mClients.size () == 0) {
+        if (mClients.size () == 0) {
             this->GetParent ().BoundReleased (reinterpret_cast <Bound*> (this));
             delete this; // we hate this
             return true;
@@ -287,21 +303,21 @@ public:
     }
 
     bool CanClientCall(Client* client) override {
-        return this->mClients.find (client) != this->mClients.end();
+        return mClients.find (client) != mClients.end();
     }
 
     /** @returns BoundID The id of the bound service */
-    BoundID GetBoundID() const override { return this->mBoundId; }
+    BoundID GetBoundID() const override { return mBoundId; }
     /** @returns The normal service that created this service */
-    BoundServiceParent<Bound>& GetParent () const { return this->mParent; }
+    BoundServiceParent<Bound>& GetParent () const { return mParent; }
     /** @returns PyTuple* The (cloned) OID of the bound object */
-    PyTuple* GetOID() const override { return this->mOID->Clone ()->AsTuple (); }
+    PyTuple* GetOID(PythonArena* arena = HeapPythonArena::instance) const override { return mOID->clone (arena); }
     /** @returns The string ID */
-    const std::string& GetIDString() const override { return this->mIdString; }
+    const std::string& GetIDString() const override { return mIdString; }
     /** @returns The service manager this service is registered in */
-    EVEServiceManager& GetServiceManager() const { return this->mManager; }
+    EVEServiceManager& GetServiceManager() const { return mManager; }
     /** @returns The list of clients that requested access to this service */
-    std::map <Client*, bool>& GetBoundClients () const { return this->m_clients; }
+    const std::map <Client*, bool>& GetBoundClients () const { return mClients; }
 private:
     /** @var The service manager this bound service is registered in */
     EVEServiceManager& mManager;
@@ -317,6 +333,8 @@ private:
     std::vector <std::pair <std::string, CallHandlerBase*>> mHandlers;
     /** @var The clients that have access to this bound service */
     std::map <Client*, bool> mClients;
+    /** @var The memory arena used to track bound-service specific Py types */
+    TrackedPythonArena mArena;
 };
 
 #endif /* !__BOUNDSERVICE_H__ */

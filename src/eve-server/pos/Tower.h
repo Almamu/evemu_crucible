@@ -54,9 +54,9 @@ public:
     void                        ReinforceTower();
 
     /* tower data methods */
-    PyRep* GetDeployFlags();
-    PyRep* GetUsageFlagList();
-    PyRep* GetProcessInfo();
+    PyDataType* GetDeployFlags();
+    PyDataType* GetUsageFlagList();
+    PyDataType* GetProcessInfo();
 
     void UpdatePassword();
     void SetDeployFlags(int8 anchor=0, int8 unanchor=0, int8 online=0, int8 offline=0);

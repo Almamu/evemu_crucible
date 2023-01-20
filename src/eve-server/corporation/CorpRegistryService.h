@@ -45,23 +45,23 @@ protected:
     CorporationDB m_db;
 
     /** @note: none of these fully work, and most are skeleton code only */
-    PyResult CreateAlliance(PyCallArgs& call, PyRep* allianceName, PyRep* shortName, PyRep* description, PyRep* url);
-    PyResult GetRecentKillsAndLosses(PyCallArgs& call);
-    PyResult GetCorporateContacts(PyCallArgs& call);
-    PyResult AddCorporateContact(PyCallArgs& call, PyInt* contactID, PyInt* relationshipID);
-    PyResult EditCorporateContact(PyCallArgs& call, PyInt* contactID, PyInt* relationshipID);
-    PyResult RemoveCorporateContacts(PyCallArgs& call, PyList* contactIDs);
-    PyResult EditContactsRelationshipID(PyCallArgs& call, PyList* contactIDs, PyInt* relationshipID);
-    PyResult GetLabels(PyCallArgs& call);
-    PyResult CreateLabel(PyCallArgs& call, PyWString* name, std::optional <PyInt*> color);
-    PyResult DeleteLabel(PyCallArgs& call, PyInt* labelID);
-    PyResult EditLabel(PyCallArgs& call, PyInt* labelID, std::optional <PyWString*> name, std::optional <PyInt*> color);
-    PyResult AssignLabels(PyCallArgs& call, PyList* contactIDs, PyInt* labelMask);
-    PyResult RemoveLabels(PyCallArgs& call, PyList* contactIDs, PyInt* labelMask);
-    PyResult ResignFromCEO(PyCallArgs& call, PyInt* newCeoID);
+    EVEResult CreateAlliance(EVECallArgs& call, PyDataType* allianceName, PyDataType* shortName, PyDataType* description, PyDataType* url);
+    EVEResult GetRecentKillsAndLosses(EVECallArgs& call);
+    EVEResult GetCorporateContacts(EVECallArgs& call);
+    EVEResult AddCorporateContact(EVECallArgs& call, PyInt* contactID, PyInt* relationshipID);
+    EVEResult EditCorporateContact(EVECallArgs& call, PyInt* contactID, PyInt* relationshipID);
+    EVEResult RemoveCorporateContacts(EVECallArgs& call, PyList* contactIDs);
+    EVEResult EditContactsRelationshipID(EVECallArgs& call, PyList* contactIDs, PyInt* relationshipID);
+    EVEResult GetLabels(EVECallArgs& call);
+    EVEResult CreateLabel(EVECallArgs& call, PyString* name, std::optional <PyInt*> color);
+    EVEResult DeleteLabel(EVECallArgs& call, PyInt* labelID);
+    EVEResult EditLabel(EVECallArgs& call, PyInt* labelID, std::optional <PyString*> name, std::optional <PyInt*> color);
+    EVEResult AssignLabels(EVECallArgs& call, PyList* contactIDs, PyInt* labelMask);
+    EVEResult RemoveLabels(EVECallArgs& call, PyList* contactIDs, PyInt* labelMask);
+    EVEResult ResignFromCEO(EVECallArgs& call, PyInt* newCeoID);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters);
 
 private:
     std::map<uint32, CorpRegistryBound*> m_instances;

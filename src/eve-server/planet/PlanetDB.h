@@ -36,8 +36,8 @@ class CommandCenterPin;
 class PlanetDB
 {
 public:
-    static PyRep* GetPlanetsForChar(uint32 charID);
-    static PyRep* GetMyLaunchesDetails(uint32 charID);
+    static PyDataType* GetPlanetsForChar(uint32 charID);
+    static PyDataType* GetMyLaunchesDetails(uint32 charID);
 
     // must send data.launchID
     static void GetLaunchDetails(Launch::Data &data);

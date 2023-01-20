@@ -28,7 +28,7 @@
 // version
 #include "../eve-common/EVEVersion.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "NetService.h"
 // data managers
 #include "StaticDataMgr.h"

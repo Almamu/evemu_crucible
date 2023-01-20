@@ -33,7 +33,7 @@ public:
     ClientStatsMgr();
 
 protected:
-    PyResult SubmitStats(PyCallArgs &call, PyTuple* data);
+  EVEResult SubmitStats(EVECallArgs&call, PyTuple* data);
 };
 
 #endif//__CLIENT_STAT_MGR_SERVICE_H__INCL__

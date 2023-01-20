@@ -195,7 +195,7 @@ bool ClassEncodeGenerator::ProcessLong(const TiXmlElement* field)
        );
 
     fprintf(mOutputFile,
-             "    %s = new PyLong(%s);\n",
+             "    %s = new PyInt(%s);\n",
              v, name
    );
 
@@ -353,7 +353,7 @@ bool ClassEncodeGenerator::ProcessWString(const TiXmlElement* field)
        );
 
     fprintf(mOutputFile,
-            "    %s = new PyWString(%s);\n",
+            "    %s = new PyString(%s, true);\n",
             v, name
    );
 
@@ -371,7 +371,7 @@ bool ClassEncodeGenerator::ProcessWStringInline(const TiXmlElement* field)
 
     const char* v = top();
     fprintf(mOutputFile,
-            "    %s = new PyWString(\"%s\", %zu);\n",
+            "    %s = new PyString(\"%s\", %zu, true);\n",
             v, value, strlen(value)
    );
 
@@ -505,7 +505,7 @@ bool ClassEncodeGenerator::ProcessObjectInline(const TiXmlElement* field)
 
     fprintf(mOutputFile,
         "    PyString* %s(nullptr);\n"
-        "    PyRep* %s(nullptr);\n"
+        "    PyDataType* %s(nullptr);\n"
         "\n",
         tname,
         aname
@@ -597,7 +597,7 @@ bool ClassEncodeGenerator::ProcessTuple(const TiXmlElement* field)
     fprintf(mOutputFile,
         "    if (%s == nullptr) {\n"
         "        _log(NET__PACKET_WARNING, \"Encode %s: %s is null.  Encoding an empty tuple.\");\n"
-        "        %s = new PyTuple(0);\n"
+        "        %s = new PyTuple();\n"
         "    } else\n",
         name,
             mName, name,
@@ -650,10 +650,10 @@ bool ClassEncodeGenerator::ProcessTupleInline(const TiXmlElement* field)
 
     //now we need to queue up all the storage locations for the fields
     //need to be backward
-    char varname[64];
+    char varname[64] = "";
     while(count-- > 0)
     {
-        snprintf(varname, sizeof(varname), "%s->items[ %u ]", iname, count);
+        snprintf(varname, sizeof(varname), "%s->mItems[ %u ]", iname, count);
         push(varname);
     }
 
@@ -744,7 +744,7 @@ bool ClassEncodeGenerator::ProcessListInline(const TiXmlElement* field)
     char varname[64];
     while(count-- > 0)
     {
-        snprintf(varname, sizeof(varname), "%s->items[ %u ]", iname, count);
+        snprintf(varname, sizeof(varname), "%s->mItems[ %u ]", iname, count);
         push(varname);
     }
 
@@ -775,7 +775,7 @@ bool ClassEncodeGenerator::ProcessListInt(const TiXmlElement* field)
     fprintf(mOutputFile,
         "    PyList* %s = new PyList();\n"
         "    for (auto cur : %s)\n"
-        "        %s->AddItemInt(cur);\n"
+        "        %s->add(new PyInt (cur));\n"
         "    %s = %s;\n"
         "\n",
         rname, name, rname,
@@ -800,7 +800,7 @@ bool ClassEncodeGenerator::ProcessListLong(const TiXmlElement* field)
     fprintf(mOutputFile,
         "    PyList *%s = new PyList();\n"
         "    for (auto cur : %s)\n"
-        "        %s->AddItemLong(cur);\n"
+        "        %s->add(new PyInt(cur));\n"
         "    %s = %s;\n"
         "\n",
         rname, name,
@@ -826,7 +826,7 @@ bool ClassEncodeGenerator::ProcessListStr(const TiXmlElement* field)
     fprintf(mOutputFile,
              "    PyList *%s = new PyList();\n"
              "    for (auto cur : %s)\n"
-             "        %s->AddItemString(cur.c_str());\n"
+             "        %s->add(new PyString(cur.c_str()));\n"
              "    %s = %s;\n"
              "\n",
              rname, name,
@@ -927,7 +927,7 @@ bool ClassEncodeGenerator::ProcessDictInline(const TiXmlElement* field)
             ++count;
 
             fprintf(mOutputFile,
-                "    PyRep* %s(nullptr);\n",
+                "    PyDataType* %s(nullptr);\n",
                 vname
            );
             push(vname);
@@ -938,23 +938,16 @@ bool ClassEncodeGenerator::ProcessDictInline(const TiXmlElement* field)
 
             //now store the result in the dict:
             //taking the keyType into account
-            if (keyTypeInt) {
+            if (keyTypeInt || keyTypeLong) {
                 fprintf(mOutputFile,
-                         "    %s->SetItem(new PyInt(%s), %s);\n"
+                         "    %s->set(new PyInt(%s), %s);\n"
                          "    PyIncRef(%s);\n",
                          iname, key, vname,
                          vname
                );
-            } else if (keyTypeLong) {
-                    fprintf(mOutputFile,
-                             "    %s->SetItem(new PyLong(%s), %s);\n"
-                             "    PyIncRef(%s);\n",
-                             iname, key, vname,
-                             vname
-                   );
             } else {
                 fprintf(mOutputFile,
-                         "    %s->SetItemString(\"%s\", %s);\n"
+                         "    %s->set(\"%s\", %s);\n"
                          "    PyIncRef(%s);\n",
                          iname, key, vname,
                          vname
@@ -1007,7 +1000,7 @@ bool ClassEncodeGenerator::ProcessDictRaw(const TiXmlElement* field)
     fprintf(mOutputFile,
         "    PyDict* %s = new PyDict();\n"
         "    for (auto cur : %s) \n"
-        "        %s->SetItem(new Py%s(cur.first), new Py%s(cur.second));\n"
+        "        %s->set(new Py%s(cur.first), new Py%s(cur.second));\n"
         "    %s = %s;\n"
         "\n",
         rname,
@@ -1035,7 +1028,7 @@ bool ClassEncodeGenerator::ProcessDictInt(const TiXmlElement* field)
         "    PyDict* %s = new PyDict();\n"
         "    for (auto cur : %s) {\n"
         "        PyIncRef(cur.second);\n"
-        "        %s->SetItem(new PyInt(cur.first), cur.second);\n"
+        "        %s->set(new PyInt(cur.first), cur.second);\n"
         "    }\n"
         "\n"
         "    %s = %s;\n",
@@ -1065,7 +1058,7 @@ bool ClassEncodeGenerator::ProcessDictStr(const TiXmlElement* field)
         "    PyDict* %s = new PyDict();\n"
         "    for (auto cur : %s) {\n"
         "        PyIncRef(cur.second);\n"
-        "        %s->SetItemString(cur.first.c_str(), cur.second);\n"
+        "        %s->set(cur.first.c_str(), cur.second);\n"
         "    }\n"
         "\n"
         "    %s = %s;\n",
@@ -1087,7 +1080,7 @@ bool ClassEncodeGenerator::ProcessSubStreamInline(const TiXmlElement* field)
 
     //encode the sub-element into a temp
     fprintf(mOutputFile,
-        "    PyRep* %s;\n",
+        "    PyDataType* %s;\n",
         varname
    );
 
@@ -1112,7 +1105,7 @@ bool ClassEncodeGenerator::ProcessSubStructInline(const TiXmlElement* field)
 
     //encode the sub-element into a temp
     fprintf(mOutputFile,
-        "    PyRep* %s;\n",
+        "    PyDataType* %s;\n",
         varname
    );
 

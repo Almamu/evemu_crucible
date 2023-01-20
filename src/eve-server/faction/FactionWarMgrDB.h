@@ -33,8 +33,8 @@ class PyRep;
 class FactionWarMgrDB : public ServiceDB
 {
 public:
-    PyRep *GetWarFactions();
-    PyRep *GetFacWarSystems();
+    PyDataType *GetWarFactions();
+    PyDataType *GetFacWarSystems();
     uint32 GetFactionMilitiaCorporation(const uint32 factionID);
 };
 

@@ -32,7 +32,7 @@
 #include "chat/LSCService.h"
 
 
-PyRep *LSCChannelChar::Encode() const {
+PyDataType *LSCChannelChar::Encode() const {
     ChannelJoinChannelCharsLine line;
 
     line.allianceID = m_allianceID;
@@ -47,16 +47,19 @@ PyRep *LSCChannelChar::Encode() const {
     rs.header.push_back("ownerID");
     rs.header.push_back("ownerName");
     rs.header.push_back("typeID");
-    rs.line = new PyList();
-    rs.line->AddItemInt( m_charID );
-    rs.line->AddItemString( m_charName.c_str() );
-    rs.line->AddItemInt( 1378 );    // fix this ... wtf is this??
+
+    rs.line = new PyList {
+        new PyInt (m_charID),
+        new PyString (m_charName),
+        new PyInt (1378) // fix this... wtf is this??
+    };
+
     line.extra = rs.Encode();//m_extra;
 
     return line.Encode();
 }
 
-PyRep *LSCChannelMod::Encode() {
+PyDataType *LSCChannelMod::Encode() {
     ChannelJoinChannelModsLine line;
 
     line.accessor = m_accessor;
@@ -279,7 +282,7 @@ OnLSC_SenderInfo *LSCChannel::_FakeSenderInfo() {
     return sender;
 }
 
-PyRep *LSCChannel::EncodeID() {
+PyDataType *LSCChannel::EncodeID() {
     switch (m_type) {
         case LSC::Type::global:
         case LSC::Type::corp:
@@ -307,7 +310,7 @@ PyRep *LSCChannel::EncodeID() {
     return new PyInt(m_channelID);
 }
 
-PyRep *LSCChannel::EncodeStaticChannel(uint32 charID) {
+PyDataType *LSCChannel::EncodeStaticChannel(uint32 charID) {
     ChannelInfoLine line;
         line.channelID = m_channelID;
         line.ownerID = m_ownerID;
@@ -329,7 +332,7 @@ PyRep *LSCChannel::EncodeStaticChannel(uint32 charID) {
     return line.Encode();
 }
 
-PyRep *LSCChannel::EncodeDynamicChannel(uint32 charID) {
+PyDataType *LSCChannel::EncodeDynamicChannel(uint32 charID) {
     ChannelJoinChannelInfo info;
         info.channelID = m_channelID;
         info.comparisonKey = m_comparisonKey;
@@ -351,17 +354,17 @@ PyRep *LSCChannel::EncodeDynamicChannel(uint32 charID) {
     return info.Encode();
 }
 
-PyRep *LSCChannel::EncodeChannelMods()
+PyDataType *LSCChannel::EncodeChannelMods()
 {
     ChannelJoinChannelMods info;
     info.lines = new PyList();
     std::map<uint32, LSCChannelMod>::iterator itr = m_mods.begin();
     for(; itr != m_mods.end(); itr++)
-        info.lines->AddItem( itr->second.Encode() );
+        info.lines->add( itr->second.Encode() );
     return info.Encode();
 }
 
-PyRep *LSCChannel::EncodeChannelChars() {
+PyDataType *LSCChannel::EncodeChannelChars() {
     /*
         [PyObjectData Name: util.Rowset]
           [PyDict 3 kvp]
@@ -382,11 +385,11 @@ PyRep *LSCChannel::EncodeChannelChars() {
     info.lines = new PyList();
     std::map<uint32, LSCChannelChar>::iterator itr = m_chars.begin();
     for(; itr != m_chars.end(); itr++)
-        info.lines->AddItem( itr->second.Encode() );
+        info.lines->add( itr->second.Encode() );
     return info.Encode();
 }
 
-PyRep *LSCChannel::EncodeEmptyChannelChars() {
+PyDataType *LSCChannel::EncodeEmptyChannelChars() {
     ChannelJoinChannelChars info;
     info.lines = new PyList();
     return info.Encode();

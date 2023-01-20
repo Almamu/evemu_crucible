@@ -154,17 +154,6 @@
     </tupleInline>
   </elementDef>
 
-  <elementDef name="CallMachoBindObject_call">
-      <tupleInline>
-        <!-- 0 -->
-        <string name="method_name"  safe="true" none_marker="" />
-        <!-- 1 -->
-        <tuple name="arguments" />
-        <!-- 2 -->
-        <dict name="dict_arguments" />
-      </tupleInline>
-  </elementDef>
-
   <!-- Used by EVECollector -->
   <elementDef name="CallMachoBindObject">
     <tupleInline>

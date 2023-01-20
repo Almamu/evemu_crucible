@@ -35,8 +35,8 @@ public:
     DevToolsProviderService();
 
 protected:
-    PyResult GetLoader(PyCallArgs& call);
-    PyResult ExceptionFluentExample(PyCallArgs& call, PyInt* value);
+  EVEResult GetLoader(EVECallArgs& call);
+  EVEResult ExceptionFluentExample(EVECallArgs& call, PyInt* value);
 };
 
 #endif

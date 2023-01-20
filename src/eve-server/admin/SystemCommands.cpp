@@ -30,7 +30,7 @@
 #include "tables/invGroups.h"
 #include "tables/invCategories.h"
 
-PyResult Command_goto(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_goto(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount() != 4
         || !args.isNumber(1)
@@ -48,13 +48,13 @@ PyResult Command_goto(Client* pClient, CommandDB* db, EVEServiceManager &service
     return new PyString("Goto successful.");
 }
 
-PyResult Command_translocate(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_translocate(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     return Command_tr(pClient,db,services,args);
 }
 
 // `UpdateBubble` is a reusable function that synchronizes the player's position
 // and ensures that their bubble exists.
-static PyResult UpdateBubble(Client *pClient) {
+static EVEResult UpdateBubble(Client *pClient) {
     if (!pClient->IsInSpace())
         throw CustomError ("You're not in space.");
     if (pClient->GetShipSE()->DestinyMgr() == nullptr)
@@ -107,7 +107,7 @@ static PyResult UpdateBubble(Client *pClient) {
  * {'messageKey': 'LocationNameInvalidTaken', 'dataID': 17882853, 'suppressable': False, 'bodyID': 259287, 'messageType': 'notify', 'urlAudio': '', 'urlIcon': '', 'titleID': None, 'messageID': 1120}
  */
 /** @todo this is a good start, but will need a bit more logic to idiot-proof and finish  */
-PyResult Command_tr(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_tr(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     // i dont expect this to be used very often, so a bit of bloat is acceptable
 
     if (pClient == nullptr) // should never hit,
@@ -135,7 +135,7 @@ PyResult Command_tr(Client* pClient, CommandDB* db, EVEServiceManager &services,
             str << "3ed arg = me|fleet|home|last|shipID|itemID|locationID|y coords|moon|planet <br>"; //80
             str << "4th arg = fleet|home|last|shipID|itemID|locationID|z coords|moon|planet <br>"; //77
             str << "typical use is .tr locationID<br>";  //35
-            str << "<br>As there are too many options to explain in this msg, a full usage list can be found on our forums.<br>";  //105
+            str << "<br>as there are too many options to explain in this msg, a full usage list can be found on our forums.<br>";  //105
             int size = 500;
             char* reply = Memory::Allocator::NewArray<char>(&sAllocators.tickAllocator, size);
             snprintf(reply, size, str.str().c_str());
@@ -496,7 +496,7 @@ PyResult Command_tr(Client* pClient, CommandDB* db, EVEServiceManager &services,
     return nullptr;
 }
 
-static PyResult generic_createitem(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
+static EVEResult generic_createitem(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
     int typeID = -1;
     if (args.isNumber(1)) {
         typeID = atoi(args.arg(1).c_str());
@@ -579,7 +579,7 @@ static PyResult generic_createitem(Client *pClient, CommandDB *db, EVEServiceMan
     return new PyInt(iRef.get()->itemID());
 }
 
-static PyResult generic_loaditem(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
+static EVEResult generic_loaditem(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
     int typeID = -1;
     if (args.isNumber(2)) {
         typeID = atoi(args.arg(2).c_str());
@@ -662,29 +662,28 @@ static PyResult generic_loaditem(Client *pClient, CommandDB *db, EVEServiceManag
     return new PyInt(iRef.get()->itemID());
 }
 
-PyResult Command_create(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_create(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     if (args.argCount() < 2) {
         throw CustomError ("Correct Usage: /create [typeID|\"Type Name\"] [qty] [where]");
     }
     return generic_createitem(pClient, db, services, args);
 }
 
-PyResult Command_load(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_load(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     if (args.argCount() < 3) {
         throw CustomError ("Correct Usage: /load me [typeID|\"Type Name\"] [qty] [where]");
     }
     return generic_loaditem(pClient, db, services, args);
 }
 
-PyResult Command_createitem(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_createitem(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     if (args.argCount() < 2) {
         throw CustomError ("Correct Usage: /createitem [typeID|\"Type Name\"] [qty] [where]");
     }
     return generic_createitem(pClient, db, services, args);
 }
 
-
-PyResult Command_kill(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_kill(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount() == 2) {
         if (!args.isNumber(1)) {
@@ -719,7 +718,7 @@ PyResult Command_kill(Client* pClient, CommandDB* db, EVEServiceManager &service
     return nullptr;
 }
 
-PyResult Command_killallnpcs(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_killallnpcs(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (!pClient->IsInSpace())
         throw CustomError ("You're not in space.");
@@ -744,7 +743,7 @@ PyResult Command_killallnpcs(Client* pClient, CommandDB* db, EVEServiceManager &
     return nullptr;
 }
 
-PyResult Command_unspawn(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_unspawn(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
 #define DEFAULT_RANGE 500000
     if (!pClient->IsInSpace()) {
@@ -847,7 +846,7 @@ PyResult Command_unspawn(Client* pClient, CommandDB* db, EVEServiceManager &serv
     return new PyBool(true);
 }
 
-PyResult Command_location(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_location(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (!pClient->IsInSpace())
         throw CustomError ("You're not in space.");
@@ -884,7 +883,7 @@ PyResult Command_location(Client* pClient, CommandDB* db, EVEServiceManager &ser
     return new PyString(reply);
 }
 
-PyResult Command_syncloc(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_syncloc(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (!pClient->IsInSpace())
         throw CustomError ("You're not in space.");
@@ -904,7 +903,7 @@ PyResult Command_syncloc(Client* pClient, CommandDB* db, EVEServiceManager &serv
     return new PyString("Position synchronized.");
 }
 
-PyResult Command_syncpos(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_syncpos(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (!pClient->IsInSpace())
         throw CustomError ("You're not in space.");
@@ -924,12 +923,11 @@ PyResult Command_syncpos(Client* pClient, CommandDB* db, EVEServiceManager &serv
     return new PyString("All Positions synchronized.");
 }
 
-
-PyResult Command_update(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
+EVEResult Command_update(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
     return UpdateBubble(pClient);
 }
 
-PyResult Command_sendstate(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
+EVEResult Command_sendstate(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
     _log(COMMAND__MESSAGE, "SystemCommands::SendState() - checking if in space");
     if (!pClient->IsInSpace()) {
         throw CustomError ("You're not in space.");
@@ -969,7 +967,7 @@ PyResult Command_sendstate(Client *pClient, CommandDB *db, EVEServiceManager &se
     return new PyString("Update sent.");
 }
 
-PyResult Command_addball(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
+EVEResult Command_addball(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
     if (!pClient->IsInSpace())
         throw CustomError ("You're not in space.");
     if (pClient->GetShipSE()->DestinyMgr() == nullptr)
@@ -987,7 +985,7 @@ PyResult Command_addball(Client *pClient, CommandDB *db, EVEServiceManager &serv
     return new PyString("Update sent.");
 }
 
-PyResult Command_addball2(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
+EVEResult Command_addball2(Client *pClient, CommandDB *db, EVEServiceManager &services, const Seperator &args) {
     if (!pClient->IsInSpace())
         throw CustomError ("You're not in space.");
     if (pClient->GetShipSE()->DestinyMgr() == nullptr)
@@ -1005,7 +1003,7 @@ PyResult Command_addball2(Client *pClient, CommandDB *db, EVEServiceManager &ser
     return new PyString("Update sent.");
 }
 
-PyResult Command_cloak(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_cloak(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount() == 1) {
         if (pClient->IsInSpace()) {
@@ -1021,7 +1019,7 @@ PyResult Command_cloak(Client* pClient, CommandDB* db, EVEServiceManager &servic
     return nullptr;
 }
 
-PyResult Command_hop(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_hop(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     /*22:49:01 W GMCommands: Command_hop(): This command passes args.argCount() = 1.
      * sm.RemoteSvc('slash').SlashCmd('/hop %s' % distance)
      */
@@ -1029,7 +1027,7 @@ PyResult Command_hop(Client* pClient, CommandDB* db, EVEServiceManager &services
 }
 
 //13:54:11 W GMCommands: Command_sov(): This command passes args.argCount() = 3.
-PyResult Command_sov(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_sov(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     sLog.Warning("GMCommands: Command_sov()", "This command passes args.argCount() = %u.", args.argCount());
     /*
      *  ' /sov complete ' + str(itemID)
@@ -1043,7 +1041,7 @@ PyResult Command_sov(Client* pClient, CommandDB* db, EVEServiceManager &services
 }
 
 //13:54:11 W GMCommands: Command_pos(): This command passes args.argCount() = 3.
-PyResult Command_pos(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_pos(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
 //    sLog.Warning("SystemCommands: Command_pos()", "This command passes args.argCount() = %u.", args.argCount());
 
     /*

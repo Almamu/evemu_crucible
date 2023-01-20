@@ -35,7 +35,7 @@ public:
 
 protected:
     //MissionDB m_db;
-    PyResult GetMyCourierMissions(PyCallArgs& call);
+  EVEResult GetMyCourierMissions(EVECallArgs& call);
 };
 
 #endif

@@ -40,8 +40,10 @@ CharUnboundMgrService::CharUnboundMgrService(EVEServiceManager& mgr) :
 {
     this->m_cache = mgr.Lookup <ObjCacheService>("objectCaching");
 
-    this->Add("SelectCharacterID", static_cast <PyResult (CharUnboundMgrService::*) (PyCallArgs&, PyInt*, std::optional <PyInt*>, std::optional <PyInt*>)> (&CharUnboundMgrService::SelectCharacterID));
-    this->Add("SelectCharacterID", static_cast <PyResult (CharUnboundMgrService::*) (PyCallArgs&, PyInt*, std::optional <PyBool*>, std::optional <PyInt*>)> (&CharUnboundMgrService::SelectCharacterID));
+    this->Add("SelectCharacterID", static_cast <EVEResult (CharUnboundMgrService::*) (
+                                        EVECallArgs&, PyInt*, std::optional <PyInt*>, std::optional <PyInt*>)> (&CharUnboundMgrService::SelectCharacterID));
+    this->Add("SelectCharacterID", static_cast <EVEResult (CharUnboundMgrService::*) (
+                                        EVECallArgs&, PyInt*, std::optional <PyBool*>, std::optional <PyInt*>)> (&CharUnboundMgrService::SelectCharacterID));
     this->Add("GetCharacterToSelect", &CharUnboundMgrService::GetCharacterToSelect);
     this->Add("GetCharactersToSelect", &CharUnboundMgrService::GetCharactersToSelect);
     this->Add("GetCharacterInfo", &CharUnboundMgrService::GetCharacterInfo);
@@ -55,39 +57,37 @@ CharUnboundMgrService::CharUnboundMgrService(EVEServiceManager& mgr) :
     this->Add("CreateCharacterWithDoll", &CharUnboundMgrService::CreateCharacterWithDoll);
 }
 
-PyResult CharUnboundMgrService::ValidateNameEx(PyCallArgs &call, PyRep* name)
+EVEResult CharUnboundMgrService::ValidateNameEx(EVECallArgs&call, PyDataType* name)
 {
-    return CharacterDB::ValidateCharNameRep(PyRep::StringContent(name));
+    return CharacterDB::ValidateCharNameRep(name->string());
 }
 
-PyResult CharUnboundMgrService::GetCharacterToSelect(PyCallArgs &call, PyInt* characterID)
-{
-    return CharacterDB::GetCharSelectInfo(characterID->value());
+EVEResult CharUnboundMgrService::GetCharacterToSelect(EVECallArgs&call, PyInt* characterID) {
+    return CharacterDB::GetCharSelectInfo(characterID->value(), &call.arena);
 }
 
-PyResult CharUnboundMgrService::GetCharactersToSelect(PyCallArgs &call)
-{
-    return CharacterDB::GetCharacterList(call.client->GetUserID());
+EVEResult CharUnboundMgrService::GetCharactersToSelect(EVECallArgs&call) {
+    return CharacterDB::GetCharacterList(call.client->GetUserID(), &call.arena);
 }
 
-PyResult CharUnboundMgrService::DeleteCharacter(PyCallArgs &call, PyInt* characterID)
+EVEResult CharUnboundMgrService::DeleteCharacter(EVECallArgs&call, PyInt* characterID)
 {
     CharacterDB::DeleteCharacter(characterID->value());
     return nullptr;
 }
 
-PyResult CharUnboundMgrService::PrepareCharacterForDelete(PyCallArgs &call, PyInt* characterID)
+EVEResult CharUnboundMgrService::PrepareCharacterForDelete(EVECallArgs&call, PyInt* characterID)
 {
-    return new PyLong(CharacterDB::PrepareCharacterForDelete(call.client->GetUserID(), characterID->value()));
+    return new PyInt(CharacterDB::PrepareCharacterForDelete(call.client->GetUserID(), characterID->value()));
 }
 
-PyResult CharUnboundMgrService::CancelCharacterDeletePrepare(PyCallArgs &call, PyInt* characterID)
+EVEResult CharUnboundMgrService::CancelCharacterDeletePrepare(EVECallArgs&call, PyInt* characterID)
 {
     CharacterDB::CancelCharacterDeletePrepare(call.client->GetUserID(), characterID->value());
     return nullptr;
 }
 
-PyResult CharUnboundMgrService::IsUserReceivingCharacter(PyCallArgs &call) {
+EVEResult CharUnboundMgrService::IsUserReceivingCharacter(EVECallArgs&call) {
     /*  this is called when selecting the 3ed slot when there are 2 chars on account already.
      * returning true will disable creating a 3ed character.
      * returning false will allow creating a 3ed character.
@@ -98,7 +98,7 @@ PyResult CharUnboundMgrService::IsUserReceivingCharacter(PyCallArgs &call) {
 }
 
 //  called from petitioner (but only when session.characterID is None)
-PyResult CharUnboundMgrService::GetCharacterInfo(PyCallArgs &call) {
+EVEResult CharUnboundMgrService::GetCharacterInfo(EVECallArgs&call) {
     // chars = sm.RemoteSvc('charUnboundMgr').GetCharacterInfo()
     _log(CLIENT__ERROR, "Called GetCharacterInfo");
     //   characterID, characterName
@@ -106,7 +106,7 @@ PyResult CharUnboundMgrService::GetCharacterInfo(PyCallArgs &call) {
     return nullptr;
 }
 
-PyResult CharUnboundMgrService::GetCharCreationInfo(PyCallArgs &call) {
+EVEResult CharUnboundMgrService::GetCharCreationInfo(EVECallArgs&call) {
     PyDict *result = new PyDict();
     //send all the cache hints needed for char creation.
     this->m_cache->InsertCacheHints(ObjCacheService::hCharCreateCachables, result);
@@ -114,20 +114,20 @@ PyResult CharUnboundMgrService::GetCharCreationInfo(PyCallArgs &call) {
     return result;
 }
 
-PyResult CharUnboundMgrService::GetCharNewExtraCreationInfo(PyCallArgs &call) {
+EVEResult CharUnboundMgrService::GetCharNewExtraCreationInfo(EVECallArgs&call) {
     PyDict *result = new PyDict();
     this->m_cache->InsertCacheHints(ObjCacheService::hCharCreateNewExtraCachables, result);
     _log(CLIENT__MESSAGE, "Sending char new extra creation info reply");
     return result;
 }
 
-PyResult CharUnboundMgrService::SelectCharacterID(PyCallArgs& call, PyInt* characterID, std::optional <PyBool*> loadDungeon, std::optional <PyInt*> secondChoiceID) {
+EVEResult CharUnboundMgrService::SelectCharacterID(EVECallArgs& call, PyInt* characterID, std::optional <PyBool*> loadDungeon, std::optional <PyInt*> secondChoiceID) {
     PyInt* loadDungeons = new PyInt (loadDungeon.has_value () ? loadDungeon.value()->value() : 0);
 
     return this->SelectCharacterID (call, characterID, loadDungeons, secondChoiceID);
 }
 
-PyResult CharUnboundMgrService::SelectCharacterID(PyCallArgs &call, PyInt* characterID, std::optional <PyInt*> loadDungeon, std::optional <PyInt*> secondChoiceID)
+EVEResult CharUnboundMgrService::SelectCharacterID(EVECallArgs&call, PyInt* characterID, std::optional <PyInt*> loadDungeon, std::optional <PyInt*> secondChoiceID)
 {
     if (!IsCharacterID(characterID->value())) {
         sLog.Error("Client::SelectCharacter()", "CharacterID %u invalid.", characterID->value());
@@ -139,24 +139,24 @@ PyResult CharUnboundMgrService::SelectCharacterID(PyCallArgs &call, PyInt* chara
     return nullptr;
 }
 
-PyResult CharUnboundMgrService::CreateCharacterWithDoll(PyCallArgs &call, PyRep* characterName, PyInt* bloodlineID, PyInt* genderID, PyInt* ancestryID, PyObject* characterInfo, PyObject* portraitInfo, PyInt* schoolID) {
+EVEResult CharUnboundMgrService::CreateCharacterWithDoll(EVECallArgs&call, PyDataType* characterName, PyInt* bloodlineID, PyInt* genderID, PyInt* ancestryID, PyObject* characterInfo, PyObject* portraitInfo, PyInt* schoolID) {
     // charID = sm.RemoteSvc('charUnboundMgr').CreateCharacterWithDoll(charactername, bloodlineID, genderID, ancestryID, charInfo, portraitInfo, schoolID)
     // ensure the PyObject* is an util.KeyVal, this might benefit from some helper methods instead of directly using the PyObject
-    if (characterInfo->type()->content() != "util.KeyVal" || characterInfo->arguments()->IsDict() == false) {
-        codelog(SERVICE__ERROR, "%s: Failed to decode characterInfo", GetName());
+    if (characterInfo->type()->content() != "util.KeyVal" || characterInfo->arguments()->is<PyDict>() == false) {
+        codelog(SERVICE__ERROR, "%s: Failed to decode characterInfo", GetName().c_str());
         return PyStatic.NewZero();
     }
 
     // ensure the PyObject* is an util.KeyVal, this might benefit from some helper methods instead of directly using the PyObject
-    if (portraitInfo->type()->content() != "util.KeyVal" || portraitInfo->arguments()->IsDict() == false) {
-        codelog(SERVICE__ERROR, "%s: Failed to decode portraitInfo", GetName());
+    if (portraitInfo->type()->content() != "util.KeyVal" || portraitInfo->arguments()->is<PyDict>() == false) {
+        codelog(SERVICE__ERROR, "%s: Failed to decode portraitInfo", GetName().c_str());
         return PyStatic.NewZero();
     }
 
-    PyDict* charInfoData = characterInfo->arguments()->AsDict();
-    PyDict* portraitInfoData = portraitInfo->arguments()->AsDict();
+    PyDict* charInfoData = characterInfo->arguments()->as<PyDict>();
+    PyDict* portraitInfoData = portraitInfo->arguments()->as<PyDict>();
     // check name and throw on failure before we get too far in this
-    CharacterDB::ValidateCharName(PyRep::StringContent(characterName));
+    CharacterDB::ValidateCharName(characterName->string());
 
     Client* pClient = call.client;
     pClient->CreateChar(true);
@@ -246,7 +246,7 @@ PyResult CharUnboundMgrService::CreateCharacterWithDoll(PyCallArgs &call, PyRep*
     corpData.baseID = cdata.stationID;
 
     cdata.typeID = char_type->id();
-    cdata.name = PyRep::StringContent(characterName);
+    cdata.name = characterName->string();
     cdata.locationID = cdata.stationID;
     cdata.logonMinutes = 2;
 

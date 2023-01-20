@@ -20,7 +20,7 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "planet/Planet.h"
 #include "pos/sovStructures/TCU.h"
 #include "packets/Sovereignty.h"
@@ -66,20 +66,20 @@ void TCUSE::SetOnline()
     svDataMgr.AddSovClaim(sovData);
 
     //Send ProcessSovStatusChanged Notification
-    PyDict *args = new PyDict;
     _log(SOV__DEBUG, "Sending ProcessSovStatusChanged for %u:%u", sovData.solarSystemID, sovData.allianceID);
 
-    args->SetItemString("contested", new PyInt(sovData.contested));
-    args->SetItemString("corporationID", new PyInt(sovData.corporationID));
-    args->SetItemString("claimTime", new PyLong(sovData.claimTime));
-    args->SetItemString("claimStructureID", new PyInt(sovData.claimStructureID));
-    args->SetItemString("hubID", new PyInt(sovData.hubID));
-    args->SetItemString("allianceID", new PyInt(sovData.allianceID));
-    args->SetItemString("solarSystemID", new PyInt(sovData.solarSystemID));
-
-    PyTuple* data = new PyTuple(2);
-        data->SetItem(0, new PyInt(sovData.solarSystemID));
-        data->SetItem(1, new PyObject("util.KeyVal", args));
+    PyTuple* data = new PyTuple {
+        new PyInt (sovData.solarSystemID),
+        new PyObject ("util.KeyVal", new PyDict {
+            {"contested", new PyInt(sovData.contested)},
+            {"corporationID", new PyInt(sovData.corporationID)},
+            {"claimTime", new PyInt(sovData.claimTime)},
+            {"claimStructureID", new PyInt(sovData.claimStructureID)},
+            {"hubID", new PyInt(sovData.hubID)},
+            {"allianceID", new PyInt(sovData.allianceID)},
+            {"solarSystemID", new PyInt(sovData.solarSystemID)},
+        })
+    };
 
     std::vector<Client*> list;
     sEntityList.GetClients(list);
@@ -101,9 +101,10 @@ void TCUSE::SetOffline()
     //Send ProcessSovStatusChanged Notification
     _log(SOV__DEBUG, "Sending ProcessSovStatusChanged (removing sov claim) %u", m_system->GetID());
 
-    PyTuple* data = new PyTuple(2);
-        data->SetItem(0, new PyInt(m_system->GetID()));
-        data->SetItem(1, PyStatic.NewNone());
+    PyTuple* data = new PyTuple {
+        new PyInt (m_system->GetID()),
+        PyStatic.NewNone()
+    };
 
     std::vector<Client*> list;
     sEntityList.GetClients(list);

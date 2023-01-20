@@ -320,7 +320,7 @@ void UnmarshalLogText( const Seperator& cmd )
             continue;
         }
 
-        PyRep* r = InflateUnmarshal( marshalBinary );
+        PyDataType* r = InflateUnmarshal( marshalBinary );
         if( NULL == r )
             sLog.Error( cmdName, "Failed to unmarshal binary." );
         else

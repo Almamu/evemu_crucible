@@ -12,7 +12,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "Client.h"
 #include "EntityList.h"
 #include "StaticDataMgr.h"
@@ -429,7 +429,7 @@ void ModuleManager::CheckGroupFitLimited(EVEItemFlags flag, InventoryItemRef iRe
         // some of these are checked client-side (by attrib) so this may not be needed.
         if (GetFittedModuleCountByGroup(iRef->groupID()) >= iRef->GetAttribute(AttrMaxGroupFitted).get_int()) {
             /*
-            std::map<std::string, PyRep *> args;
+            std::map<std::string, PyDataType *> args;
             args["noOfModules"]         = new PyInt(iRef->GetAttribute(AttrMaxGroupFitted).get_int());
             args["noOfModulesFitted"]   = new PyInt(GetFittedModuleCountByGroup(iRef->groupID()));
             args["ship"]                = new PyInt(pShipItem->itemID());
@@ -544,7 +544,7 @@ bool ModuleManager::AddModule(ModuleItemRef mRef, EVEItemFlags flag)
     return true;
     /*
     if (is_log_enabled(MODULE__DEBUG)) { // debug msg?
-        std::map<std::string, PyRep *> args;
+        std::map<std::string, PyDataType *> args;
         args["item"]  = new PyString(iRef->itemName());
         args["slot"]  = new PyString(sDataMgr.GetFlagName(flag));
         throw PyException( MakeUserError("ModuleFit", args));
@@ -698,7 +698,7 @@ void ModuleManager::Activate(int32 itemID, uint16 effectID, int32 targetID, int3
             // report player tractoring item?
             pShipItem->GetPilot()->SendNotifyMsg("Your %s cannot engage the %s, which is already being tractor beamed by something else.", pMod->GetSelf()->name(), pSE->GetName());
             return;
-        //std::map<std::string, PyRep *> args;
+        //std::map<std::string, PyDataType *> args;
         //args["module"]  = new PyInt(itemID);
         //throw PyException(MakeUserError("InvalidTargetCanAlreadyTractored", args));
         }
@@ -823,7 +823,7 @@ void ModuleManager::RepairModules()
             cur.second->Repair();
 }
 
-PyRep* ModuleManager::ModuleRepair(uint32 modID)
+PyDataType* ModuleManager::ModuleRepair(uint32 modID)
 {
     /*  Restrictions/Capabilities
      *
@@ -994,14 +994,10 @@ void ModuleManager::LoadCharge(InventoryItemRef chargeRef, EVEItemFlags flag)
         if (pShipItem->HasPilot() and pShipItem->GetPilot()->IsInSpace()) {
             Rsp_CommonGetInfo_Entry entry2;
             if (chargeRef->Populate(entry2)) {
-                PyTuple* tuple = new PyTuple(3);
-                    tuple->SetItem(0, new PyInt(chargeRef->locationID()));
-                    tuple->SetItem(1, new PyInt(chargeRef->flag()));
-                    tuple->SetItem(2, new PyInt(chargeRef->typeID()));
-                PyTuple* result = new PyTuple(2);
-                    result->SetItem(0, new PyInt(chargeRef->locationID()));
-                    result->SetItem(1, new PyObject("util.KeyVal", entry2.Encode()));
-                pShipItem->GetPilot()->SendNotification("OnGodmaPrimeItem", "clientID", result);     // this is sequenced
+                pShipItem->GetPilot()->SendNotification("OnGodmaPrimeItem", "clientID", new PyTuple {
+                    new PyInt (chargeRef->locationID()),
+                    new PyObject ("util.KeyVal", entry2.Encode())
+                });     // this is sequenced
             } else {
                 sLog.Error("MM::LoadCharge","cannot Populate() %s", chargeRef->name());
             }

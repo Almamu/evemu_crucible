@@ -12,7 +12,7 @@
 #define EVE_STATION_OFFICE_H
 
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "inventory/Inventory.h"
 #include "inventory/InventoryItem.h"
 #include "station/StationDB.h"
@@ -61,7 +61,7 @@ protected:
         return StationOfficeRef(new StationOffice(officeID, type, idata, odata));
     }
 
-    virtual PyRep* GetItem() const                      { return GetItemRow(); }
+    virtual PyDataType* GetItem() const                      { return GetItemRow(); }
 
 private:
     OfficeData m_data;

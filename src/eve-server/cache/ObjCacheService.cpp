@@ -30,7 +30,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "cache/ObjCacheService.h"
 
 const char *const ObjCacheService::LoginCachableObjects[] = {
@@ -244,14 +244,14 @@ ObjCacheService::ObjCacheService(const char *cacheDir) :
     m_cacheKeys["charNewExtraCreationInfo.specialities"] = "specialities";
 }
 
-PyResult ObjCacheService::GetCachableObject(PyCallArgs &call, PyRep* shared, PyRep* objectID, PyTuple* cacheVersion, PyInt* nodeID) {
+EVEResult ObjCacheService::GetCachableObject(EVECallArgs&call, PyDataType* shared, PyDataType* objectID, PyTuple* cacheVersion, PyInt* nodeID) {
     int64 timestamp = 0;
     int64 version = 0;
 
     // nothing here is used yet, but is kept here as documentation for when it's eventually used
     if (cacheVersion->size() == 2) {
-        timestamp = PyRep::IntegerValue(cacheVersion->GetItem(0));
-        version = PyRep::IntegerValue(cacheVersion->GetItem(1));
+        timestamp = cacheVersion->at (0)->i64();
+        version = cacheVersion->at (1)->i64();
     }
   /*
 20:27:48 L ObjCacheService: Handle_GetCachableObject
@@ -270,7 +270,7 @@ PyResult ObjCacheService::GetCachableObject(PyCallArgs &call, PyRep* shared, PyR
 20:27:48 [SvcCall]         [ 3] Integer field: 333444
   */
     //sLog.White( "ObjCacheService", "Handle_GetCachableObject" );
-    //call.Dump(SERVICE__CALL_DUMP);
+    //call.dump(SERVICE__CALL_DUMP);
     if (!_LoadCachableObject(objectID))
         return nullptr;   //print done already
 
@@ -283,9 +283,7 @@ PyResult ObjCacheService::GetCachableObject(PyCallArgs &call, PyRep* shared, PyR
     }
     */
 
-    PyObject *result = m_cache.GetCachedObject(objectID);
-
-    return result;
+    return m_cache.GetCachedObject(objectID, &call.arena);
 }
 
 void ObjCacheService::PrimeCache()
@@ -306,7 +304,7 @@ PySubStream* ObjCacheService::LoadCachedFile(const char *filename, const char *o
 }
 
 
-bool ObjCacheService::_LoadCachableObject(const PyRep *objectID) {
+bool ObjCacheService::_LoadCachableObject(PyDataType *objectID) {
     if (m_cache.HaveCached(objectID))
         return true;
 
@@ -323,7 +321,7 @@ bool ObjCacheService::_LoadCachableObject(const PyRep *objectID) {
 
     //first try to generate it from the database...
     //we go to the DB with a string, not a rep
-    PyRep *cache = m_db.GetCachableObject(objectID_string);
+    PyDataType *cache = m_db.GetCachableObject(objectID_string);
     if (cache != nullptr) {
         //we have generated the cache file in question, remember it
         m_cache.UpdateCache(objectID, &cache);
@@ -354,7 +352,7 @@ bool ObjCacheService::_LoadCachableObject(const PyRep *objectID) {
     return true;
 }
 
-PyRep *ObjCacheService::GetCacheHint(const PyRep* objectID) {
+PyDataType *ObjCacheService::GetCacheHint(PyDataType* objectID) {
     if (!_LoadCachableObject(objectID))
         return nullptr;    //print done already
 
@@ -402,30 +400,30 @@ void ObjCacheService::InsertCacheHints(hintSet hset, PyDict *into) {
 
         //get the hint
         PyString* str = new PyString( objects[r] );
-        PyRep *cache_hint = GetCacheHint( str );
+        PyDataType *cache_hint = GetCacheHint( str );
         PyDecRef( str );
 
         if (cache_hint == nullptr)
             continue;    //print already done.
 
-        into->SetItemString(res->second.c_str(), cache_hint);
+        into->set (res->second.c_str(), cache_hint);
     }
 }
 
-bool ObjCacheService::IsCacheLoaded(const PyRep *objectID) const {
+bool ObjCacheService::IsCacheLoaded(PyDataType *objectID) const {
     return(m_cache.HaveCached(objectID));
 }
 
-void ObjCacheService::InvalidateCache(const PyRep *objectID) {
+void ObjCacheService::InvalidateCache(PyDataType *objectID) {
     m_cache.InvalidateCache(objectID);
 }
 
-void ObjCacheService::GiveCache(const PyRep *objectID, PyRep **contents) {
+void ObjCacheService::GiveCache(PyDataType *objectID, PyDataType **contents) {
     //contents is consumed.
     m_cache.UpdateCache(objectID, contents);
 }
 
-PyObject *ObjCacheService::MakeObjectCachedSessionMethodCallResult(const PyRep *objectID, const char *sessionInfoName, const char *clientWhen) {
+PyObject *ObjCacheService::MakeObjectCachedSessionMethodCallResult(PyDataType *objectID, const char *sessionInfoName, const char *clientWhen) {
     if (!IsCacheLoaded(objectID))
         return nullptr;
 
@@ -436,7 +434,7 @@ PyObject *ObjCacheService::MakeObjectCachedSessionMethodCallResult(const PyRep *
     return c.Encode();
 }
 
-PyObject *ObjCacheService::MakeObjectCachedMethodCallResult(const PyRep *objectID, const char *versionCheck) {
+PyObject *ObjCacheService::MakeObjectCachedMethodCallResult(PyDataType *objectID, const char *versionCheck) {
     if (!IsCacheLoaded(objectID))
         return nullptr;
 

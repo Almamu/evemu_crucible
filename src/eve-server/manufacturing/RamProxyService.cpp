@@ -70,33 +70,33 @@ RamProxyService::RamProxyService() :
  * MANUF__DUMP
  */
 
-PyResult RamProxyService::GetRelevantCharSkills(PyCallArgs &call) {
+EVEResult RamProxyService::GetRelevantCharSkills(EVECallArgs&call) {
     return call.client->GetChar()->GetRAMSkills();
 }
 
-PyResult RamProxyService::AssemblyLinesSelectPublic(PyCallArgs &call) {
+EVEResult RamProxyService::AssemblyLinesSelectPublic(EVECallArgs&call) {
     return FactoryDB::AssemblyLinesSelectPublic(call.client->GetRegionID());
 }
 
-PyResult RamProxyService::AssemblyLinesSelectPrivate(PyCallArgs &call) {
+EVEResult RamProxyService::AssemblyLinesSelectPrivate(EVECallArgs&call) {
     return FactoryDB::AssemblyLinesSelectPrivate(call.client->GetCharacterID());
 }
 
-PyResult RamProxyService::AssemblyLinesSelectCorp(PyCallArgs &call) {
+EVEResult RamProxyService::AssemblyLinesSelectCorp(EVECallArgs&call) {
     /** @todo  this needs to search db for POS arrays based on corp */
     return FactoryDB::AssemblyLinesSelectCorporation(call.client->GetCorporationID());
 }
 
-PyResult RamProxyService::AssemblyLinesSelectAlliance(PyCallArgs &call) {
+EVEResult RamProxyService::AssemblyLinesSelectAlliance(EVECallArgs&call) {
     /** @todo  this needs to search db for POS arrays based on alliance */
     return FactoryDB::AssemblyLinesSelectAlliance(call.client->GetAllianceID());
 }
 
-PyResult RamProxyService::AssemblyLinesGet(PyCallArgs &call, PyInt* stationID) {
+EVEResult RamProxyService::AssemblyLinesGet(EVECallArgs&call, PyInt* stationID) {
     return FactoryDB::AssemblyLinesGet(stationID->value());
 }
 
-PyResult RamProxyService::AssemblyLinesSelect(PyCallArgs &call, PyString* filter) {
+EVEResult RamProxyService::AssemblyLinesSelect(EVECallArgs&call, PyString* filter) {
     if (filter->content() == "region") {
         return FactoryDB::AssemblyLinesSelectPublic(call.client->GetRegionID());
     } else if (filter->content() == "char") {
@@ -111,7 +111,7 @@ PyResult RamProxyService::AssemblyLinesSelect(PyCallArgs &call, PyString* filter
     return nullptr;
 }
 
-PyResult RamProxyService::GetJobs2(PyCallArgs &call, PyInt* ownerID, PyBool* completed) {
+EVEResult RamProxyService::GetJobs2(EVECallArgs&call, PyInt* ownerID, PyBool* completed) {
     if (ownerID->value() == call.client->GetCorporationID())
         if ((call.client->GetCorpRole() & Corp::Role::FactoryManager) != Corp::Role::FactoryManager) {
             // what other roles (if any) can view corp factory jobs?
@@ -124,15 +124,15 @@ PyResult RamProxyService::GetJobs2(PyCallArgs &call, PyInt* ownerID, PyBool* com
 
 /** @todo update this for corp usage */
 /** @todo  add missing/unhandled indy types (RE, invention, ??)  */
-PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRep* itemLocationData, PyRep* bomLocationData, PyRep* flagOutput, PyRep* buildRuns, PyRep* activityID, PyRep* licensedProductionRuns, PyRep* ownerFlag, PyRep* blah) {
+EVEResult RamProxyService::InstallJob(EVECallArgs&call, PyDataType* locationData, PyDataType* itemLocationData, PyDataType* bomLocationData, PyDataType* flagOutput, PyDataType* buildRuns, PyDataType* activityID, PyDataType* licensedProductionRuns, PyDataType* ownerFlag, PyDataType* blah) {
     //job = sm.ProxySvc('ramProxy').InstallJob(installationLocationData, installedItemLocationData, bomLocationData, flagOutput, quoteData.buildRuns, quoteData.activityID, quoteData.licensedProductionRuns, not quoteData.ownerFlag, 'blah', quoteOnly=1, installedItem=quoteData.blueprint, maxJobStartTime=quoteData.assemblyLine.nextFreeTime + 1 * MIN, inventionItems=quoteData.inventionItems, inventionOutputItemID=quoteData.inventionItems.outputType)
 
     _log(MANUF__DUMP, "RamProxyService::Handle_InstallJob() - size=%lli", call.tuple->size());
-    call.Dump(MANUF__DUMP);
+    call.dump(MANUF__DUMP);
 
     Call_InstallJob args;
     if (!args.Decode(&call.tuple)) {
-        codelog(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+        codelog(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
         return nullptr;
     }
 
@@ -189,8 +189,8 @@ PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRe
              * 21:48:04 [ManufDump]       Args:   [10] Value:     String: ''
              */
 
-            PyDict* dict = call.byname["installedItem"]->AsDict();
-            installedItem = sItemFactory.GetItemRef( PyRep::IntegerValueU32(dict->GetItemString("itemID")) );
+            PyDict* dict = call.byname["installedItem"]->as<PyDict>();
+            installedItem = sItemFactory.GetItemRef( dict->get("itemID")->u32() );
             if (installedItem.get() == nullptr) {
                 // make error here.....
                 throw UserError ("RamActivityRequiresABlueprint");
@@ -253,7 +253,7 @@ PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRe
         bomLocPath.flagID       = bomPath.pathFlagID;
     } else {
         // get path data for player
-        if (!bomLocPath.Decode(args.bpLocPath->GetItem(0))) {
+        if (!bomLocPath.Decode(args.bpLocPath->at (0))) {
             _log(SERVICE__ERROR, "Failed to decode BOM path.");
             return nullptr;
         }
@@ -269,7 +269,7 @@ PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRe
 
     // sent as assy line.nextFreeTime + 1m  (a previous call asks for assy line nextFreeTime, displayed in window)
     if (call.byname.find("maxJobStartTime") != call.byname.end())
-        if (rsp.maxJobStartTime > PyRep::IntegerValue(call.byname["maxJobStartTime"]))
+        if (rsp.maxJobStartTime > call.byname["maxJobStartTime"]->i64())
             throw UserError ("RamProductionTimeExceedsLimits");
 
     //RamCannotGuaranteeStartTime  // timeslot taken by another char while installing this one
@@ -279,7 +279,7 @@ PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRe
     sDataMgr.GetRamRequiredItems(bpRef->typeID(), (int8)args.activityID, reqItems);
 
     // quoteOnly is sent for all jobs before installation to approve price and timeframe
-    if (PyRep::IntegerValueU32(call.byname["quoteOnly"])) {
+    if (call.byname["quoteOnly"]->u32()) {
         _log(MANUF__INFO, "quoteOnly = true");
         sRamMthd.EncodeBillOfMaterials(reqItems, rsp.materialMultiplier, rsp.charMaterialMultiplier, args.runs, rsp.bom);
         sRamMthd.EncodeMissingMaterials(reqItems, bomLocPath, call.client, rsp.materialMultiplier, rsp.charMaterialMultiplier, args.runs, rsp.missingMaterials);
@@ -319,7 +319,7 @@ PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRe
     }
 
     // approved job cost from quote
-    float cost(PyRep::IntegerValue(call.byname["authorizedCost"]));
+    float cost(call.byname["authorizedCost"]->i64());
 
     // pay for assembly lines...take the money, send wallet blink event record the transaction in journal.
     std::string reason = "DESC: Installing ";
@@ -419,7 +419,7 @@ PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRe
         //     inventionItems=quoteData.inventionItems
         uint16 outputType(0), baseItemType(0), decryptorType(0);
         if (call.byname.find("inventionItems") != call.byname.end()) {
-            PyDict* dict = call.byname["inventionItems"]->AsDict();
+            PyDict* dict = call.byname["inventionItems"]->as<PyDict>();
             outputType = PyRep::IntegerValueU32(dict->GetItemString("outputType"));
             baseItemType = PyRep::IntegerValueU32(dict->GetItemString("baseItemType"));
             decryptorType = PyRep::IntegerValueU32(dict->GetItemString("decryptorType"));
@@ -552,7 +552,7 @@ PyResult RamProxyService::InstallJob(PyCallArgs &call, PyRep* locationData, PyRe
     return nullptr;
 }
 
-PyResult RamProxyService::CompleteJob(PyCallArgs &call, PyRep* info, PyRep* jobID, PyRep* cancel) {
+EVEResult RamProxyService::CompleteJob(EVECallArgs&call, PyDataType* info, PyDataType* jobID, PyDataType* cancel) {
     /*
      * 23:35:54 [ManufDump] RamProxyService::Handle_CompleteJob() - size 3
      * 23:35:54 [ManufDump]   Call Arguments:
@@ -568,11 +568,11 @@ PyResult RamProxyService::CompleteJob(PyCallArgs &call, PyRep* info, PyRep* jobI
      * 23:35:54 [ManufDump]       [ 2]    Boolean: false                    cancel
      */
     _log(MANUF__DUMP, "RamProxyService::Handle_CompleteJob() - size=%lli", call.tuple->size());
-    call.Dump(MANUF__DUMP);
+    call.dump(MANUF__DUMP);
 
     Call_CompleteJob args;
     if (!args.Decode(&call.tuple)) {
-        codelog(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+        codelog(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
         return nullptr;
     }
 
@@ -695,16 +695,16 @@ PyResult RamProxyService::CompleteJob(PyCallArgs &call, PyRep* info, PyRep* jobI
         */
                 PyDict* dict = new PyDict();
                 if (1) {
-                    dict->SetItemString("messageLabel", new PyString("UI/ScienceAndIndustry/ScienceAndIndustryWindow/RamInventionJobSucceeded"));
-                    dict->SetItemString("jobCompletedSuccessfully", new PyBool(true));
-                    dict->SetItemString("outputME", new PyInt(0));
-                    dict->SetItemString("outputPE", new PyInt(0));
-                    dict->SetItemString("outputRuns", new PyInt(0));
-                    dict->SetItemString("outputTypeID", new PyInt(0));
-                    dict->SetItemString("outputItemID", new PyInt(0));
+                    dict->set ("messageLabel", new PyString("UI/ScienceAndIndustry/ScienceAndIndustryWindow/RamInventionJobSucceeded"));
+                    dict->set ("jobCompletedSuccessfully", new PyBool(true));
+                    dict->set ("outputME", new PyInt(0));
+                    dict->set ("outputPE", new PyInt(0));
+                    dict->set ("outputRuns", new PyInt(0));
+                    dict->set ("outputTypeID", new PyInt(0));
+                    dict->set ("outputItemID", new PyInt(0));
                 } else {
-                    dict->SetItemString("messageLabel", new PyString("UI/ScienceAndIndustry/ScienceAndIndustryWindow/RamInventionJobFailed"));
-                    dict->SetItemString("jobCompletedSuccessfully", new PyBool(false));
+                    dict->set ("messageLabel", new PyString("UI/ScienceAndIndustry/ScienceAndIndustryWindow/RamInventionJobFailed"));
+                    dict->set ("jobCompletedSuccessfully", new PyBool(false));
                 }
 
                 /* invention result outcomes:  (proposed in phoebe)
@@ -770,9 +770,9 @@ PyResult RamProxyService::CompleteJob(PyCallArgs &call, PyRep* info, PyRep* jobI
                 eve.Message(result.message.msg, result.message.args)
                 */
                 PyDict* msg = new PyDict();
-                    msg->SetItemString("msg", new PyInt(0));
-                    msg->SetItemString("args", new PyInt(0));
-                dict->SetItemString("message", msg);
+                    msg->set ("msg", new PyInt(0));
+                    msg->set ("args", new PyInt(0));
+                dict->set ("message", msg);
                 return dict;
             } break;
 
@@ -799,9 +799,9 @@ PyResult RamProxyService::CompleteJob(PyCallArgs &call, PyRep* info, PyRep* jobI
     return PyStatic.NewNone();
 }
 
-PyResult RamProxyService::UpdateAssemblyLineConfigurations(PyCallArgs &call, PyRep* installationLocationData, PyRep* rowset) {
+EVEResult RamProxyService::UpdateAssemblyLineConfigurations(EVECallArgs&call, PyDataType* installationLocationData, PyDataType* rowset) {
     _log(MANUF__DUMP, "RamProxyService::Handle_UpdateAssemblyLineConfigurations() - size=%lli", call.tuple->size());
-    call.Dump(MANUF__DUMP);
+    call.dump(MANUF__DUMP);
 
     //RamConfigAssemblyLinesAccessDenied
     //RamConfigAssemblyLinesInsuficientAccess

@@ -46,10 +46,10 @@
 
 <!--  direction scan results
         PyDict* res = new PyDict;
-            res->SetItemString("id",         new PyInt(i->GetID()));
-            res->SetItemString("typeID",     new PyInt(i->Item()->typeID()));
-            res->SetItemString("groupID",    new PyInt(i->Item()->groupID()));
-            res->SetItemString("categoryID", new PyInt(i->Item()->categoryID()));
+            res->set ("id",         new PyInt(i->GetID()));
+            res->set ("typeID",     new PyInt(i->Item()->typeID()));
+            res->set ("groupID",    new PyInt(i->Item()->groupID()));
+            res->set ("categoryID", new PyInt(i->Item()->categoryID()));
     put a Vector3 in for item position?
 
 -->

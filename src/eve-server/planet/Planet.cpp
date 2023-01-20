@@ -25,7 +25,7 @@
 
 
 #include "Client.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "math/Trig.h"
 #include "planet/Colony.h"
 #include "planet/Planet.h"
@@ -134,7 +134,7 @@ void PlanetSE::Process()
         cur.second->Process();
 }
 
-PyRep* PlanetSE::GetResourceData(Call_ResourceDataDict& dict)
+PyDataType* PlanetSE::GetResourceData(Call_ResourceDataDict& dict)
 {
     /*  from eve/client/script/environment/planet\clientPlanet.py
      * This method is used to fetch spherical harmonic data for a given
@@ -183,52 +183,58 @@ PyRep* PlanetSE::GetResourceData(Call_ResourceDataDict& dict)
     _log(PLANET__DEBUG, "PlanetSE::GetResourceData() for %s (%u) using remoteSense: %u, planetology: %u, advPlanetology: %u - updateTime: %u, proximity: %u, newBand: %u, oldBand: %u, bufferSize: %u", \
                 sPIDataMgr.GetProductName(dict.resourceTypeID), dict.resourceTypeID, dict.remoteSensing, dict.planetology, dict.advancedPlanetology, \
                 dict.updateTime, dict.proximity, dict.newBand, dict.oldBand, size);
-    PyDict* args = new PyDict();
-        args->SetItemString("data", new PyString(data));
-        args->SetItemString("numBands", new PyInt(dict.newBand));
-        args->SetItemString("proximity", new PyInt(dict.proximity));
+    PyDict* args = new PyDict {
+        {"data", new PyString (data)},
+        {"numBands", new PyInt (dict.newBand)},
+        {"proximity", new PyInt (dict.proximity)}
+    };
+
     //PyIncRef(args);
     PyObject* rtn = new PyObject("util.KeyVal", args);
     if (is_log_enabled(PLANET__RES_DUMP))
-        rtn->Dump(PLANET__RES_DUMP, "   ");
+        rtn->dump(PLANET__RES_DUMP, "   ");
     return rtn;
 }
 
-PyRep* PlanetSE::GetPlanetResourceInfo()
+PyDataType* PlanetSE::GetPlanetResourceInfo()
 {
-    PyDict* res = new PyDict();
-        res->SetItem(new PyInt(m_data.type_1), new PyFloat(m_data.dist_1));
-        res->SetItem(new PyInt(m_data.type_2), new PyFloat(m_data.dist_2));
-        res->SetItem(new PyInt(m_data.type_3), new PyFloat(m_data.dist_3));
-        res->SetItem(new PyInt(m_data.type_4), new PyFloat(m_data.dist_4));
-        res->SetItem(new PyInt(m_data.type_5), new PyFloat(m_data.dist_5));
+    PyDict* res = new PyDict {
+        {new PyInt (m_data.type_1), new PyFloat (m_data.dist_1)},
+        {new PyInt (m_data.type_2), new PyFloat (m_data.dist_2)},
+        {new PyInt (m_data.type_3), new PyFloat (m_data.dist_3)},
+        {new PyInt (m_data.type_4), new PyFloat (m_data.dist_4)},
+        {new PyInt (m_data.type_5), new PyFloat (m_data.dist_5)},
+    };
+
     if (is_log_enabled(PLANET__RES_DUMP))
-        res->Dump(PLANET__RES_DUMP, "   ");
+        res->dump(PLANET__RES_DUMP, "   ");
     return res;
 }
 
-PyRep* PlanetSE::GetPlanetInfo(Colony* pColony) {
-    PyDict *args = new PyDict();
-    args->SetItem("planetTypeID", new PyInt(m_self->typeID()));
-    args->SetItem("solarSystemID", new PyInt(m_system->GetID()));
-    args->SetItem("radius", new PyInt(GetRadius()));
-    args->SetItem("planetID", new PyInt(m_self->itemID()));
+PyDataType* PlanetSE::GetPlanetInfo(Colony* pColony) {
+    PyDict *args = new PyDict{
+        {"planetTypeID", new PyInt (m_self->typeID())},
+        {"solarSystemID", new PyInt (m_system->GetID())},
+        {"radius", new PyInt (GetRadius())},
+        {"planetID", new PyInt (m_self->itemID())}
+    };
+
     if (pColony->HasColony()) {
         //pColony->Update();
-        args->SetItem("level", new PyInt(pColony->GetLevel()));
-        args->SetItem("pins", pColony->GetPins());
-        args->SetItem("links", pColony->GetLinks());
-        args->SetItem("routes", pColony->GetRoutes());
-        args->SetItem("currentSimTime", new PyLong(pColony->GetSimTime()));
+        args->set("level", new PyInt(pColony->GetLevel()));
+        args->set("pins", pColony->GetPins());
+        args->set("links", pColony->GetLinks());
+        args->set("routes", pColony->GetRoutes());
+        args->set("currentSimTime", new PyInt(pColony->GetSimTime()));
     }
     //PyIncRef(args);
     PyObject *rtn = new PyObject("util.KeyVal", args);
     if (is_log_enabled(PLANET__RES_DUMP))
-        rtn->Dump(PLANET__RES_DUMP, "   ");
+        rtn->dump(PLANET__RES_DUMP, "   ");
     return rtn;
 }
 
-PyRep* PlanetSE::GetExtractorsForPlanet(int32 planetID) {
+PyDataType* PlanetSE::GetExtractorsForPlanet(int32 planetID) {
     // NOTE this gets ALL extractors on this planet
     // returns typeID, ownerID, latitude?, longitude?
 
@@ -239,17 +245,17 @@ PyRep* PlanetSE::GetExtractorsForPlanet(int32 planetID) {
     PyList* list = new PyList();
     DBResultRow row;
     while (res.GetRow(row)) {
-        PyDict* dict(new PyDict());
-            dict->SetItem("pinID", new PyInt(row.GetInt(0)));
-            dict->SetItem("typeID", new PyInt(row.GetInt(1)));
-            dict->SetItem("ownerID", new PyInt(row.GetInt(2)));
-            dict->SetItem("latitude", new PyFloat(row.GetFloat(3)));
-            dict->SetItem("longitude", new PyFloat(row.GetFloat(4)));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(new PyObject("util.KeyVal", new PyDict {
+            {"pinID", new PyInt (row.GetInt (0))},
+            {"typeID", new PyInt (row.GetInt (1))},
+            {"ownerID", new PyInt (row.GetInt (2))},
+            {"latitude", new PyFloat (row.GetFloat (3))},
+            {"longitude", new PyFloat (row.GetFloat (4))}
+        }));
     }
 
     if (is_log_enabled(PLANET__RES_DUMP))
-        list->Dump(PLANET__RES_DUMP, "   ");
+        list->dump(PLANET__RES_DUMP, "   ");
     return list;
 }
 

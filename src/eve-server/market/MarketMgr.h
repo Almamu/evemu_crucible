@@ -49,17 +49,17 @@ public:
     // market order placed by seller to sell items (usually at higher prices)
     void ExecuteSellOrder(Client *buyer, uint32 orderID, uint32 quantity, float price, uint32 stationID, uint32 typeID, bool useCorp);
     //forces a refresh of market data.
-    void SendOnOwnOrderChanged(Client* pClient, uint32 orderID, uint8 action, bool isCorp = false, PyRep* order = nullptr);
+    void SendOnOwnOrderChanged(Client* pClient, uint32 orderID, uint8 action, bool isCorp = false, PyDataType* order = nullptr);
 
     void InvalidateOrdersCache(uint32 regionID, uint32 typeID);
 
     bool NeedsUpdate()                                  { return m_timeStamp > GetFileTimeNow()?false:true; }
 
-    PyRep* GetMarketGroups()                            { PyIncRef(m_marketGroups); return m_marketGroups; }
+    PyDataType* GetMarketGroups()                            { PyIncRef(m_marketGroups); return m_marketGroups; }
     // cached
-    PyRep* GetNewPriceHistory(uint32 regionID, uint32 typeID);
+    PyDataType* GetNewPriceHistory(uint32 regionID, uint32 typeID);
     // cached
-    PyRep* GetOldPriceHistory(uint32 regionID, uint32 typeID);
+    PyDataType* GetOldPriceHistory(uint32 regionID, uint32 typeID);
 
 
     // base price update method
@@ -75,7 +75,7 @@ private:
     MarketDB m_db;
     ObjCacheService* m_cache;
 
-    PyRep* m_marketGroups;  // static market group data
+    PyDataType* m_marketGroups;  // static market group data
 
     int64 m_timeStamp;
 

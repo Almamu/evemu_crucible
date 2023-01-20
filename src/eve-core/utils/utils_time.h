@@ -37,16 +37,14 @@ YEAR = (12 * MONTH)
 */
 namespace EvE {
     namespace Time {
-        enum:int64_t {
-            mSecond     = 1000L,        //1000
-            Second      = 10000000L,    //10000000
-            Minute      = (Second * 60L),
-            Hour        = (Minute * 60L),
-            Day         = (Hour * 24L),
-            Week        = (Day * 7L),
-            Month       = (Day * 30L),
-            Year        = (Day * 365L)
-        };
+          const int64_t mSecond     = 1000L;        //1000
+          const int64_t Second      = 10000000L;    //10000000
+          const int64_t Minute      = (Second * 60L);
+          const int64_t Hour        = (Minute * 60L);
+          const int64_t Day         = (Hour * 24L);
+          const int64_t Week        = (Day * 7L);
+          const int64_t Month       = (Day * 30L);
+          const int64_t Year        = (Day * 365L);
     }
 
     struct TimeParts {

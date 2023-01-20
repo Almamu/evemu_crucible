@@ -35,7 +35,7 @@ PhotoUploadService::PhotoUploadService() :
     this->Add("Upload", &PhotoUploadService::Upload);
 }
 
-PyResult PhotoUploadService::Upload(PyCallArgs &call, PyString* contents)
+EVEResult PhotoUploadService::Upload(EVECallArgs&call, PyString* contents)
 {
     std::shared_ptr<std::vector<char> > data(new std::vector<char>(contents->content().begin(), contents->content().end()));
     sImageServer.ReportNewImage(call.client->GetUserID(), data);

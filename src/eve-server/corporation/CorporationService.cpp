@@ -67,16 +67,16 @@ CorporationService::CorporationService() :
  * CORP__DB_MESSAGE
  */
 
-PyResult CorporationService::GetNPCDivisions(PyCallArgs &call)
+EVEResult CorporationService::GetNPCDivisions(EVECallArgs&call)
 {
     return sDataMgr.GetNPCDivisions();
 }
 
-PyResult CorporationService::GetEmploymentRecord(PyCallArgs &call, PyInt* characterID) {
+EVEResult CorporationService::GetEmploymentRecord(EVECallArgs&call, PyInt* characterID) {
     return m_db.GetEmploymentRecord(characterID->value());
 }
 
-PyResult CorporationService::GetFactionInfo(PyCallArgs &call) {
+EVEResult CorporationService::GetFactionInfo(EVECallArgs&call) {
     /*self.factionIDbyNPCCorpID, self.factionRegions, self.factionConstellations, self.factionSolarSystems,
      * self.factionRaces, self.factionStationCount, self.factionSolarSystemCount, self.npcCorpInfo = sm.RemoteSvc('corporationSvc').GetFactionInfo()
      *        for corpID, factionID in self.factionIDbyNPCCorpID.iteritems():
@@ -91,32 +91,37 @@ PyResult CorporationService::GetFactionInfo(PyCallArgs &call) {
      *            owners[v] = 0
      */
 
-    return sDataMgr.GetFactionInfo();
+    // TODO: VALIDATE THIS WORKS PROPERLY AFTER MIGRATION
+    return EVEResult (sDataMgr.GetFactionInfo(), false);
 }
 
 // this wants corp market info
-PyResult CorporationService::GetCorpInfo(PyCallArgs &call, PyInt* corporationID) {
+EVEResult CorporationService::GetCorpInfo(EVECallArgs&call, PyInt* corporationID) {
     return m_db.GetMktInfo(corporationID->value());
 }
 
-PyResult CorporationService::GetRecruitmentAdRegistryData(PyCallArgs& call)
+EVEResult CorporationService::GetRecruitmentAdRegistryData(EVECallArgs& call)
 {   // working
     _log(CORP__CALL, "CorporationService::Handle_GetRecruitmentAdRegistryData()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
-    PyDict* dict = new PyDict();
-        dict->SetItemString("types", m_db.GetAdTypeData());
-        dict->SetItemString("groups", m_db.GetAdGroupData());
-    PyObject* args = new PyObject("util.KeyVal", dict);
+    PyObject* args = new PyObject(
+        "util.KeyVal",
+        new PyDict {
+            {"types", m_db.GetAdTypeData()},
+            {"groups", m_db.GetAdGroupData()}
+        }
+    );
     if (is_log_enabled(CORP__RSP_DUMP))
-        args->Dump(CORP__RSP_DUMP, "");
+        args->dump(CORP__RSP_DUMP, "");
     return args;
 }
 
-PyResult CorporationService::GetRecruitmentAdsByCriteria(PyCallArgs& call, PyInt* typeMask, PyBool* inAlliance, std::optional<PyInt*> minMembers, std::optional<PyInt*> maxMembers)
+EVEResult CorporationService::GetRecruitmentAdsByCriteria(
+    EVECallArgs& call, PyInt* typeMask, PyBool* inAlliance, std::optional<PyInt*> minMembers, std::optional<PyInt*> maxMembers)
 {    //   return sm.RemoteSvc('corporationSvc').GetRecruitmentAdsByCriteria(typeMask, isInAlliance, minMembers, maxMembers)
     _log(CORP__CALL, "CorporationService::Handle_GetRecruitmentAdsByCriteria()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return m_db.GetAdRegistryData(
         typeMask->value(), inAlliance->value(),
@@ -124,11 +129,11 @@ PyResult CorporationService::GetRecruitmentAdsByCriteria(PyCallArgs& call, PyInt
         maxMembers.has_value () ? maxMembers.value ()->value() : 0);
 }
 
-PyResult CorporationService::GetRecruitmentAdsForCorporation(PyCallArgs& call)
+EVEResult CorporationService::GetRecruitmentAdsForCorporation(EVECallArgs& call)
 {
     // recruitments = self.GetCorpRegistry().GetRecruitmentAdsForCorporation()
     _log(CORP__CALL, "CorporationService::Handle_GetRecruitmentAdsForCorporation()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return m_db.GetAdRegistryData();
 }
@@ -138,7 +143,7 @@ PyResult CorporationService::GetRecruitmentAdsForCorporation(PyCallArgs& call)
  * @note   these below are partially coded
  */
 
-PyResult CorporationService::CreateMedal(PyCallArgs &call, PyWString* name, PyWString* description, PyList* medalData) {
+EVEResult CorporationService::CreateMedal(EVECallArgs&call, PyString* name, PyString* description, PyList* medalData) {
     // destroy = sm.StartService('medals').CreateMedal(mName, mDesc, cMedalData)
     //  destroy = true will close window
 
@@ -180,14 +185,14 @@ PyResult CorporationService::CreateMedal(PyCallArgs &call, PyWString* name, PyWS
     //if (is_log_enabled(CORP__PKT_TRACE))
     //    args.data->Dump(CORP__PKT_TRACE, "");
     for (PyList::const_iterator itr = medalData->begin(); itr != medalData->end(); ++itr) {
-        list = (*itr)->AsList();
+        list = (*itr)->as<PyList>();
         if (list == nullptr)
             continue;
         // type:  1 = ribbon, 2 = medal
         Corp::MedalData data = Corp::MedalData();
-            data.part = PyRep::IntegerValue(list->GetItem(0));
-            data.graphic = PyRep::StringContent(list->GetItem(1));
-            data.color = PyRep::IntegerValue(list->GetItem(2));
+            data.part = list->at (0)->i64();
+            data.graphic = list->at (1)->string();
+            data.color = list->at (2)->i64();
         dataList.push_back( data );
     }
 
@@ -197,7 +202,7 @@ PyResult CorporationService::CreateMedal(PyCallArgs &call, PyWString* name, PyWS
     return PyStatic.NewFalse();
 }
 
-PyResult CorporationService::GetMedalsReceived(PyCallArgs &call, PyInt* characterID) {
+EVEResult CorporationService::GetMedalsReceived(EVECallArgs&call, PyInt* characterID) {
     // this should be cached
     //  medalInfo, medalGraphics = sm.StartService('medals').GetMedalsReceived(charID)
     /*
@@ -206,45 +211,49 @@ PyResult CorporationService::GetMedalsReceived(PyCallArgs &call, PyInt* characte
      * 13:25:05 [CorpCallDump]       [ 0]    Integer: 90000000
      */
     _log(CORP__CALL, "CorporationService::Handle_GetMedalsReceived()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
-    PyTuple* res = new PyTuple(2);
-        res->SetItem(0, m_db.GetMedalsReceived(characterID->value()));
-        res->SetItem(1, m_db.GetMedalsReceivedDetails(characterID->value()));
+    PyTuple* res = new PyTuple {
+        m_db.GetMedalsReceived (characterID->value()),
+        m_db.GetMedalsReceivedDetails (characterID->value())
+    };
+
     if (is_log_enabled(CORP__RSP_DUMP))
-        res->Dump(CORP__RSP_DUMP, "");
+        res->dump(CORP__RSP_DUMP, "");
+
     return res;
 }
 
-PyResult CorporationService::GetMedalDetails(PyCallArgs &call, PyInt* medalID)
+EVEResult CorporationService::GetMedalDetails(EVECallArgs&call, PyInt* medalID)
 {   // working
     _log(CORP__CALL, "CorporationService::Handle_GetMedalDetails()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return m_db.GetMedalDetails(medalID->value());
 }
 
-PyResult CorporationService::GetAllCorpMedals(PyCallArgs& call, PyInt* corporationID)
+EVEResult CorporationService::GetAllCorpMedals(EVECallArgs& call, PyInt* corporationID)
 {   //working
     // medals, medalDetails = sm.RemoteSvc('corporationSvc').GetAllCorpMedals(corpID)
     _log(CORP__CALL, "CorporationService::Handle_GetAllCorpMedals()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // TODO: use the corporationID supplied by the caller?
-    PyTuple* res = new PyTuple(2);
-        res->SetItem(0, m_db.GetAllCorpMedals(call.client->GetCorporationID()));
-        res->SetItem(1, m_db.GetCorpMedalData(call.client->GetCorporationID()));
+    PyTuple* res = new PyTuple {
+        m_db.GetAllCorpMedals(call.client->GetCorporationID()),
+        m_db.GetCorpMedalData(call.client->GetCorporationID())
+    };
     if (is_log_enabled(CORP__RSP_DUMP))
-        res->Dump(CORP__RSP_DUMP, "");
+        res->dump(CORP__RSP_DUMP, "");
     return res;
 }
 
-PyResult CorporationService::GetRecipientsOfMedal(PyCallArgs &call, PyInt* medalID)
+EVEResult CorporationService::GetRecipientsOfMedal(EVECallArgs&call, PyInt* medalID)
 {
     //   recipients = sm.RemoteSvc('corporationSvc').GetRecipientsOfMedal(medalID)
     //          called from GetMedalSubContent in corp_ui_member_deco
     _log(CORP__CALL, "CorporationService::Handle_GetRecipientsOfMedal()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /*
      *     issuerID = recipients.issuerID
@@ -255,7 +264,7 @@ PyResult CorporationService::GetRecipientsOfMedal(PyCallArgs &call, PyInt* medal
     return m_db.GetRecipientsOfMedal(medalID->value());
 }
 
-PyResult CorporationService::GiveMedalToCharacters(PyCallArgs &call, PyInt* medalID, PyList* recipientIDs, PyWString* reason) {
+EVEResult CorporationService::GiveMedalToCharacters(EVECallArgs&call, PyInt* medalID, PyList* recipientIDs, PyString* reason) {
     //  sm.RemoteSvc('corporationSvc').GiveMedalToCharacters(medalID, recipientID, reason)
     /*
      * 13:24:32 [CorpCallDump]   Call Arguments:
@@ -266,12 +275,12 @@ PyResult CorporationService::GiveMedalToCharacters(PyCallArgs &call, PyInt* meda
      * 13:24:32 [CorpCallDump]       [ 2]    WString: 'testing this shit'
      */
     _log(CORP__CALL, "CorporationService::Handle_GiveMedalToCharacters()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // can award one medal to multiple chars at once, at 5m isk per award
     std::vector< uint32 > charVec;
     for (PyList::const_iterator itr = recipientIDs->begin(); itr != recipientIDs->end(); ++itr)
-        charVec.push_back(PyRep::IntegerValue(*itr));
+        charVec.push_back((*itr)->i64());
 
     uint32 cost = sConfig.rates.medalAwardCost;
     cost *= charVec.size();
@@ -292,18 +301,18 @@ PyResult CorporationService::GiveMedalToCharacters(PyCallArgs &call, PyInt* meda
     return nullptr;
 }
 
-PyResult CorporationService::GetMedalStatuses(PyCallArgs &call)
+EVEResult CorporationService::GetMedalStatuses(EVECallArgs&call)
 {
     //  return sm.RemoteSvc('corporationSvc').GetMedalStatuses()
     //  statusID, statusName = self.GetStatus(theyareallthesame.status)
     _log(CORP__CALL, "CorporationService::Handle_GetMedalStatuses()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     //  cant find any other references to this, so it's hacked in the db call
     // statusID, statusName
-    PyRep* res = m_db.GetMedalStatuses();
+    PyDataType* res = m_db.GetMedalStatuses();
     if (is_log_enabled(CORP__RSP_DUMP))
-        res->Dump(CORP__RSP_DUMP, "");
+        res->dump(CORP__RSP_DUMP, "");
     return res;
 }
 
@@ -312,7 +321,7 @@ PyResult CorporationService::GetMedalStatuses(PyCallArgs &call)
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult CorporationService::SetMedalStatus(PyCallArgs &call, PyDict* newStatus)
+EVEResult CorporationService::SetMedalStatus(EVECallArgs&call, PyDict* newStatus)
 {
     //  sm.RemoteSvc('corporationSvc').SetMedalStatus(statusdict)
     //    this is called from char PD for setting view permissions on received medals
@@ -333,7 +342,7 @@ PyResult CorporationService::SetMedalStatus(PyCallArgs &call, PyDict* newStatus)
      *
      */
     _log(CORP__CALL, "CorporationService::Handle_SetMedalStatus()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     call.client->SendInfoModalMsg("Sorry, %s.  Saving Permissions for Medals isn't functional yet.", call.client->GetName());
     return nullptr;

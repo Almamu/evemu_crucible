@@ -39,14 +39,14 @@ public:
 protected:
     CorporationDB m_db;
 
-    PyResult GetPublicInfo(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetCorporations(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetCorporationIDForCharacter(PyCallArgs& call, PyInt* characterID);
-    PyResult AuditMember(PyCallArgs& call, PyInt* memberID, PyLong* fromDate, PyLong* toDate, std::optional<PyInt*> rowsPerPage);
-    PyResult GetAssetInventory(PyCallArgs& call, PyInt* corporationID, PyString* which);
-    PyResult GetAssetInventoryForLocation(PyCallArgs& call, PyInt* corporationID, PyInt* stationID, PyString* which);
-    PyResult GetCorporationStations(PyCallArgs& call);
-    PyResult SearchAssets(PyCallArgs& call, PyString* which, std::optional<PyInt*> itemCategoryID, std::optional<PyInt*> itemGroupID, std::optional<PyInt*> itemTypeID, std::optional<PyInt*> quantity);
+    EVEResult GetPublicInfo(EVECallArgs& call, PyInt* corporationID);
+    EVEResult GetCorporations(EVECallArgs& call, PyInt* corporationID);
+    EVEResult GetCorporationIDForCharacter(EVECallArgs& call, PyInt* characterID);
+    EVEResult AuditMember(EVECallArgs& call, PyInt* memberID, PyInt* fromDate, PyInt* toDate, std::optional<PyInt*> rowsPerPage);
+    EVEResult GetAssetInventory(EVECallArgs& call, PyInt* corporationID, PyString* which);
+    EVEResult GetAssetInventoryForLocation(EVECallArgs& call, PyInt* corporationID, PyInt* stationID, PyString* which);
+    EVEResult GetCorporationStations(EVECallArgs& call);
+    EVEResult SearchAssets(EVECallArgs& call, PyString* which, std::optional<PyInt*> itemCategoryID, std::optional<PyInt*> itemGroupID, std::optional<PyInt*> itemTypeID, std::optional<PyInt*> quantity);
 };
 
 #endif

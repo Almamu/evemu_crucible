@@ -459,7 +459,7 @@ PyObject *LSCDB::GetMailHeaders(uint32 recID) {
 }
 
 
-PyRep *LSCDB::GetMailDetails(uint32 messageID, uint32 readerID) {
+PyDataType *LSCDB::GetMailDetails(uint32 messageID, uint32 readerID) {
     DBQueryResult result;
     DBResultRow row;
 

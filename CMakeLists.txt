@@ -10,7 +10,7 @@
 ###############
 # We need a target-specific property INCLUDE_DIRECTORIES which
 # is part of CMake 2.8.8 and later.
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8.8 FATAL_ERROR )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.26 FATAL_ERROR )
 
 PROJECT( "evemu" )
 SET( PROJECT_DESCRIPTION_SUMMARY "A server emulator for EVE Online" )
@@ -62,12 +62,13 @@ INCLUDE( "DetectScm" )
 # override the setup.
 #
 # Switch to the C++11 standard (required)
+set (CMAKE_CXX_STANDARD 20)
+
 IF (WIN32)
-  set (CMAKE_CXX_STANDARD 17)
   SET( CMAKE_CXX_FLAGS "/permissive- -DHAVE_WINDOWS_H -DHAVE_WINSOCK2_H /DEBUG /Zi ${CMAKE_CXX_FLAGS}" )
   link_libraries(DbgHelp.lib)
 ELSE()
-  SET( CMAKE_CXX_FLAGS "-std=gnu++17 -march=native -Werror=return-type -fabi-version=14 ${CMAKE_CXX_FLAGS}" )
+  SET( CMAKE_CXX_FLAGS "-march=native -Werror=return-type ${CMAKE_CXX_FLAGS}" )
 ENDIF()
 # -Wall -Wextra -Weffc++ -Wconversion -Wdouble-promotion
 # -pg -ggdb -pedantic
@@ -226,4 +227,5 @@ ENDIF( EVEMU_TARGETS_IMPORT )
 ADD_SUBDIRECTORY( "src/eve-core" )
 ADD_SUBDIRECTORY( "src/eve-xmlpktgen" )
 ADD_SUBDIRECTORY( "src/eve-common" )
+ADD_SUBDIRECTORY( "src/eve-test" )
 ADD_SUBDIRECTORY( "src/eve-server" )

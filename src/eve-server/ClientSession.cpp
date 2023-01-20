@@ -26,15 +26,13 @@
 
 #include "ClientSession.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 /**
  * Map of variables that should never be sent through the wire on the session data
  * These variables will be ignored. In reality we should have a whitelist
  *
  * TODO: COME UP WITH A REAL WHITELIST OF THINGS THAT HAVE TO BE SENT TO THE CLIENT
- *
- * @author Almamu
  */
 static std::map<std::string, bool> NONPERSISTVARS = {
     {"clientID", true},
@@ -43,195 +41,213 @@ static std::map<std::string, bool> NONPERSISTVARS = {
 };
 
 
-ClientSession::ClientSession()
-: mSession(new PyDict()),
-mDirty(false),
-m_sessionID(0)
-{
-    /* default session values */
-    mSession->SetItemString("role", new_tuple(PyStatic.NewNone(), new PyLong(Acct::Role::PLAYER | Acct::Role::NEWBIE), PyStatic.NewFalse()));
-    mSession->SetItemString("userid", new_tuple(PyStatic.NewNone(), PyStatic.NewZero(), PyStatic.NewFalse()));
-    mSession->SetItemString("address", new_tuple(PyStatic.NewNone(), new PyString("0.0.0.0"), PyStatic.NewFalse()));
+ClientSession::ClientSession() :
+    mArena (),
+    mDirty (false),
+    mSessionID (0),
+    mSession () {
+    // default session values
+    _initialize ("role", mArena.Int(Acct::Role::PLAYER | Acct::Role::NEWBIE));
+    _initialize ("userid", mArena.Int(0));
+    _initialize ("address", mArena.String("0.0.0.0"));
 
-    /*  session id is unique to each session.
-     * is not saved or shared between chars
-     */
-    //random.getrandbits(63)
-    m_sessionID = GetTimeUSeconds() *15;
-    sEntityList.RegisterSID(m_sessionID);
+    // session id is unique for each connection, a good candidate is the clientID
+    // but it can also be generated randomly or with the current time as this is doing
+    // doesn't really matter as long as it's unique
+    mSessionID = GetTimeUSeconds() *15;
+    sEntityList.RegisterSID(mSessionID);
 }
 
-ClientSession::~ClientSession()
-{
+ClientSession::~ClientSession() {
     // do we clear session vars here, or let ~PyDict() do it?
-    PyDecRef(mSession);
-    sEntityList.RemoveSID(m_sessionID);
+    sEntityList.RemoveSID(mSessionID);
 }
 
-// note:  cannot destroy these Py* objects here.
-void ClientSession::Clear(const char* name)
-{
-    _Set(name, PyStatic.NewNone());
+bool ClientSession::isDirty() const {
+    return mDirty;
 }
 
-void ClientSession::SetInt(const char* name, int32 value)
-{
-    _Set(name, new PyInt(value));
+void ClientSession::clear (const char* name) {
+    _set (name, mArena.None());
 }
 
-void ClientSession::SetLong(const char* name, int64 value)
-{
-    _Set(name, new PyLong(value));
+ClientSession::const_iterator ClientSession::begin() const {
+    return mSession.begin();
 }
 
-void ClientSession::SetString(const char* name, const char* value)
-{
-    _Set(name, new PyString(value));
+ClientSession::iterator ClientSession::begin() {
+    return mSession.begin();
 }
 
-void ClientSession::SetFloat(const char* name, double value)
-{
-    _Set(name, new PyFloat(value));
+ClientSession::const_iterator ClientSession::end() const {
+    return mSession.end();
 }
 
-int32 ClientSession::GetLastInt(const char* name) const
-{
-    return PyRep::IntegerValue(_GetLast(name));
+ClientSession::iterator ClientSession::end() {
+    return mSession.end();
 }
 
-int32 ClientSession::GetCurrentInt(const char* name) const
-{
-    return PyRep::IntegerValue(_GetCurrent(name));
+void ClientSession::set (const char* name, int64 value) {
+    _set (name, mArena.Int (value));
 }
 
-int64 ClientSession::GetLastLong(const char* name) const
-{
-    return PyRep::IntegerValue(_GetLast(name));
+void ClientSession::set (const char* name, int32 value) {
+    _set (name, mArena.Int (value));
 }
 
-int64 ClientSession::GetCurrentLong(const char* name) const
-{
-    return PyRep::IntegerValue(_GetCurrent(name));
+void ClientSession::set (const char* name, uint32 value) {
+    _set (name, mArena.Int (value));
 }
 
-std::string ClientSession::GetLastString(const char* name) const
-{
-    return PyRep::StringContent(_GetLast(name));
+void ClientSession::set (const char* name, const char* value) {
+    _set (name, mArena.String (value));
 }
 
-std::string ClientSession::GetCurrentString(const char* name) const
-{
-    return PyRep::StringContent(_GetCurrent(name));
+void ClientSession::set (const char* name, double value) {
+    _set (name, mArena.Float (value));
 }
 
-double ClientSession::GetLastFloat(const char* name) const
-{
-    return PyRep::FloatValue(_GetLast(name));
+int64 ClientSession::i64 (const char* name) const {
+    auto it = _getValue (name);
+
+    if (it == this->end()) {
+        return 0;
+    }
+
+    return it->second.current->i64();
 }
 
-double ClientSession::GetCurrentFloat(const char* name) const
-{
-    return PyRep::FloatValue(_GetCurrent(name));
+int64 ClientSession::i64previous (const char* name) const {
+    auto it = _getValue (name);
+
+    if (it == this->end()) {
+        return 0;
+    }
+
+    return it->second.previous->i64();
 }
 
-void ClientSession::EncodeChanges(PyDict* into)
-{
+std::string ClientSession::string (const char* name) const {
+    auto it = _getValue (name);
+
+    if (it == this->end()) {
+        return "";
+    }
+
+    return it->second.current->string();
+}
+
+std::string ClientSession::stringPrevious (const char* name) const {
+    auto it = _getValue (name);
+
+    if (it == this->end()) {
+        return "";
+    }
+
+    return it->second.previous->string();
+}
+
+double ClientSession::decimal (const char* name) const {
+    auto it = _getValue (name);
+
+    if (it == this->end()) {
+        return 0;
+    }
+
+    return it->second.current->decimal();
+}
+
+double ClientSession::decimalPrevious (const char* name) const {
+    auto it = _getValue (name);
+
+    if (it == this->end()) {
+        return 0;
+    }
+
+    return it->second.previous->decimal();
+}
+
+void ClientSession::encodeChanges(PyDict* into) {
     if (!mDirty)
         return;
 
-    for (auto cur : *mSession)
-    {
-        PyTuple* valueTuple = cur.second->AsTuple ();
-
-        if (valueTuple->GetItem (2)->AsBool ()->value () == false)
+    for (auto cur : *this) {
+        if (cur.second.dirty == false)
             continue;
 
-        // mark the value as not new
-        valueTuple->SetItem (2, PyStatic.NewFalse());
+        cur.second.dirty = false;
 
-        // add the value to the list if it should be persisted
-        if (NONPERSISTVARS.find (cur.first->AsString ()->content ()) == NONPERSISTVARS.end ())
-            into->SetItem (cur.first, new_tuple (valueTuple->GetItem (0), valueTuple->GetItem(1)));
+        // ignore variables that should not be sent to the client
+        if (NONPERSISTVARS.find (cur.first) != NONPERSISTVARS.end())
+            continue;
+
+        into->set (cur.first, into->arena()->Tuple ({cur.second.previous, cur.second.current}, false));
     }
 
     mDirty = false;
 }
 
-void ClientSession::EncodeInitialState (PyDict* into)
-{
-    for (auto cur : *mSession)
-    {
-        PyTuple* valueTuple = cur.second->AsTuple ();
+void ClientSession::encodeInitialState (PyDict* into) {
+    for (auto cur : *this) {
+        cur.second.dirty = false;
 
-        valueTuple->SetItem(2, PyStatic.NewFalse());
+        if (NONPERSISTVARS.find (cur.first) != NONPERSISTVARS.end())
+            continue;
 
-        // add the value to the initial state only if required
-        if (NONPERSISTVARS.find (cur.first->AsString ()->content ()) == NONPERSISTVARS.end ())
-            into->SetItem (cur.first, cur.second->AsTuple ()->GetItem (1));
+        // TODO: DECIDE IF THIS SHOULD BE CHECKED AGAINST THE ARENA OR NOT
+        into->set (cur.first, cur.second.current, false);
     }
 
     // mark the session as not dirty
     mDirty = false;
 }
 
-bool ClientSession::HasValue (const char* name) const
-{
-    PyTuple* valueTuple = _GetValueTuple (name);
-
-    if (valueTuple == nullptr)
-        return false;
-
-    PyRep* value = valueTuple->GetItem(1);
-
-    return value != nullptr && value->IsNone() == false;
+bool ClientSession::has (const char* name) const {
+    return _getValue (name) != this->end();
 }
 
-PyTuple* ClientSession::_GetValueTuple(const char* name) const
-{
-    PyRep* value(mSession->GetItemString(name));
-    if (value == nullptr)
-        return nullptr;
-    return value->AsTuple();
+int64 ClientSession::sessionID() const {
+    return mSessionID;
 }
 
-PyRep* ClientSession::_GetLast(const char* name) const
-{
-    PyTuple* tuple(_GetValueTuple(name)); // copy c'tor
-    if (tuple == nullptr) {
-        _log(CLIENT__SESSION_NOTFOUND, "ClientSession::_GetLast - value not found with name '%s'", name);
-        return nullptr;
-    }
-    return tuple->GetItem(0);
+ClientSession::const_iterator ClientSession::_getValue (const char* name) const {
+    return mSession.find (name);
 }
 
-PyRep* ClientSession::_GetCurrent(const char* name) const
-{
-    PyTuple* tuple(_GetValueTuple(name)); // copy c'tor
-    if (tuple == nullptr) {
-        if (is_log_enabled(CLIENT__SESSION_NOTFOUND)) {
-            _log(CLIENT__SESSION_NOTFOUND, "ClientSession::_GetCurrent - value not found with name '%s'", name);
-            EvE::traceStack();
+ClientSession::iterator ClientSession::_getValue (const char* name) {
+    return mSession.find (name);
+}
+
+void ClientSession::_set (const char* name, PyDataType* value) {
+    auto it = _getValue (name);
+
+    if (it == this->end()) {
+        it = _initialize (name, mArena.None());
+
+        if (it == this->end()) {
+            throw std::runtime_error ("Cannot initialize new key in the client session data");
         }
-        return nullptr;
     }
-    return tuple->GetItem(1);
+
+    if (it->second.current->equals (value) == false) {
+        // delete previous value as it's not needed anymore
+        // TODO: REPLACE WITH A PROPER DELETE
+        PySafeDecRef (it->second.previous);
+
+        // now replace it with the right values
+        it->second.previous = it->second.current;
+        it->second.current = value->clone (&mArena);
+        it->second.dirty = true;
+        mDirty = true;
+    }
+
+    PyDecRef (value);
 }
 
-void ClientSession::_Set(const char* name, PyRep* value)
-{
-    PyTuple* tuple(_GetValueTuple(name)); // copy c'tor
-    if (tuple == nullptr) {
-        tuple = new_tuple(PyStatic.NewNone(), PyStatic.NewNone(), PyStatic.NewFalse());
-        mSession->SetItemString(name, tuple);
-    }
-
-    PyRep* current(tuple->GetItem(1)); // copy c'tor
-    if (value->hash() != current->hash()) {
-        tuple->SetItem(0, current); /* didn't the session need to store the old value too? */
-        tuple->SetItem(1, value);
-        tuple->SetItem(2, PyStatic.NewTrue());
-        mDirty = true;
-    } else {
-        PyDecRef(value);
-    }
+ClientSession::iterator ClientSession::_initialize (const char* name, PyDataType* value) {
+    return mSession.insert ({name, {
+        .previous = mArena.None(),
+        .current = value,
+        .dirty = false
+    }}).first;
 }

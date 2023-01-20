@@ -40,7 +40,7 @@ void AllianceDB::DeleteBulletin(uint32 bulletinID)
                        bulletinID);
 }
 
-PyRep *AllianceDB::GetBulletins(uint32 allyID)
+PyDataType *AllianceDB::GetBulletins(uint32 allyID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -55,7 +55,7 @@ PyRep *AllianceDB::GetBulletins(uint32 allyID)
     return DBResultToCRowset(res);
 }
 
-PyRep *AllianceDB::GetAlliance(uint32 allyID)
+PyDataType *AllianceDB::GetAlliance(uint32 allyID)
 {
     // called by alliance member
     DBQueryResult res;
@@ -83,7 +83,7 @@ PyRep *AllianceDB::GetAlliance(uint32 allyID)
     //return DBResultToRowset(res);
 }
 
-PyRep *AllianceDB::GetMyApplications(uint32 corpID)
+PyDataType *AllianceDB::GetMyApplications(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -99,12 +99,12 @@ PyRep *AllianceDB::GetMyApplications(uint32 corpID)
 
     PyObjectEx *obj = DBResultToCIndexedRowset(res, "corporationID");
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 }
 
-PyRep *AllianceDB::GetApplications(uint32 allyID)
+PyDataType *AllianceDB::GetApplications(uint32 allyID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -119,7 +119,7 @@ PyRep *AllianceDB::GetApplications(uint32 allyID)
     }
     PyObjectEx *obj = DBResultToCIndexedRowset(res, "corporationID");
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 }
@@ -219,7 +219,7 @@ bool AllianceDB::DeleteApplication(const Alliance::ApplicationInfo &aInfo)
     return true;
 }
 
-PyRep *AllianceDB::GetContacts(uint32 allyID)
+PyDataType *AllianceDB::GetContacts(uint32 allyID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -233,7 +233,7 @@ PyRep *AllianceDB::GetContacts(uint32 allyID)
 
     PyObjectEx *obj = DBResultToCIndexedRowset(res, "contactID");
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 }
@@ -266,7 +266,7 @@ void AllianceDB::RemoveContact(uint32 contactID, uint32 ownerID)
                        contactID, ownerID);
 }
 
-PyRep *AllianceDB::GetLabels(uint32 allyID)
+PyDataType *AllianceDB::GetLabels(uint32 allyID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT labelID, color, name FROM alnLabels WHERE ownerID = %u", allyID))
@@ -312,7 +312,7 @@ bool AllianceDB::AddEmployment(uint32 allyID, uint32 corpID)
     return true;
 }
 
-PyRep *AllianceDB::GetEmploymentRecord(uint32 corpID)
+PyDataType *AllianceDB::GetEmploymentRecord(uint32 corpID)
 {
     DBQueryResult res;
     //do we really need this order by??
@@ -456,7 +456,7 @@ bool AllianceDB::CreateAlliance(std::string name, std::string shortName, std::st
     return true;
 }
 
-PyRep *AllianceDB::GetMembers(uint32 allyID) //to be called by member of alliance
+PyDataType *AllianceDB::GetMembers(uint32 allyID) //to be called by member of alliance
 {
     //This function is called to gather all of the corporationIDs associated to a particular alliance
     DBQueryResult res;
@@ -471,7 +471,7 @@ PyRep *AllianceDB::GetMembers(uint32 allyID) //to be called by member of allianc
 
     PyObject *obj = DBResultToIndexRowset(res, "corporationID");
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 
@@ -479,7 +479,7 @@ PyRep *AllianceDB::GetMembers(uint32 allyID) //to be called by member of allianc
     //return DBResultToRowset(res);
 }
 
-PyRep *AllianceDB::GetAllianceMembers(uint32 allyID) //to be called from show details pane
+PyDataType *AllianceDB::GetAllianceMembers(uint32 allyID) //to be called from show details pane
 {
     //This function is called to gather all of the corporationIDs associated to a particular alliance
     DBQueryResult res;
@@ -496,7 +496,7 @@ PyRep *AllianceDB::GetAllianceMembers(uint32 allyID) //to be called from show de
 }
 
 // Not sure how alliances but for now this will simply return an ordered list based upon member count
-PyRep *AllianceDB::GetRankedAlliances()
+PyDataType *AllianceDB::GetRankedAlliances()
 {
     //This function is called to gather all of the corporationIDs associated to a particular alliance
     DBQueryResult res;
@@ -562,7 +562,7 @@ bool AllianceDB::CreateAllianceChangePacket(OnAllianceChanged &ac, uint32 oldAll
         ac.executorCorpIDNew = new PyInt(row.GetUInt(5));
         ac.creatorCorpIDNew = new PyInt(row.GetUInt(6));
         ac.creatorCharIDNew = new PyInt(row.GetUInt(7));
-        ac.startDateNew = new PyLong(row.GetInt64(8));
+        ac.startDateNew = new PyInt(row.GetInt64(8));
         ac.memberCountNew = new PyInt(row.GetUInt(9));
         ac.urlNew = new PyString(row.GetText(10));
         ac.deletedNew = new PyInt(row.GetInt(11));
@@ -615,7 +615,7 @@ bool AllianceDB::CreateAllianceChangePacket(OnAllianceChanged &ac, uint32 oldAll
         ac.executorCorpIDOld = new PyInt(row.GetUInt(5));
         ac.creatorCorpIDOld = new PyInt(row.GetUInt(6));
         ac.creatorCharIDOld = new PyInt(row.GetUInt(7));
-        ac.startDateOld = new PyLong(row.GetInt64(8));
+        ac.startDateOld = new PyInt(row.GetInt64(8));
         ac.memberCountOld = new PyInt(row.GetUInt(9));
         ac.urlOld = new PyString(row.GetText(10));
         ac.deletedOld = new PyInt(row.GetInt(11));

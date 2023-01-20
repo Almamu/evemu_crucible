@@ -44,13 +44,13 @@ public:
 protected:
     StandingDB m_db;
 
-    PyResult GetCharStandings(PyCallArgs& call);
-    PyResult GetCorpStandings(PyCallArgs& call);
-    PyResult GetNPCNPCStandings(PyCallArgs& call);
-    PyResult GetSecurityRating(PyCallArgs& call, PyInt* ownerID);
-    PyResult GetMyKillRights(PyCallArgs& call);
-    PyResult GetStandingTransactions(PyCallArgs& call, PyInt* fromID, PyInt* toID, PyInt* direction, std::optional<PyInt*> eventID, std::optional<PyInt*> eventType, std::optional<PyLong*> eventDateTime);
-    PyResult GetStandingCompositions(PyCallArgs& call, PyInt* fromID, PyInt* toID);
+    EVEResult GetCharStandings(EVECallArgs& call);
+    EVEResult GetCorpStandings(EVECallArgs& call);
+    EVEResult GetNPCNPCStandings(EVECallArgs& call);
+    EVEResult GetSecurityRating(EVECallArgs& call, PyInt* ownerID);
+    EVEResult GetMyKillRights(EVECallArgs& call);
+    EVEResult GetStandingTransactions(EVECallArgs& call, PyInt* fromID, PyInt* toID, PyInt* direction, std::optional<PyInt*> eventID, std::optional<PyInt*> eventType, std::optional<PyInt*> eventDateTime);
+    EVEResult GetStandingCompositions(EVECallArgs& call, PyInt* fromID, PyInt* toID);
 };
 
 #endif

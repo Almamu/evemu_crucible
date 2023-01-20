@@ -24,7 +24,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 
 #include "cache/ObjCacheService.h"
@@ -43,17 +43,17 @@ DogmaIMService::DogmaIMService(EVEServiceManager& mgr) :
     this->m_cache = this->GetServiceManager().Lookup <ObjCacheService>("objectCaching");
 }
 
-PyResult DogmaIMService::GetAttributeTypes(PyCallArgs& call) {
+EVEResult DogmaIMService::GetAttributeTypes(EVECallArgs& call) {
     PyString* str = new PyString("dogmaIM.attributesByName" );
-    PyRep* result = this->m_cache->GetCacheHint( str );
+    PyDataType* result = this->m_cache->GetCacheHint( str );
     PyDecRef( str );
     return result;
 }
 
-BoundDispatcher* DogmaIMService::BindObject(Client* client, PyRep* bindParameters) {
+BoundDispatcher* DogmaIMService::BindObject(Client* client, PyDataType* bindParameters) {
     DogmaLM_BindArgs args;
     //crap
-    PyRep* tmp(bindParameters->Clone());
+    PyDataType* tmp(bindParameters->clone());
     if (!args.Decode(&tmp)) {
         codelog(SERVICE__ERROR, "%s: Failed to decode bind args.", GetName().c_str());
         return nullptr;
@@ -83,10 +83,10 @@ DogmaIMBound::DogmaIMBound(EVEServiceManager& mgr, DogmaIMService& parent, uint3
     this->Add("GetAllInfo", &DogmaIMBound::GetAllInfo);
     this->Add("DestroyWeaponBank", &DogmaIMBound::DestroyWeaponBank);
     this->Add("GetCharacterBaseAttributes", &DogmaIMBound::GetCharacterBaseAttributes);
-    this->Add("Activate", static_cast <PyResult(DogmaIMBound::*)(PyCallArgs&, PyInt*, PyInt*)> (&DogmaIMBound::Activate));
-    this->Add("Activate", static_cast <PyResult(DogmaIMBound::*)(PyCallArgs&, PyInt*, PyWString*, std::optional <PyInt*>, PyInt*)> (&DogmaIMBound::Activate));
-    this->Add("Deactivate", static_cast <PyResult(DogmaIMBound::*)(PyCallArgs&, PyInt*, PyWString*)> (&DogmaIMBound::Deactivate));
-    this->Add("Deactivate", static_cast <PyResult(DogmaIMBound::*)(PyCallArgs&, PyInt*, PyInt*)> (&DogmaIMBound::Deactivate));
+    this->Add("Activate", static_cast <EVEResult (DogmaIMBound::*)(EVECallArgs&, PyInt*, PyInt*)> (&DogmaIMBound::Activate));
+    this->Add("Activate", static_cast <EVEResult (DogmaIMBound::*)(EVECallArgs&, PyInt*, PyString*, std::optional <PyInt*>, PyInt*)> (&DogmaIMBound::Activate));
+    this->Add("Deactivate", static_cast <EVEResult (DogmaIMBound::*)(EVECallArgs&, PyInt*, PyString*)> (&DogmaIMBound::Deactivate));
+    this->Add("Deactivate", static_cast <EVEResult (DogmaIMBound::*)(EVECallArgs&, PyInt*, PyInt*)> (&DogmaIMBound::Deactivate));
     this->Add("Overload", &DogmaIMBound::Overload);
     this->Add("StopOverload", &DogmaIMBound::StopOverload);
     this->Add("CancelOverloading", &DogmaIMBound::CancelOverloading);
@@ -105,38 +105,38 @@ DogmaIMBound::DogmaIMBound(EVEServiceManager& mgr, DogmaIMService& parent, uint3
     this->Add("PeelAndLink", &DogmaIMBound::PeelAndLink);
 }
 
-PyResult DogmaIMBound::CharGetInfo(PyCallArgs& call) {
-    return call.client->GetChar()->GetCharInfo();
+EVEResult DogmaIMBound::CharGetInfo(EVECallArgs& call) {
+    return call.client->GetChar()->GetCharInfo(&call.arena);
 }
 
-PyResult DogmaIMBound::ClearTargets(PyCallArgs& call) {
+EVEResult DogmaIMBound::ClearTargets(EVECallArgs& call) {
     call.client->GetShipSE()->TargetMgr()->ClearTargets();
     //call.client->GetShipSE()->TargetMgr()->OnTarget(nullptr, TargMgr::Mode::Clear, TargMgr::Msg::ClientReq);
     return nullptr;
 }
 
-PyResult DogmaIMBound::GetTargets(PyCallArgs& call) {
+EVEResult DogmaIMBound::GetTargets(EVECallArgs& call) {
     return call.client->GetShipSE()->TargetMgr()->GetTargets();
 }
 
-PyResult DogmaIMBound::GetTargeters(PyCallArgs& call) {
+EVEResult DogmaIMBound::GetTargeters(EVECallArgs& call) {
     return call.client->GetShipSE()->TargetMgr()->GetTargeters();
 }
 
-PyResult DogmaIMBound::GetCharacterBaseAttributes(PyCallArgs& call)
+EVEResult DogmaIMBound::GetCharacterBaseAttributes(EVECallArgs& call)
 {
     CharacterRef cref = call.client->GetChar();
-    PyDict* result = new PyDict();
-        result->SetItem(new PyInt(AttrIntelligence), cref->GetAttribute(AttrIntelligence).GetPyObject());
-        result->SetItem(new PyInt(AttrPerception), cref->GetAttribute(AttrPerception).GetPyObject());
-        result->SetItem(new PyInt(AttrCharisma), cref->GetAttribute(AttrCharisma).GetPyObject());
-        result->SetItem(new PyInt(AttrWillpower), cref->GetAttribute(AttrWillpower).GetPyObject());
-        result->SetItem(new PyInt(AttrMemory), cref->GetAttribute(AttrMemory).GetPyObject());
-    return result;
+
+    return new PyDict {
+        {new PyInt (AttrIntelligence), cref->GetAttribute (AttrIntelligence).GetPyObject ()},
+        {new PyInt (AttrPerception), cref->GetAttribute (AttrPerception).GetPyObject ()},
+        {new PyInt (AttrCharisma), cref->GetAttribute (AttrCharisma).GetPyObject ()},
+        {new PyInt (AttrWillpower), cref->GetAttribute (AttrWillpower).GetPyObject ()},
+        {new PyInt (AttrMemory), cref->GetAttribute (AttrMemory).GetPyObject ()},
+    };
 }
 
-
-PyResult DogmaIMBound::ItemGetInfo(PyCallArgs& call, PyInt* itemID) {
+EVEResult DogmaIMBound::ItemGetInfo(EVECallArgs& call, PyInt* itemID) {
     // called when item 'row' info not in shipState data from GetAllInfo() return
     InventoryItemRef itemRef = sItemFactory.GetItemRef(itemID->value());
     if (itemRef.get() == nullptr ) {
@@ -146,11 +146,11 @@ PyResult DogmaIMBound::ItemGetInfo(PyCallArgs& call, PyInt* itemID) {
 
     PyObject* obj = itemRef->ItemGetInfo();
     if (is_log_enabled(ITEM__DEBUG))
-        obj->Dump(ITEM__DEBUG, "    ");
+        obj->dump(ITEM__DEBUG, "    ");
     return obj;
 }
 
-PyResult DogmaIMBound::SetModuleOnline(PyCallArgs& call, PyInt* locationID, PyInt* moduleID) {
+EVEResult DogmaIMBound::SetModuleOnline(EVECallArgs& call, PyInt* locationID, PyInt* moduleID) {
     Client* pClient(call.client);
 
     if (pClient->IsInSpace()) {
@@ -171,7 +171,7 @@ PyResult DogmaIMBound::SetModuleOnline(PyCallArgs& call, PyInt* locationID, PyIn
     return this->GetOID();
 }
 
-PyResult DogmaIMBound::TakeModuleOffline(PyCallArgs& call, PyInt* locationID, PyInt* moduleID) {
+EVEResult DogmaIMBound::TakeModuleOffline(EVECallArgs& call, PyInt* locationID, PyInt* moduleID) {
     Client* pClient(call.client);
 
     if (pClient->IsInSpace()) {
@@ -192,7 +192,7 @@ PyResult DogmaIMBound::TakeModuleOffline(PyCallArgs& call, PyInt* locationID, Py
     return this->GetOID();
 }
 
-PyResult DogmaIMBound::LoadAmmoToModules(PyCallArgs& call, PyInt* shipID, PyList* cModuleIDs, PyInt* chargeTypeID, PyInt* itemID, PyInt* ammoLocationId) {
+EVEResult DogmaIMBound::LoadAmmoToModules(EVECallArgs& call, PyInt* shipID, PyList* cModuleIDs, PyInt* chargeTypeID, PyInt* itemID, PyInt* ammoLocationId) {
     //  self.remoteDogmaLM.LoadAmmoToModules(shipID, moduleIDs, chargeTypeID, itemID, ammoLocationID, qty=qty)
     //  NOTE:  this call seems to be a list of moduleIDs with ONLY a single module.
     /* 02:13:11 [SvcCall]       Tuple: 5 elements
@@ -207,17 +207,17 @@ PyResult DogmaIMBound::LoadAmmoToModules(PyCallArgs& call, PyInt* shipID, PyList
      * 02:13:11 [SvcCall]         (None)
      */
     _log(MODULE__TRACE, "DogmaIMBound::Handle_LoadAmmoToModules()");
-    call.Dump(MODULE__TRACE);
+    call.dump(MODULE__TRACE);
     std::vector<int32> moduleIDs;
 
     PyList::const_iterator list_2_cur = cModuleIDs->begin();
     for (size_t list_2_index(0); list_2_cur != cModuleIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_Dogma_LoadAmmoToModules failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         moduleIDs.push_back(t->value());
     }
 
@@ -225,7 +225,7 @@ PyResult DogmaIMBound::LoadAmmoToModules(PyCallArgs& call, PyInt* shipID, PyList
         return nullptr;
     if (moduleIDs.size() > 1) {
         sLog.Error("DogmaIMBound::Handle_LoadAmmoToModules()", "args.moduleIDs.size = %lu.", moduleIDs.size() );
-        call.Dump(MODULE__WARNING);
+        call.dump(MODULE__WARNING);
     }
 
     // Get Reference to Ship and Charge
@@ -241,14 +241,14 @@ PyResult DogmaIMBound::LoadAmmoToModules(PyCallArgs& call, PyInt* shipID, PyList
     return this->GetOID();
 }
 
-PyResult DogmaIMBound::LoadAmmoToBank(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* chargeTypeID, PyList* cItemIDs, PyInt* chargeLocationID, std::optional <PyInt*> qty) {
+EVEResult DogmaIMBound::LoadAmmoToBank(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* chargeTypeID, PyList* cItemIDs, PyInt* chargeLocationID, std::optional <PyInt*> qty) {
   /*   NOTE:  this to load ALL modules in weapon bank, if possible.
    * self.remoteDogmaLM.LoadAmmoToBank(shipID, masterID, chargeTypeID,  itemIDs,  chargeLocationID,   qty)
    *                                    ship,   module,  charge type, charge item, charge location, stack qty (usually none - havent found otherwise)
    *   *******    UPDATED VAR NAMES TO MATCH CLIENT CODE  -allan 26Jul14  *************
    */
   _log(MODULE__TRACE, "DogmaIMBound::Handle_LoadAmmoToBank()");
-  call.Dump(MODULE__TRACE);
+  call.dump(MODULE__TRACE);
 
     /*
     args.shipID
@@ -262,12 +262,12 @@ PyResult DogmaIMBound::LoadAmmoToBank(PyCallArgs& call, PyInt* shipID, PyInt* ma
 
     PyList::const_iterator list_2_cur = cItemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != cItemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_Dogma_LoadAmmoToModules failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         itemIDs.push_back(t->value());
     }
 
@@ -299,7 +299,7 @@ PyResult DogmaIMBound::LoadAmmoToBank(PyCallArgs& call, PyInt* shipID, PyInt* ma
     return this->GetOID();
 }
 
-PyResult DogmaIMBound::AddTarget(PyCallArgs& call, PyInt* targetID) {
+EVEResult DogmaIMBound::AddTarget(EVECallArgs& call, PyInt* targetID) {
    // flag, targetList = self.GetDogmaLM().AddTargetOBO(sid, tid)
     // flag, targetList = self.GetDogmaLM().AddTarget(tid)
     // as a note, targetList isnt used once call returns to client
@@ -445,7 +445,7 @@ PyResult DogmaIMBound::AddTarget(PyCallArgs& call, PyInt* targetID) {
     return rsp.Encode();
 }
 
-PyResult DogmaIMBound::RemoveTarget(PyCallArgs& call, PyInt* targetID) {
+EVEResult DogmaIMBound::RemoveTarget(EVECallArgs& call, PyInt* targetID) {
     Client* pClient(call.client);
 
     SystemManager* pSysMgr = pClient->SystemMgr();
@@ -471,8 +471,7 @@ PyResult DogmaIMBound::RemoveTarget(PyCallArgs& call, PyInt* targetID) {
     return nullptr;
 }
 
-
-PyResult DogmaIMBound::GetAllInfo(PyCallArgs& call, PyBool* getCharInfo, PyBool* getShipInfo)
+EVEResult DogmaIMBound::GetAllInfo(EVECallArgs& call, PyBool* getCharInfo, PyBool* getShipInfo)
 {
     // added more return data and updated logic (almost complete and mostly accurate) -allan 26Mar16
     // completed.  -allan 7Jan19
@@ -480,8 +479,9 @@ PyResult DogmaIMBound::GetAllInfo(PyCallArgs& call, PyBool* getCharInfo, PyBool*
     Client* pClient(call.client);
 
     // Create the response dictionary
-    PyDict* rsp = new PyDict();
-    rsp->SetItemString("activeShipID", new PyInt(pClient->GetShipID()));
+    PyDict* rsp = call.arena.Dict({
+        {"activeShipID", call.arena.Int (pClient->GetShipID())}
+    });
     // Set "locationInfo" in the Dictionary
     /** @todo  havent found a populated item in packet logs
      *
@@ -491,64 +491,68 @@ PyResult DogmaIMBound::GetAllInfo(PyCallArgs& call, PyBool* getCharInfo, PyBool*
         ** this has *something* to do with POS
         */
     if (getShipInfo->value()) {
-        rsp->SetItemString("locationInfo", new PyDict());
+        rsp->set ("locationInfo", call.arena.Dict());
     } else {
-        rsp->SetItemString("locationInfo", PyStatic.NewNone());
+        rsp->set ("locationInfo", call.arena.None());
     }
 
     // Set "shipModifiedCharAttribs" in the Dictionary
     /** @todo  havent found a populated item in packet logs */
-    rsp->SetItemString("shipModifiedCharAttribs", PyStatic.NewNone());
+    rsp->set ("shipModifiedCharAttribs", call.arena.None());
 
     // Set "charInfo" in the Dictionary  -fixed 24Mar16
     sItemFactory.SetUsingClient(pClient);
     if (getCharInfo->value()) {
-        PyDict* charResult = pClient->GetChar()->GetCharInfo();
+        PyDict* charResult = pClient->GetChar()->GetCharInfo(&call.arena);
         if (charResult == nullptr) {
             _log(SERVICE__ERROR, "Unable to build char info for char %u", pClient->GetCharacterID());
             sItemFactory.UnsetUsingClient();
             PySafeDecRef(rsp);
-            return PyStatic.NewNone();
+            return call.arena.None();
         }
-        rsp->SetItemString("charInfo", charResult);
+        rsp->set ("charInfo", charResult);
     } else {
-        rsp->SetItemString("charInfo", new PyDict());
+        rsp->set ("charInfo", call.arena.Dict());
     }
 
     // Set "shipInfo" in the Dictionary  -fixed 26Mar16
     if (getShipInfo->value()) {
-        PyDict* shipResult = pClient->GetShip()->GetShipInfo();
+        PyDict* shipResult = pClient->GetShip()->GetShipInfo(&call.arena);
         if (shipResult == nullptr) {
             _log(SERVICE__ERROR, "Unable to build ship info for ship %u", pClient->GetShipID());
             sItemFactory.UnsetUsingClient();
             PySafeDecRef(rsp);
-            return PyStatic.NewNone();
+            return call.arena.None();
         }
-        rsp->SetItemString("shipInfo", shipResult);
+        rsp->set ("shipInfo", shipResult);
     } else {
-        rsp->SetItemString("shipInfo", new PyDict());
+        rsp->set ("shipInfo", call.arena.Dict());
     }
 
     // Set "shipState" in the Dictionary  -fixed 26Mar16  -UD to add linked weapons 7Jan19
     if (pClient->GetShip().get() == nullptr) {
         _log(SERVICE__ERROR, "Unable to build shipState for %u", pClient->GetShipID());
         PySafeDecRef(rsp);
-        return PyStatic.NewNone();
+        return call.arena.None();
     }
-    PyTuple* rspShipState = new PyTuple(3);
-        rspShipState->items[0] = pClient->GetShip()->GetShipState();        // fitted module list
-        rspShipState->items[1] = pClient->GetShip()->GetChargeState();      // loaded charges (subLocation)
-        rspShipState->items[2] = pClient->GetShip()->GetLinkedWeapons();    // linked weapons
-    rsp->SetItemString("shipState", rspShipState);
+
+    rsp->set (
+        "shipState",
+        call.arena.Tuple ({
+            pClient->GetShip()->GetShipState (&call.arena), // fitted module list
+            pClient->GetShip()->GetChargeState (&call.arena), // loaded charges (subLocation)
+            pClient->GetShip()->GetLinkedWeapons (&call.arena), // linked weapons
+        })
+    );
 
     if (is_log_enabled(SHIP__STATE))
-        rsp->Dump(SHIP__STATE, "     ");
+        rsp->dump(SHIP__STATE, "     ");
 
     sItemFactory.UnsetUsingClient();
-    return new PyObject("util.KeyVal", rsp );
+    return call.arena.Object ("util.KeyVal", rsp);
 }
 
-PyResult DogmaIMBound::LinkWeapons(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* fromID) {
+EVEResult DogmaIMBound::LinkWeapons(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* fromID) {
     /*  data = self.remoteDogmaLM.LinkWeapons(shipID, masterID, fromID)
      *
      *    def SetWeaponBanks(self, shipID, data):
@@ -580,10 +584,10 @@ PyResult DogmaIMBound::LinkWeapons(PyCallArgs& call, PyInt* shipID, PyInt* maste
         return nullptr;
     }
     sRef->LinkWeapon(masterID->value(), fromID->value());
-    return sRef->GetLinkedWeapons();
+    return sRef->GetLinkedWeapons(&call.arena);
 }
 
-PyResult DogmaIMBound::LinkAllWeapons(PyCallArgs& call, PyInt* shipID) {
+EVEResult DogmaIMBound::LinkAllWeapons(EVECallArgs& call, PyInt* shipID) {
     if (!IsPlayerItem(shipID->value()))
         return nullptr;
 
@@ -601,10 +605,10 @@ PyResult DogmaIMBound::LinkAllWeapons(PyCallArgs& call, PyInt* shipID) {
     }
     // locate and link all weapons on ship, if possible.
     sRef->LinkAllWeapons();
-    return sRef->GetLinkedWeapons();
+    return sRef->GetLinkedWeapons(&call.arena);
 }
 
-PyResult DogmaIMBound::DestroyWeaponBank(PyCallArgs& call, PyInt* shipID, PyInt* itemID) {
+EVEResult DogmaIMBound::DestroyWeaponBank(EVECallArgs& call, PyInt* shipID, PyInt* itemID) {
     //self.remoteDogmaLM.DestroyWeaponBank(shipID, itemID)
     if (!IsPlayerItem(shipID->value()) or !IsPlayerItem(itemID->value()))
         return nullptr;
@@ -625,7 +629,7 @@ PyResult DogmaIMBound::DestroyWeaponBank(PyCallArgs& call, PyInt* shipID, PyInt*
     return nullptr;
 }
 
-PyResult DogmaIMBound::UnlinkAllModules(PyCallArgs& call, PyInt* shipID) {
+EVEResult DogmaIMBound::UnlinkAllModules(EVECallArgs& call, PyInt* shipID) {
     //info = self.remoteDogmaLM.UnlinkAllModules(shipID)
     if (!IsPlayerItem(shipID->value()))
         return nullptr;
@@ -643,14 +647,14 @@ PyResult DogmaIMBound::UnlinkAllModules(PyCallArgs& call, PyInt* shipID) {
         return nullptr;
     }
     sRef->UnlinkAllWeapons();
-    return sRef->GetLinkedWeapons();
+    return sRef->GetLinkedWeapons(&call.arena);
 }
 
-PyResult DogmaIMBound::UnlinkModule(PyCallArgs& call, PyInt* shipID, PyInt* moduleID) {
+EVEResult DogmaIMBound::UnlinkModule(EVECallArgs& call, PyInt* shipID, PyInt* moduleID) {
     // slaveID = self.remoteDogmaLM.UnlinkModule(shipID, moduleID)
     if (is_log_enabled(SHIP__MESSAGE)) {
         sLog.Warning("DogmaIMBound::Handle_UnlinkModule()", "size=%lu", call.tuple->size());
-        call.Dump(SHIP__MESSAGE);
+        call.dump(SHIP__MESSAGE);
     }
 
     if (!IsPlayerItem(shipID->value()) or !IsPlayerItem(moduleID->value()))
@@ -672,11 +676,11 @@ PyResult DogmaIMBound::UnlinkModule(PyCallArgs& call, PyInt* shipID, PyInt* modu
     return new PyInt(sRef->UnlinkWeapon(moduleID->value()));
 }
 
-PyResult DogmaIMBound::MergeModuleGroups(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID) {
+EVEResult DogmaIMBound::MergeModuleGroups(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID) {
     //info = self.remoteDogmaLM.MergeModuleGroups(shipID, masterID, slaveID)
     if (is_log_enabled(SHIP__MESSAGE)) {
         sLog.Warning("DogmaIMBound::Handle_MergeModuleGroups()", "size=%lu", call.tuple->size());
-        call.Dump(SHIP__MESSAGE);
+        call.dump(SHIP__MESSAGE);
     }
 
     /* args.shipID
@@ -701,14 +705,14 @@ PyResult DogmaIMBound::MergeModuleGroups(PyCallArgs& call, PyInt* shipID, PyInt*
     // merge slaveID group into masterID group
     sRef->MergeModuleGroups(masterID->value(), slaveID->value());
 
-    return sRef->GetLinkedWeapons();
+    return sRef->GetLinkedWeapons(&call.arena);
 }
 
-PyResult DogmaIMBound::PeelAndLink(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID) {
+EVEResult DogmaIMBound::PeelAndLink(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID) {
     //info = self.remoteDogmaLM.PeelAndLink(shipID, masterID, slaveID)
     if (is_log_enabled(SHIP__MESSAGE)) {
         sLog.Warning("DogmaIMBound::Handle_PeelAndLink()", "size=%lu", call.tuple->size());
-        call.Dump(SHIP__MESSAGE);
+        call.dump(SHIP__MESSAGE);
     }
 
     /* args.shipID
@@ -732,10 +736,10 @@ PyResult DogmaIMBound::PeelAndLink(PyCallArgs& call, PyInt* shipID, PyInt* maste
 
     // remove slaveID from existing group and add to masterID group
     sRef->PeelAndLink(masterID->value(), slaveID->value());
-    return sRef->GetLinkedWeapons();
+    return sRef->GetLinkedWeapons(&call.arena);
 }
 
-PyResult DogmaIMBound::Activate(PyCallArgs& call, PyInt* itemID, PyInt* effectID) {
+EVEResult DogmaIMBound::Activate(EVECallArgs& call, PyInt* itemID, PyInt* effectID) {
     // dogmaLM.Activate(itemID, const.effectOnlineForStructures)
     // dogmaLM.Activate(itemID, const.effectAnchorDrop)
     // dogmaLM.Activate(itemID, const.effectAnchorLift)
@@ -805,7 +809,7 @@ PyResult DogmaIMBound::Activate(PyCallArgs& call, PyInt* itemID, PyInt* effectID
     return PyStatic.NewOne();
 }
 
-PyResult DogmaIMBound::Activate(PyCallArgs& call, PyInt* itemID, PyWString* effectName, std::optional <PyInt*> target, PyInt* repeat)
+EVEResult DogmaIMBound::Activate(EVECallArgs& call, PyInt* itemID, PyString* effectName, std::optional <PyInt*> target, PyInt* repeat)
 {
     // ret = self.GetDogmaLM().Activate(itemID, effectName, target, repeat)  - i cant find where this return is used but is "1" in packet logs
     Client* pClient(call.client);
@@ -828,7 +832,7 @@ PyResult DogmaIMBound::Activate(PyCallArgs& call, PyInt* itemID, PyWString* effe
     return PyStatic.NewOne();
 }
 
-PyResult DogmaIMBound::Deactivate(PyCallArgs& call, PyInt* itemID, PyInt* effect) {
+EVEResult DogmaIMBound::Deactivate(EVECallArgs& call, PyInt* itemID, PyInt* effect) {
     Client* pClient(call.client);
 
     if (!pClient->IsInSpace()) {
@@ -837,7 +841,7 @@ PyResult DogmaIMBound::Deactivate(PyCallArgs& call, PyInt* itemID, PyInt* effect
     }
 
     // if effect is integer, call is for pos or container
-    call.Dump(POS__DUMP);
+    call.dump(POS__DUMP);
     SystemEntity* pSE = pClient->SystemMgr()->GetSE(itemID->value());
     if (pSE == nullptr) {
         sLog.Error("DogmaIMBound::Handle_Deactivate()", "%u is not a valid EntityID in this system.", itemID->value());
@@ -865,13 +869,13 @@ PyResult DogmaIMBound::Deactivate(PyCallArgs& call, PyInt* itemID, PyInt* effect
     return PyStatic.NewNone();
 }
 
-PyResult DogmaIMBound::Deactivate(PyCallArgs& call, PyInt* itemID, PyWString* effectName)
+EVEResult DogmaIMBound::Deactivate(EVECallArgs& call, PyInt* itemID, PyString* effectName)
 {
     //  return self.statemanager.Deactivate(self.itemID, self.effectName)
     //  dogmaLM.Deactivate(itemID, const.effectOnlineForStructures)
     if (is_log_enabled(SHIP__MESSAGE)) {
         sLog.Warning("DogmaIMBound::Handle_Deactivate()", "size=%lu", call.tuple->size());
-        call.Dump(SHIP__MESSAGE);
+        call.dump(SHIP__MESSAGE);
     }
 
     Client* pClient(call.client);
@@ -888,7 +892,7 @@ PyResult DogmaIMBound::Deactivate(PyCallArgs& call, PyInt* itemID, PyWString* ef
     return PyStatic.NewNone();
 }
 
-PyResult DogmaIMBound::Overload(PyCallArgs& call, PyInt* itemID, PyInt* effectID) {
+EVEResult DogmaIMBound::Overload(EVECallArgs& call, PyInt* itemID, PyInt* effectID) {
     /*
      * 23:52:45 L DogmaIMBound::Handle_Overload(): size=2
      * 23:52:45 [SvcCallDump]   Call Arguments:
@@ -906,7 +910,7 @@ PyResult DogmaIMBound::Overload(PyCallArgs& call, PyInt* itemID, PyInt* effectID
 }
 
 // this one is called from Deactivate() when module is OL
-PyResult DogmaIMBound::StopOverload(PyCallArgs& call, PyInt* itemID, PyInt* effectID)
+EVEResult DogmaIMBound::StopOverload(EVECallArgs& call, PyInt* itemID, PyInt* effectID)
 {
     Client* pClient(call.client);
     //  cancel overload then deactivate module
@@ -916,7 +920,7 @@ PyResult DogmaIMBound::StopOverload(PyCallArgs& call, PyInt* itemID, PyInt* effe
     return PyStatic.NewNone();
 }
 
-PyResult DogmaIMBound::CancelOverloading(PyCallArgs& call, PyInt* itemID) {
+EVEResult DogmaIMBound::CancelOverloading(EVECallArgs& call, PyInt* itemID) {
     // self.dogmaLM.CancelOverloading(itemID)
 
     Client* pClient(call.client);
@@ -924,7 +928,7 @@ PyResult DogmaIMBound::CancelOverloading(PyCallArgs& call, PyInt* itemID) {
     return nullptr;
 }
 
-PyResult DogmaIMBound::OverloadRack(PyCallArgs& call, PyInt* itemID) {
+EVEResult DogmaIMBound::OverloadRack(EVECallArgs& call, PyInt* itemID) {
     /* moduleIDs = self.GetDogmaLM().OverloadRack(itemID)
      *   moduleIDs is list of modules in rack.
      */
@@ -934,7 +938,7 @@ PyResult DogmaIMBound::OverloadRack(PyCallArgs& call, PyInt* itemID) {
     return list;
 }
 
-PyResult DogmaIMBound::StopOverloadRack(PyCallArgs& call, PyInt* itemID) {
+EVEResult DogmaIMBound::StopOverloadRack(EVECallArgs& call, PyInt* itemID) {
     /* moduleIDs = self.GetDogmaLM().StopOverloadRack(itemID)
      *   moduleIDs is list of modules in rack.
      */
@@ -944,7 +948,7 @@ PyResult DogmaIMBound::StopOverloadRack(PyCallArgs& call, PyInt* itemID) {
     return list;
 }
 
-PyResult DogmaIMBound::InitiateModuleRepair(PyCallArgs& call, PyInt* itemID) {
+EVEResult DogmaIMBound::InitiateModuleRepair(EVECallArgs& call, PyInt* itemID) {
     //  this is for repairing modules using nanite paste (button's ring turns white).  return bool.
     //  res = self.GetDogmaLM().InitiateModuleRepair(itemID)
     // see notes in ModuleManager::ModuleRepair()
@@ -952,7 +956,7 @@ PyResult DogmaIMBound::InitiateModuleRepair(PyCallArgs& call, PyInt* itemID) {
     return call.client->GetShip()->ModuleRepair(itemID->value());
 }
 
-PyResult DogmaIMBound::StopModuleRepair(PyCallArgs& call, PyInt* itemID) {
+EVEResult DogmaIMBound::StopModuleRepair(EVECallArgs& call, PyInt* itemID) {
     //  self.GetDogmaLM().StopModuleRepair(itemID)
 
     call.client->GetShip()->StopModuleRepair(itemID->value());
@@ -961,7 +965,7 @@ PyResult DogmaIMBound::StopModuleRepair(PyCallArgs& call, PyInt* itemID) {
     return nullptr;
 }
 
-PyResult DogmaIMBound::ChangeDroneSettings(PyCallArgs& call, PyDict* settings) {
+EVEResult DogmaIMBound::ChangeDroneSettings(EVECallArgs& call, PyDict* settings) {
     /*
      * 21:59:29 L DogmaIMBound::Handle_ChangeDroneSettings(): size=1
      * 21:59:29 [SvcCall]   Call Arguments:
@@ -977,7 +981,7 @@ PyResult DogmaIMBound::ChangeDroneSettings(PyCallArgs& call, PyDict* settings) {
     
     std::map<int16, int8> attribs;
     for (PyDict::const_iterator itr = settings->begin(); itr != settings->end(); ++itr)
-        attribs[PyRep::IntegerValueU32(itr->first)] = PyRep::IntegerValue(itr->second);
+        attribs[itr->first->u32()] = itr->second->i64();
 
     call.client->GetShipSE()->UpdateDrones(attribs);
 

@@ -30,16 +30,16 @@ public:
     void Initialize(EVEServiceManager& svc);
 
     uint32 CreateFleet(Client* pClient);
-    PyRep* CreateWing(uint32 fleetID);
+    PyDataType* CreateWing(uint32 fleetID);
     void CreateSquad(uint32 fleetID, uint32 wingID);
     void DeleteFleet(uint32 fleetID);
     void DeleteWing(uint32 wingID);
     void DeleteSquad(uint32 squadID);
 
-    PyRep* GetAvailableFleets();
-    PyRep* GetWings(uint32 fleetID);
+    PyDataType* GetAvailableFleets();
+    PyDataType* GetWings(uint32 fleetID);
 
-    PyRep* GetFleetAdvert(uint32 fleetID);
+    PyDataType* GetFleetAdvert(uint32 fleetID);
     void CreateFleetAdvert(uint32 fleetID, FleetAdvert data);
     void RemoveFleetAdvert(uint32 fleetID);
 
@@ -54,7 +54,7 @@ public:
     bool IsWingActive(int32 wingID);
 
     void SetMOTD(uint32 fleetID, std::string motd);
-    PyRep* GetMOTD(uint32 fleetID);
+    PyDataType* GetMOTD(uint32 fleetID);
 
     void RenameWing(uint32 wingID, std::string name);
     void RenameSquad(uint32 squadID, std::string name);

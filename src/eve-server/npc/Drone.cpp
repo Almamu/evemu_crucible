@@ -26,7 +26,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "EntityList.h"
 #include "inventory/AttributeEnum.h"
 #include "npc/Drone.h"
@@ -217,17 +217,18 @@ void DroneSE::StateChange() {
         m_bubble->BubblecastDestinyUpdate(&up, "destiny");
         //pShipSE->DestinyMgr()->SendSingleDestinyUpdate(&up);
     } else {
-        PyList* list = new PyList();
-            list->AddItemInt(m_self->itemID());
-            list->AddItem(PyStatic.NewNone());
-            list->AddItem(PyStatic.NewNone());
-            list->AddItem(PyStatic.NewNone());
-            list->AddItem(PyStatic.NewNone());
-            list->AddItem(PyStatic.NewNone());
-            list->AddItem(PyStatic.NewNone());
-        PyTuple* tuple = new PyTuple(2);
-            tuple->SetItem(0, new PyString("OnDroneStateChange"));
-            tuple->SetItem(1, list);
+        PyTuple* tuple = new PyTuple {
+            new PyString ("OnDroneStateChange"),
+            new PyList {
+                new PyInt (m_self->itemID()),
+                PyStatic.NewNone(),
+                PyStatic.NewNone(),
+                PyStatic.NewNone(),
+                PyStatic.NewNone(),
+                PyStatic.NewNone(),
+                PyStatic.NewNone(),
+            }
+        };
         m_bubble->BubblecastDestinyUpdate(&tuple, "destiny");
     }
 }
@@ -251,17 +252,17 @@ void DroneSE::TargetedLost(SystemEntity* who) {
 PyDict* DroneSE::MakeSlimItem() {
     _log(SE__SLIMITEM, "MakeSlimItem for Drone %u ", m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",           new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",           new PyInt(m_self->typeID()));
-        slim->SetItemString("categoryID",       new PyInt(m_self->categoryID()));
-        slim->SetItemString("groupID",          new PyInt(m_self->groupID()));
-        slim->SetItemString("name",             new PyString(m_self->itemName()));
-        slim->SetItemString("ownerID",          new PyInt(m_ownerID));
-        slim->SetItemString("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-        slim->SetItemString("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-        slim->SetItemString("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
-        slim->SetItemString("bounty",           new PyFloat(GetBounty()));
-        slim->SetItemString("securityStatus",   new PyFloat(GetSecurityRating()));
+        slim->set ("itemID",           new PyInt(m_self->itemID()));
+        slim->set ("typeID",           new PyInt(m_self->typeID()));
+        slim->set ("categoryID",       new PyInt(m_self->categoryID()));
+        slim->set ("groupID",          new PyInt(m_self->groupID()));
+        slim->set ("name",             new PyString(m_self->itemName()));
+        slim->set ("ownerID",          new PyInt(m_ownerID));
+        slim->set ("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+        slim->set ("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+        slim->set ("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+        slim->set ("bounty",           new PyFloat(GetBounty()));
+        slim->set ("securityStatus",   new PyFloat(GetSecurityRating()));
     return slim;
 }
 

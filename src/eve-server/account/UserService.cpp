@@ -31,22 +31,19 @@
 
 MovementService::MovementService(EVEServiceManager *mgr) :
     Service("movementServer"),
-    m_manager(mgr)
-{
+    m_manager(mgr) {
     this->Add("ResolveNodeID", &MovementService::ResolveNodeID);
 }
 
-PyResult MovementService::ResolveNodeID(PyCallArgs& call, PyInt* newWorldSpaceId)
-{
+EVEResult MovementService::ResolveNodeID(EVECallArgs& call, PyInt* newWorldSpaceId) {
     sLog.Yellow( "MovementService", "ResolveNodeID" );
-    call.Dump(CHARACTER__DEBUG);
+    call.dump(CHARACTER__DEBUG);
 
-    return new PyInt(this->m_manager->GetNodeID());
+    return call.arena.Int (this->m_manager->GetNodeID());
 }
 
 UserService::UserService() :
-    Service("userSvc", eAccessLevel_User)
-{
+    Service("userSvc", eAccessLevel_User) {
     this->Add("GetRedeemTokens", &UserService::GetRedeemTokens);
     this->Add("ReverseRedeem", &UserService::ReverseRedeem);
     this->Add("GetCreateDate", &UserService::GetCreateDate);
@@ -55,11 +52,10 @@ UserService::UserService() :
     this->Add("ApplyPilotLicence", &UserService::ApplyPilotLicence);
 }
 
-PyResult UserService::GetRedeemTokens(PyCallArgs& call)
-{
+EVEResult UserService::GetRedeemTokens(EVECallArgs& call) {
     /*
     sLog.Yellow( "UserService", "Handle_GetRedeemTokens" );
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
      * ==================== Sent from Client 84 bytes
      *
      * [PyObjectData Name: macho.CallReq]
@@ -158,14 +154,13 @@ PyResult UserService::GetRedeemTokens(PyCallArgs& call)
      *
      */
 
-    return new PyList();
+    return call.arena.List();
 }
 
-PyResult UserService::ReverseRedeem(PyCallArgs& call, PyInt* itemID)
-{
+EVEResult UserService::ReverseRedeem(EVECallArgs& call, PyInt* itemID) {
     //sm.RemoteSvc('userSvc').ReverseRedeem(item.itemID)
     sLog.Yellow( "UserService", "Handle_ReverseRedeem" );
-    call.Dump(CHARACTER__DEBUG);
+    call.dump(CHARACTER__DEBUG);
 
     return nullptr;
     
@@ -177,33 +172,29 @@ PyResult UserService::ReverseRedeem(PyCallArgs& call, PyInt* itemID)
      */
 }
 
-PyResult UserService::GetCreateDate(PyCallArgs& call)
-{
-    return new PyLong(call.client->GetChar()->createDateTime());
+EVEResult UserService::GetCreateDate(EVECallArgs& call) {
+    return call.arena.Int (call.client->GetChar()->createDateTime());
 }
 
-PyResult UserService::ReportISKSpammer(PyCallArgs& call, PyInt* characterID, PyInt* channelID)
-{
+EVEResult UserService::ReportISKSpammer(EVECallArgs& call, PyInt* characterID, PyInt* channelID) {
     // sm.RemoteSvc('userSvc').ReportISKSpammer(charID, channelID, spamEntries)
     sLog.Yellow( "UserService", "Handle_ReportISKSpammer" );
-    call.Dump(CHARACTER__DEBUG);
+    call.dump(CHARACTER__DEBUG);
 
     return nullptr;
 }
 
-PyResult UserService::ReportBot(PyCallArgs& call, PyInt* itemID)
-{
+EVEResult UserService::ReportBot(EVECallArgs& call, PyInt* itemID) {
     sLog.Yellow( "UserService", "Handle_ReportBot" );
-    call.Dump(CHARACTER__DEBUG);
+    call.dump(CHARACTER__DEBUG);
 
     return nullptr;
 }
 
-PyResult UserService::ApplyPilotLicence(PyCallArgs& call, PyInt* itemID)
-{
+EVEResult UserService::ApplyPilotLicence(EVECallArgs& call, PyInt* itemID) {
     //sm.RemoteSvc('userSvc').ApplyPilotLicence(itemID, justQuery=True)
     sLog.Yellow( "UserService", "Handle_ApplyPilotLicence" );
-    call.Dump(CHARACTER__DEBUG);
+    call.dump(CHARACTER__DEBUG);
 
     return nullptr;
 }

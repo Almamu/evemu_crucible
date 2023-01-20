@@ -51,7 +51,7 @@ int32 StationDB::GetOfficeCount(uint32 corpID)
     return row.GetInt(0);
 }
 
-PyRep* StationDB::GetOffices(uint32 stationID)
+PyDataType* StationDB::GetOffices(uint32 stationID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -104,7 +104,7 @@ void StationDB::GetStationOfficeData(DBQueryResult& res)
         codelog(DATABASE__ERROR, "Error in GetStationOfficeData query: %s", res.error.c_str());
 }
 
-PyRep* StationDB::GetStationOfficeIDs(uint32 locationID, uint32 corpID, const char* key)
+PyDataType* StationDB::GetStationOfficeIDs(uint32 locationID, uint32 corpID, const char* key)
 {
     DBQueryResult res;
     if (sDataMgr.IsStation(locationID)) {

@@ -178,7 +178,7 @@ void EvE::traceStack(void)
 
     for (int i = 0; i < callStack.size(); ++i)
     {
-        printf("[%3d] %15p: %s in %s\n", callStack.size() - i, callStack[i].offset, callStack[i].function.c_str(), callStack[i].module.c_str());
+        printf("[%3zu] %15lu: %s in %s\n", callStack.size() - i, callStack[i].offset, callStack[i].function.c_str(), callStack[i].module.c_str());
     }
 }
 

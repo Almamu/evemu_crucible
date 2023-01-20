@@ -51,15 +51,15 @@ ConfigService::ConfigService() :
 }
 
 /** @todo put these next two in static data to avoid db hits  */
-PyResult ConfigService::GetUnits(PyCallArgs &call) {
+EVEResult ConfigService::GetUnits(EVECallArgs&call) {
     return m_db.GetUnits();
 }
 
-PyResult ConfigService::GetMapLandmarks(PyCallArgs &call) {
+EVEResult ConfigService::GetMapLandmarks(EVECallArgs&call) {
     return m_db.GetMapLandmarks();
 }
 
-PyResult ConfigService::GetMultiOwnersEx(PyCallArgs &call, PyList* ownerIDs) {
+EVEResult ConfigService::GetMultiOwnersEx(EVECallArgs&call, PyList* ownerIDs) {
   /*
 23:14:21 L ConfigService: Handle_GetMultiOwnersEx
 23:14:21 [SvcCall]   Call Arguments:
@@ -68,122 +68,95 @@ PyResult ConfigService::GetMultiOwnersEx(PyCallArgs &call, PyList* ownerIDs) {
 23:14:21 [SvcCall]         [ 0]   [ 0] Integer field: 140000053
   */
     _log(CACHE__DUMP, "ConfigService::Handle_GetMultiOwnersEx" );
-    call.Dump(CACHE__DUMP);
+    call.dump(CACHE__DUMP);
 
-    std::vector<int32> ints;
-
-    PyList::const_iterator list_2_cur = ownerIDs->begin();
-    for (size_t list_2_index(0); list_2_cur != ownerIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
-            _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
-            return nullptr;
-        }
-
-        const PyInt* t = (*list_2_cur)->AsInt();
-        ints.push_back(t->value());
-    }
-
-    return m_db.GetMultiOwnersEx(ints);
+    return m_db.GetMultiOwnersEx(ownerIDs->wrap <PyInt>(), &call.arena);
 }
 
-PyResult ConfigService::GetMultiAllianceShortNamesEx(PyCallArgs &call, PyList* allianceIDs) {
+EVEResult ConfigService::GetMultiAllianceShortNamesEx(EVECallArgs&call, PyList* allianceIDs) {
 
     std::vector<int32> ints;
 
     PyList::const_iterator list_2_cur = allianceIDs->begin();
     for (size_t list_2_index(0); list_2_cur != allianceIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
     return m_db.GetMultiAllianceShortNamesEx(ints);
 }
 
-
-PyResult ConfigService::GetMultiLocationsEx(PyCallArgs &call, PyList* locationIDs) {      // now working correctly  -allan  25April
+EVEResult ConfigService::GetMultiLocationsEx(EVECallArgs&call, PyList* locationIDs) {      // now working correctly  -allan  25April
     _log(CACHE__DUMP,  "ConfigService::Handle_GetMultiLocationsEx" );
-    call.Dump(CACHE__DUMP);
+    call.dump(CACHE__DUMP);
 
     std::vector<int32> ints;
 
     PyList::const_iterator list_2_cur = locationIDs->begin();
     for (size_t list_2_index(0); list_2_cur != locationIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
     return m_db.GetMultiLocationsEx(ints);
 }
 
-PyResult ConfigService::GetMultiStationEx(PyCallArgs &call, PyList* stationIDs) {
+EVEResult ConfigService::GetMultiStationEx(EVECallArgs&call, PyList* stationIDs) {
     _log(CACHE__DUMP,  "ConfigService::Handle_GetMultiStationEx" );
-    call.Dump(CACHE__DUMP);
+    call.dump(CACHE__DUMP);
 
     std::vector<int32> ints;
 
     PyList::const_iterator list_2_cur = stationIDs->begin();
     for (size_t list_2_index(0); list_2_cur != stationIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
     return m_db.GetMultiStationEx(ints);
 }
 
-PyResult ConfigService::GetMultiCorpTickerNamesEx(PyCallArgs &call, PyList* corporationIDs) {
-    std::vector<int32> ints;
-
-    PyList::const_iterator list_2_cur = corporationIDs->begin();
-    for (size_t list_2_index(0); list_2_cur != corporationIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
-            _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
-            return nullptr;
-        }
-
-        const PyInt* t = (*list_2_cur)->AsInt();
-        ints.push_back(t->value());
-    }
-
-    return m_db.GetMultiCorpTickerNamesEx(ints);
+EVEResult ConfigService::GetMultiCorpTickerNamesEx(EVECallArgs&call, PyList* corporationIDs) {
+    return m_db.GetMultiCorpTickerNamesEx(corporationIDs->wrap <PyInt> (), &call.arena);
 }
 
-PyResult ConfigService::GetMultiGraphicsEx(PyCallArgs &call, PyList* graphicIDs) {
+EVEResult ConfigService::GetMultiGraphicsEx(EVECallArgs&call, PyList* graphicIDs) {
     std::vector<int32> ints;
 
     PyList::const_iterator list_2_cur = graphicIDs->begin();
     for (size_t list_2_index(0); list_2_cur != graphicIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
     return m_db.GetMultiGraphicsEx(ints);
 }
 
-PyResult ConfigService::GetMap(PyCallArgs &call, PyInt* solarSystemID) {
+EVEResult ConfigService::GetMap(EVECallArgs&call, PyInt* solarSystemID) {
     return m_db.GetMap(solarSystemID->value());
 }
 
-PyResult ConfigService::GetMapOffices(PyCallArgs &call, PyInt* solarSystemID) {
+EVEResult ConfigService::GetMapOffices(EVECallArgs&call, PyInt* solarSystemID) {
   /*
 22:38:58 [SvcCall] Service config: calling GetMapOffices
 22:38:58 [SvcCall]   Call Arguments:
@@ -196,24 +169,24 @@ PyResult ConfigService::GetMapOffices(PyCallArgs &call, PyInt* solarSystemID) {
     return m_db.GetMapOffices(solarSystemID->value());
 }
 
-PyResult ConfigService::GetMapObjects(PyCallArgs &call, PyInt* systemID, PyInt* region, PyInt* constellation, PyInt* system, PyInt* station, PyInt* unknown) {
+EVEResult ConfigService::GetMapObjects(EVECallArgs&call, PyInt* systemID, PyInt* region, PyInt* constellation, PyInt* system, PyInt* station, PyInt* unknown) {
     return m_db.GetMapObjects( systemID->value(), region->value(), constellation->value(), system->value(), station->value());
 }
 
-PyResult ConfigService::GetMultiInvTypesEx(PyCallArgs &call, PyList* typeIDs) {
+EVEResult ConfigService::GetMultiInvTypesEx(EVECallArgs&call, PyList* typeIDs) {
     _log(CACHE__DUMP,  "ConfigService::Handle_GetMultiInvTypesEx" );
-    call.Dump(CACHE__DUMP);
+    call.dump(CACHE__DUMP);
 
     std::vector<int32> ints;
 
     PyList::const_iterator list_2_cur = typeIDs->begin();
     for (size_t list_2_index(0); list_2_cur != typeIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
@@ -223,7 +196,7 @@ PyResult ConfigService::GetMultiInvTypesEx(PyCallArgs &call, PyList* typeIDs) {
 
 //02:10:35 L ConfigService::Handle_GetMapConnections(): size= 6
 //15:12:56 W ConfigDB::GetMapConnections: DB query - System:20000307, B1:0, B2:0, B3:1, Cel:0, _c:1  <-- this means cached
-PyResult ConfigService::GetMapConnections(PyCallArgs &call, PyInt* itemID, PyInt* reg, PyInt* con, PyInt* sol, PyInt* cel, PyInt* _c) {
+EVEResult ConfigService::GetMapConnections(EVECallArgs&call, PyInt* itemID, PyInt* reg, PyInt* con, PyInt* sol, PyInt* cel, PyInt* _c) {
 /**
         this is cached on clientside.  only called if not in client cache
 */
@@ -236,28 +209,28 @@ PyResult ConfigService::GetMapConnections(PyCallArgs &call, PyInt* itemID, PyInt
     }
 }
 
-PyResult ConfigService::GetStationSolarSystemsByOwner(PyCallArgs &call, PyInt* ownerID) {
+EVEResult ConfigService::GetStationSolarSystemsByOwner(EVECallArgs&call, PyInt* ownerID) {
   // solorSys = sm.RemoteSvc('config').GetStationSolarSystemsByOwner(itemID)
   // solarSys.solarSystemID
     // this seems to ONLY return solarSystemIDs
     return m_db.GetStationSolarSystemsByOwner(ownerID->value());
 }
 
-PyResult ConfigService::GetCelestialStatistic(PyCallArgs &call, PyInt* celestialID) {
+EVEResult ConfigService::GetCelestialStatistic(EVECallArgs&call, PyInt* celestialID) {
     return m_db.GetCelestialStatistic(celestialID->value());
 }
 
-PyResult ConfigService::GetDynamicCelestials(PyCallArgs &call, PyInt* locationID) {
+EVEResult ConfigService::GetDynamicCelestials(EVECallArgs&call, PyInt* locationID) {
     if (sDataMgr.IsSolarSystem(locationID->value())) {
         //sLog.Green("GetDynamicCelesitals", " IsSolarSystem %u", arg.arg);
-        return m_db.GetDynamicCelestials(locationID->value());
+        return m_db.GetDynamicCelestials(locationID->value(), &call.arena);
     } else {
         sLog.Error("GetDynamicCelesitals", "!IsSolarSystem %u", locationID->value());
-        return new PyInt( 0 );
+        return call.arena.Int (0);
     }
 }
 
-PyResult ConfigService::SetMapLandmarks(PyCallArgs &call, PyList* landmarkData) {
+EVEResult ConfigService::SetMapLandmarks(EVECallArgs&call, PyList* landmarkData) {
   /**
             x, y, z = landmark.translation
             data = (landmark.landmarkID,
@@ -269,7 +242,7 @@ PyResult ConfigService::SetMapLandmarks(PyCallArgs &call, PyList* landmarkData) 
         sm.RemoteSvc('config').SetMapLandmarks(landmarkData)
              */
     _log(CACHE__DUMP,  "MapService::Handle_SetMapLandmarks()");
-    call.Dump(CACHE__DUMP);
+    call.dump(CACHE__DUMP);
 
     return nullptr;
 }

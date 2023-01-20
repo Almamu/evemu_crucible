@@ -21,7 +21,7 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "planet/Moon.h"
 #include "pos/Tower.h"
 #include "system/Container.h"
@@ -346,24 +346,22 @@ void TowerSE::SetDeployFlags(int8 anchor/*0*/, int8 unanchor/*0*/, int8 online/*
     m_db.UpdateDeployFlags(m_data.itemID, m_tdata);
 }
 
-PyRep* TowerSE::GetDeployFlags()
+PyDataType* TowerSE::GetDeployFlags()
 {
-    PyList* header = new PyList(4);
-        header->SetItemString(0, "anchor");
-        header->SetItemString(1, "unanchor");
-        header->SetItemString(2, "online");
-        header->SetItemString(3, "offline");
-    PyList* line = new PyList(4);           // these are structure permissions for this tower
-        line->SetItem(0, new PyInt(m_tdata.anchor));
-        line->SetItem(1, new PyInt(m_tdata.unanchor));
-        line->SetItem(2, new PyInt(m_tdata.online));
-        line->SetItem(3, new PyInt(m_tdata.offline));
-
-    PyDict* dict = new PyDict();
-    dict->SetItemString("header", header);
-    dict->SetItemString("line", line);
-
-    return new PyObject("util.Row", dict);
+    return new PyObject("util.Row", new PyDict {
+        {"header", new PyList {
+            new PyString ("anchor"),
+            new PyString ("unanchor"),
+            new PyString ("online"),
+            new PyString ("offline")
+        }},
+        {"line", new PyList {
+            new PyInt (m_tdata.anchor),
+            new PyInt (m_tdata.unanchor),
+            new PyInt (m_tdata.online),
+            new PyInt (m_tdata.offline)
+        }}
+    });
 }
 
 void TowerSE::SetUseFlags(uint32 itemID, int8 view, int8 take, int8 use/*0*/)
@@ -375,7 +373,7 @@ void TowerSE::SetUseFlags(uint32 itemID, int8 view, int8 take, int8 use/*0*/)
     }
 }
 
-PyRep* TowerSE::GetUsageFlagList()
+PyDataType* TowerSE::GetUsageFlagList()
 {
     /*
                 [PyObject Name: eve.common.script.sys.rowset.Rowset]
@@ -397,30 +395,29 @@ PyRep* TowerSE::GetUsageFlagList()
                                         [PyInt 0]
                                         */
 
-    PyList* header = new PyList(4);
-        header->SetItemString(0, "structureID");
-        header->SetItemString(1, "viewput");
-        header->SetItemString(2, "viewputtake");
-        header->SetItemString(3, "use");
     PyList* lines = new PyList();
     for (auto cur : m_structs) {
-        PyList* line = new PyList(4);
-            line->SetItem(0, new PyInt(cur.first));
-            line->SetItem(1, new PyInt(cur.second->CanView()));
-            line->SetItem(2, new PyInt(cur.second->CanTake()));
-            line->SetItem(3, new PyInt(cur.second->CanUse()));
-        lines->AddItem(line);
+        lines->add(new PyTuple {
+            new PyInt (cur.first),
+            new PyInt (cur.second->CanView()),
+            new PyInt (cur.second->CanTake()),
+            new PyInt (cur.second->CanUse())
+        });
     }
 
-    PyDict* dict = new PyDict();
-    dict->SetItemString("header", header);
-    dict->SetItemString("RowClass", new PyToken("util.Row"));
-    dict->SetItemString("lines", lines);
-
-    return new PyObject("util.Rowset", dict);
+    return new PyObject("util.Rowset", new PyDict {
+        {"header", new PyList {
+            new PyString ("structureID"),
+            new PyString ("viewput"),
+            new PyString ("viewputtake"),
+            new PyString ("use")
+        }},
+        {"RowClass", new PyToken ("util.Row")},
+        {"lines", lines}
+    });
 }
 
-PyRep* TowerSE::GetProcessInfo()
+PyDataType* TowerSE::GetProcessInfo()
 {
     /*
             info = self.posMgr.GetMoonProcessInfoForTower(self.slimItem.itemID)
@@ -465,20 +462,20 @@ PyRep* TowerSE::GetProcessInfo()
             case EVEDB::invGroups::Moon_Mining:
             case EVEDB::invGroups::Silo:
             case EVEDB::invGroups::Mobile_Reactor: {
-                PyTuple* tuple = new PyTuple(6);
-                tuple->SetItem(0, new PyInt(cur.first));
-                tuple->SetItem(1, new PyBool(false));
-                tuple->SetItem(2, PyStatic.NewNone());
-                tuple->SetItem(3, new PyList());
-                tuple->SetItem(4, new PyList());
-                tuple->SetItem(5, new PyList());
-                list->AddItem(tuple);
+                list->add(new PyTuple {
+                    new PyInt (cur.first),
+                    new PyBool (false),
+                    PyStatic.NewNone(),
+                    new PyList(),
+                    new PyList(),
+                    new PyList()
+                });
             }
         }
     }
 
     if (is_log_enabled(POS__RSP_DUMP))
-        list->Dump(POS__RSP_DUMP, "   ");
+        list->dump(POS__RSP_DUMP, "   ");
     return list;
 }
 
@@ -512,21 +509,21 @@ PyDict* TowerSE::MakeSlimItem()
     _log(POS__SLIMITEM, "MakeSlimItem for TowerSE %u", m_self->itemID());
 
     PyDict *slim = new PyDict();
-    slim->SetItemString("name",                     new PyString(m_self->itemName()));
-    slim->SetItemString("itemID",                   new PyLong(m_self->itemID()));
-    slim->SetItemString("typeID",                   new PyInt(m_self->typeID()));
-    slim->SetItemString("ownerID",                  new PyInt(m_ownerID));
-    slim->SetItemString("corpID",                   IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-    slim->SetItemString("allianceID",               IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-    slim->SetItemString("warFactionID",             IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
-    slim->SetItemString("posTimestamp",             new PyLong(m_data.timestamp));
-    slim->SetItemString("posState",                 new PyInt(m_data.state));
-    slim->SetItemString("incapacitated",            new PyInt((m_data.state == EVEPOS::StructureState::Incapacitated) ? 1 : 0));
-    slim->SetItemString("posDelayTime",             new PyInt(m_delayTime));
+    slim->set ("name",                     new PyString(m_self->itemName()));
+    slim->set ("itemID",                   new PyInt(m_self->itemID()));
+    slim->set ("typeID",                   new PyInt(m_self->typeID()));
+    slim->set ("ownerID",                  new PyInt(m_ownerID));
+    slim->set ("corpID",                   IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+    slim->set ("allianceID",               IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+    slim->set ("warFactionID",             IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+    slim->set ("posTimestamp",             new PyInt(m_data.timestamp));
+    slim->set ("posState",                 new PyInt(m_data.state));
+    slim->set ("incapacitated",            new PyInt((m_data.state == EVEPOS::StructureState::Incapacitated) ? 1 : 0));
+    slim->set ("posDelayTime",             new PyInt(m_delayTime));
 
     if (is_log_enabled(POS__SLIMITEM)) {
         _log( POS__SLIMITEM, "TowerSE::MakeSlimItem() - %s(%u)", GetName(), GetID());
-        slim->Dump(POS__SLIMITEM, "     ");
+        slim->dump(POS__SLIMITEM, "     ");
     }
     return slim;
 }

@@ -42,7 +42,7 @@ public:
 protected:
     ReprocessingDB m_db;
 
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters) override;
 };
 
 class ReprocessingServiceBound : public EVEBoundObject <ReprocessingServiceBound>
@@ -51,11 +51,11 @@ public:
     ReprocessingServiceBound(EVEServiceManager& mgr, ReprocessingService& parent, ReprocessingDB& db, uint32 stationID);
 
 protected:
-    PyResult GetOptionsForItemTypes(PyCallArgs& call, PyDict* typeIDs);
-    PyResult GetReprocessingInfo(PyCallArgs& call);
-    PyResult GetQuote(PyCallArgs& call, PyInt* itemID);
-    PyResult GetQuotes(PyCallArgs& call, PyList* itemIDs, PyInt* activeShipID);
-    PyResult Reprocess(PyCallArgs& call, PyList* itemIDs, PyInt* fromLocation, std::optional<PyInt*> ownerID, std::optional<PyInt*> flag, PyBool* unknown, PyList* skipChecks);
+  EVEResult GetOptionsForItemTypes(EVECallArgs& call, PyDict* typeIDs);
+  EVEResult GetReprocessingInfo(EVECallArgs& call);
+  EVEResult GetQuote(EVECallArgs& call, PyInt* itemID);
+  EVEResult GetQuotes(EVECallArgs& call, PyList* itemIDs, PyInt* activeShipID);
+  EVEResult Reprocess(EVECallArgs& call, PyList* itemIDs, PyInt* fromLocation, std::optional<PyInt*> ownerID, std::optional<PyInt*> flag, PyBool* unknown, PyList* skipChecks);
 
     ReprocessingDB& m_db;
 
@@ -66,7 +66,7 @@ protected:
 
     float CalcReprocessingEfficiency(const Client *pClient, InventoryItemRef item = InventoryItemRef(nullptr)) const;
     float CalcTax(float standing) const;
-    PyRep* GetQuote(uint32 itemID, Client* pClient);
+    PyDataType* GetQuote(uint32 itemID, Client* pClient);
 
     float GetStanding(const Client* pClient) const; // gets the higher of char/corp standings with station owner
 };

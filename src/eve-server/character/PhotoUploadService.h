@@ -34,7 +34,7 @@ public:
     PhotoUploadService();
 
 private:
-    PyResult Upload(PyCallArgs& call, PyString* contents);
+  EVEResult Upload(EVECallArgs& call, PyString* contents);
 };
 
 #endif // __PHOTOUPLOADSERVICE__H__INCL__

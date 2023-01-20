@@ -28,14 +28,10 @@
 
 #include "network/EVETCPConnection.h"
 
-class PyPacket;
-class PyRep;
+class EVEPacket;
 
-class VersionExchangeClient;
-class VersionExchangeServer;
-class CryptoRequestPacket;
-class CryptoChallengePacket;
-class CryptoHandshakeResult;
+class EVESecureClientHandshake;
+class EVELowLevelVersionExchange;
 
 /**
  * @brief Client session from server's side.
@@ -53,9 +49,10 @@ public:
     typedef TCPConnection::state_t state_t;
 
     /**
-     * @param[in] n Connection of this session.
+     * @param[in] n     Connection of this session.
+     * @param[in] arena The python memory arena to use for reading data
      */
-    EVEClientSession( EVETCPConnection** n );
+    EVEClientSession (EVETCPConnection** n, TrackedPythonArena* arena);
     /**
      * @brief Destroys contained connection.
      */
@@ -78,14 +75,16 @@ public:
      *
      * @param[in] p Packed to be queued.
      */
-    void QueuePacket( PyPacket* packet );
+    void QueuePacket (EVEPacket* packet, PythonArena* arena);
 
     /**
      * @brief Pops new packet from queue.
      *
+     * @param[in] arena The python arena to be used for allocations
+     *
      * @return Popped packet.
      */
-    PyPacket* PopPacket();
+    EVEPacket* PopPacket(PythonArena* arena);
 
     /**
      * @brief Disconnects client from the server
@@ -99,7 +98,7 @@ protected:
      *
      * @param[in] version Object to be filled with version information.
      */
-    virtual void _GetVersion( VersionExchangeServer& version ) = 0;
+    virtual void _GetVersion (EVELowLevelVersionExchange& version) = 0;
     /** @return Current count of connected users. */
     //virtual uint32 GetUserCount() = 0;
     /** @return Current position in connection queue. */
@@ -113,7 +112,7 @@ protected:
      * @retval true  Verification succeeded; proceeds to next state.
      * @retval false Verification failed; stays in current state.
      */
-    virtual bool _VerifyVersion( VersionExchangeClient& version ) = 0;
+    virtual bool _VerifyVersion (EVELowLevelVersionExchange& version) = 0;
     /**
      * @brief Verifies VIP key.
      *
@@ -126,12 +125,13 @@ protected:
     /**
      * @brief Verifies crypto.
      *
-     * @param[in] cr Crypto sent by client.
+     * @param[in] keyVersion Key version used by the client
+     * @param[in] keyParams  Extra parameters for the key used by the client
      *
      * @retval true  Verification succeeded; proceeds to next state.
      * @retval false Verification failed; stays in current state.
      */
-    virtual bool _VerifyCrypto( CryptoRequestPacket& cr ) = 0;
+    virtual bool _VerifyCrypto (const std::string& keyVersion, PyDict* keyParams) = 0;
     /**
      * @brief Verifies login.
      *
@@ -140,30 +140,34 @@ protected:
      * @retval true  Verification succeeded; proceeds to next state.
      * @retval false Verification failed; stays in current state.
      */
-    virtual bool _VerifyLogin( CryptoChallengePacket& ccp ) = 0;
+    virtual bool _VerifyLogin (EVESecureClientHandshake& ccp) = 0;
     /**
      * @brief Verifies function result.
      *
-     * @param[in] result Function result sent by client.
+     * @param[in] challenge_responsehash Hash response
+     * @param[in] func_output            Output of the function sent by the server
      *
      * @retval true  Verification succeeded; proceeds to next state.
      * @retval false Verification failed; stays in current state.
      */
-    virtual bool _VerifyFuncResult( CryptoHandshakeResult& result ) = 0;
+    virtual bool _VerifyFuncResult (const std::string& challenge_responsehash, const std::string& func_output) = 0;
 
     /** Connection of this session. */
     EVETCPConnection* const mNet;
 
+    /** The python arena to use for input data */
+    TrackedPythonArena* mArena;
+
 private:
     // State machine facility:
-    PyPacket* ( EVEClientSession::*mPacketHandler )( PyRep* rep );
+    EVEPacket* ( EVEClientSession::*mPacketHandler )( PyDataType* rep );
 
-    PyPacket* _HandleVersion( PyRep* rep );
-    PyPacket* _HandleCommand( PyRep* rep );
-    PyPacket* _HandleCrypto( PyRep* rep );
-    PyPacket* _HandleAuthentication( PyRep* rep );
-    PyPacket* _HandleFuncResult( PyRep* rep );
-    PyPacket* _HandlePacket( PyRep* rep );
+    EVEPacket* _HandleVersion( PyDataType* rep );
+    EVEPacket* _HandleCommand( PyDataType* rep );
+    EVEPacket* _HandleCrypto( PyDataType* rep );
+    EVEPacket* _HandleAuthentication( PyDataType* rep );
+    EVEPacket* _HandleFuncResult( PyDataType* rep );
+    EVEPacket* _HandlePacket( PyDataType* rep );
 };
 
 #endif /* !__EVE_SESSION_H__INCL__ */

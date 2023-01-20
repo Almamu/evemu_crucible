@@ -70,15 +70,15 @@ FleetBound::FleetBound(EVEServiceManager& mgr, FleetObject& parent, uint32 fleet
     this->Add("ExcludeFromVoiceMute", &FleetBound::ExcludeFromVoiceMute);
 }
 
-PyResult FleetBound::GetFleetID(PyCallArgs &call) {
+EVEResult FleetBound::GetFleetID(EVECallArgs&call) {
     return new PyInt(m_fleetID);
 }
 
-PyResult FleetBound::Init(PyCallArgs &call, std::optional <PyInt*> shipTypeID) {
+EVEResult FleetBound::Init(EVECallArgs&call, std::optional <PyInt*> shipTypeID) {
     //self.fleet.Init(self.GetMyShipTypeID())
     // this only sends ship typeID when inspace.
     sLog.Warning("FleetBound", "Handle_Init() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
 /*
     FleetInitCall args;
@@ -93,11 +93,11 @@ PyResult FleetBound::Init(PyCallArgs &call, std::optional <PyInt*> shipTypeID) {
 
     Client* pClient = call.client;
     if (pClient == nullptr)
-        return new PyLong(GetFileTimeNow());
+        return new PyInt(GetFileTimeNow());
 
     Character* pChar = pClient->GetChar().get();
     if (pChar == nullptr)
-        return new PyLong(GetFileTimeNow());
+        return new PyInt(GetFileTimeNow());
 
     // member is already added here, so cannot use sFltSvc.AddMember()
     JoinFleetRSP join;
@@ -114,26 +114,32 @@ PyResult FleetBound::Init(PyCallArgs &call, std::optional <PyInt*> shipTypeID) {
         join.solarSystemID = pClient->GetSystemID();
         join.wingID = pChar->wingID();
         join.timestamp = pChar->fleetJoinTime();
-    PyTuple* res = new PyTuple(1);
-        res->SetItem(0, join.Encode());
+    PyTuple* res = new PyTuple {
+        join.Encode ()
+    };
     if (is_log_enabled(FLEET__DEBUG)) {
         _log(FLEET__UPDATE_DUMP, "OnFleetJoin");
-        res->Dump(FLEET__UPDATE_DUMP, "   ");
+        res->dump(FLEET__UPDATE_DUMP, "   ");
     }
     pClient->SendNotification("OnFleetJoin", "clientid", &res, true);
 
-    PyDict* dict = new PyDict();
-        dict->SetItemString("targetTags", new PyDict());
-    PyTuple* obj = new PyTuple(1);
-        obj->SetItem(0, new PyObject("util.KeyVal", dict));
+    PyTuple* obj = new PyTuple {
+        new PyObject (
+            "util.KeyVal",
+            new PyDict {
+                {"targetTags", new PyDict}
+            }
+        )
+    };
     _log(FLEET__UPDATE_DUMP, "OnFleetStateChange");
-    obj->Dump(FLEET__UPDATE_DUMP, "   ");
+    obj->dump(FLEET__UPDATE_DUMP, "   ");
     pClient->SendNotification("OnFleetStateChange", "clientid", obj, true);
 
-    PyTuple* count = new PyTuple(1);
-        count->SetItem(0, new PyInt(254));
+    PyTuple* count = new PyTuple {
+        new PyInt (254)
+    };
     _log(FLEET__UPDATE_DUMP, "OnFleetActive");
-    count->Dump(FLEET__UPDATE_DUMP, "   ");
+    count->dump(FLEET__UPDATE_DUMP, "   ");
     pClient->SendNotification("OnFleetActive", "clientid", count, true);
 
     //response should be OID
@@ -144,10 +150,10 @@ PyResult FleetBound::Init(PyCallArgs &call, std::optional <PyInt*> shipTypeID) {
         [PyString "N=790423:223898"]  "N=%u:%u", &nodeID, &bindID
         [PyIntegerVar 129756560170416597]
         */
-    return new PyLong(GetFileTimeNow());
+    return new PyInt(GetFileTimeNow());
 }
 
-PyResult FleetBound::GetInitState(PyCallArgs &call) {
+EVEResult FleetBound::GetInitState(EVECallArgs&call) {
     FleetData fData = FleetData();
     sFltSvc.GetFleetData(m_fleetID, fData);
 
@@ -162,13 +168,13 @@ PyResult FleetBound::GetInitState(PyCallArgs &call) {
 
     PyDict* muteDict = new PyDict();
     for (auto cur : fData.isExcludedFromMuting)
-        muteDict->SetItem(new PyInt(cur.first), new PyInt(cur.second));
+        muteDict->set(new PyInt(cur.first), new PyInt(cur.second));
     PySafeDecRef(rsp.isExcludedFromMuting);
     rsp.isExcludedFromMuting = muteDict;
 
     PyDict* lMuteDict = new PyDict();
     for (auto cur : fData.isMutedByLeader)
-        lMuteDict->SetItem(new PyInt(cur.first), new PyInt(cur.second));
+        lMuteDict->set(new PyInt(cur.first), new PyInt(cur.second));
     PySafeDecRef(rsp.isMutedByLeader);
     rsp.isMutedByLeader = lMuteDict;
 
@@ -193,11 +199,11 @@ PyResult FleetBound::GetInitState(PyCallArgs &call) {
             SquadRSP squad;
             squad.name = sData.name;
             squad.squadID = squadID;
-            dict->SetItem(new PyInt(squadID), squad.Encode());
+            dict->set(new PyInt(squadID), squad.Encode());
         }
         PySafeDecRef(wing.squads);
         wing.squads = dict;
-        dict1->SetItem(new PyInt(wingID), wing.Encode());
+        dict1->set(new PyInt(wingID), wing.Encode());
     }
     PySafeDecRef(rsp.wings);
     rsp.wings = dict1;
@@ -220,7 +226,7 @@ PyResult FleetBound::GetInitState(PyCallArgs &call) {
             member.solarSystemID = cur->GetSystemID();
             member.wingID = cur->GetChar()->wingID();
             member.timestamp = cur->GetChar()->fleetJoinTime();
-        dict2->SetItem(new PyInt(member.charID), member.Encode());
+        dict2->set(new PyInt(member.charID), member.Encode());
     }
 
     rsp.members = dict2;
@@ -231,9 +237,9 @@ PyResult FleetBound::GetInitState(PyCallArgs &call) {
     return rsp.Encode();
 }
 
-PyResult FleetBound::Invite(PyCallArgs &call, PyInt* characterID, std::optional<PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyLong*> role) {
+EVEResult FleetBound::Invite(EVECallArgs&call, PyInt* characterID, std::optional<PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyInt*> role) {
     sLog.Warning("FleetBound", "Handle_Invite() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     Client* pClient = sEntityList.FindClientByCharID(characterID->value());
     if (pClient == nullptr)
@@ -276,19 +282,22 @@ PyResult FleetBound::Invite(PyCallArgs &call, PyInt* characterID, std::optional<
     // join requests are accepted via invite.  delete request on invite
     sFltSvc.RemoveJoinRequest(m_fleetID, pClient);
 
-    PyTuple* tuple = new PyTuple(4);
-        tuple->SetItem(0, new PyInt(m_fleetID));
-        tuple->SetItem(1, new PyInt(data.inviteBy->GetCharacterID()));
-        tuple->SetItem(2, new PyString("AskJoinFleet"));
-    PyTuple* tuple2 = new PyTuple(2);
-        tuple2->SetItem(0, new PyInt(call.client->GetChar()->fleetJob()));
-        tuple2->SetItem(1, new PyInt(data.inviteBy->GetCharacterID()));
-    PyDict* dict = new PyDict();
-        dict->SetItemString("name", tuple2);
-        tuple->SetItem(3, dict);
+    PyTuple* tuple = new PyTuple {
+        new PyInt (m_fleetID),
+        new PyInt (data.inviteBy->GetCharacterID()),
+        new PyString ("AskJoinFleet"),
+        new PyDict {
+            {"name", new PyTuple {
+                     new PyInt (call.client->GetChar()->fleetJob()),
+                     new PyInt (data.inviteBy->GetCharacterID())
+                 }
+            }
+        }
+    };
+
     if (is_log_enabled(FLEET__UPDATE_DUMP)) {
         _log(FLEET__UPDATE_DUMP, "OnFleetInvite");
-        tuple->Dump(FLEET__UPDATE_DUMP, "   ");
+        tuple->dump(FLEET__UPDATE_DUMP, "   ");
     }
     pClient->SendNotification("OnFleetInvite", "clientID", &tuple, true);
 
@@ -296,18 +305,18 @@ PyResult FleetBound::Invite(PyCallArgs &call, PyInt* characterID, std::optional<
     return nullptr;
 }
 
-PyResult FleetBound::AcceptInvite(PyCallArgs &call, std::optional <PyInt*> shipTypeID) {
+EVEResult FleetBound::AcceptInvite(EVECallArgs&call, std::optional <PyInt*> shipTypeID) {
     sLog.Warning("FleetBound", "Handle_AcceptInvite() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     Character* pChar = call.client->GetChar().get();
     if (pChar == nullptr)
-        return new PyLong(GetFileTimeNow());
+        return new PyInt(GetFileTimeNow());
 
     InviteData data = InviteData();
     if (!sFltSvc.GetInviteData(pChar->itemID(), data)){
         call.client->SendNotifyMsg("You do not have an outstanding Fleet Invite on issue.");
-        return new PyLong(GetFileTimeNow());
+        return new PyInt(GetFileTimeNow());
     }
 
     int8 booster = Fleet::Booster::No;
@@ -339,22 +348,22 @@ PyResult FleetBound::AcceptInvite(PyCallArgs &call, std::optional <PyInt*> shipT
     return this->GetOID();
 }
 
-PyResult FleetBound::RejectInvite(PyCallArgs &call) {
+EVEResult FleetBound::RejectInvite(EVECallArgs&call) {
     sLog.Warning("FleetBound", "Handle_RejectInvite() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     Character* pChar = call.client->GetChar().get();
     if (pChar == nullptr)
-        return new PyLong(GetFileTimeNow());
+        return new PyInt(GetFileTimeNow());
 
     bool rejected = false;
-    if (call.tuple->AsTuple()->GetItem(0)->IsBool())
-        rejected = call.tuple->AsTuple()->GetItem(0)->AsBool()->value();
+    if (call.tuple->as<PyTuple>()->at (0)->is<PyBool>())
+        rejected = call.tuple->as<PyTuple>()->at (0)->as<PyBool>()->value();
 
     InviteData data = InviteData();
     if (!sFltSvc.GetInviteData(pChar->itemID(), data)) {
         call.client->SendNotifyMsg("You do not have an outstanding Fleet Invite on issue.");
-        return new PyLong(GetFileTimeNow());
+        return new PyInt(GetFileTimeNow());
     }
 
     if (rejected) {
@@ -368,38 +377,37 @@ PyResult FleetBound::RejectInvite(PyCallArgs &call) {
     return this->GetOID();
 }
 
-
-PyResult FleetBound::ChangeWingName(PyCallArgs &call, PyInt* wingID, PyRep* name) {
+EVEResult FleetBound::ChangeWingName(EVECallArgs&call, PyInt* wingID, PyDataType* name) {
           //   self.fleet.ChangeWingName(wingID, ret[:MAX_NAME_LENGTH])
     sLog.Warning("FleetBound", "Handle_ChangeWingName() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
-    sFltSvc.RenameWing(wingID->value(), PyRep::StringContent (name));
+    sFltSvc.RenameWing(wingID->value(), name->string());
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::ChangeSquadName(PyCallArgs &call, PyInt* squadID, PyRep* name) {
+EVEResult FleetBound::ChangeSquadName(EVECallArgs&call, PyInt* squadID, PyDataType* name) {
           //   self.fleet.ChangeSquadName(squadID, ret[:MAX_NAME_LENGTH])
     sLog.Warning("FleetBound", "Handle_ChangeSquadName() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
-    sFltSvc.RenameSquad(squadID->value(), PyRep::StringContent(name));
+    sFltSvc.RenameSquad(squadID->value(), name->string());
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::SetOptions(PyCallArgs &call, PyObject* options) {
+EVEResult FleetBound::SetOptions(EVECallArgs&call, PyObject* options) {
           //   self.fleet.SetOptions(options)
     sLog.Warning("FleetBound", "Handle_SetOptions() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
-    PyDict* dict = options->arguments()->AsDict();
-    bool isFreeMove = dict->GetItemString("isFreeMove")->AsBool()->value();
-    bool isRegistered = dict->GetItemString("isRegistered")->AsBool()->value();
-    bool isVoiceEnabled = (dict->GetItemString("isVoiceEnabled")->AsBool()->value() ? sConfig.chat.EnableVoiceChat : false);
+    PyDict* dict = options->arguments()->as<PyDict>();
+    bool isFreeMove = dict->get <PyBool> ("isFreeMove")->value();
+    bool isRegistered = dict->get <PyBool> ("isRegistered")->value();
+    bool isVoiceEnabled = (dict->get <PyBool> ("isVoiceEnabled")->value() ? sConfig.chat.EnableVoiceChat : false);
 
     sFltSvc.UpdateOptions(m_fleetID, isFreeMove, isRegistered, isVoiceEnabled);
 
@@ -407,14 +415,14 @@ PyResult FleetBound::SetOptions(PyCallArgs &call, PyObject* options) {
     return nullptr;
 }
 
-PyResult FleetBound::GetJoinRequests(PyCallArgs &call) {
+EVEResult FleetBound::GetJoinRequests(EVECallArgs&call) {
           //   self.fleet.GetJoinRequests()
     /* 20:12:59 W FleetBound: Handle_GetJoinRequests() size=0
      * 20:12:59 [FleetDump]   Call Arguments:
      * 20:12:59 [FleetDump]       Tuple: Empty
      */
     sLog.Warning("FleetBound", "Handle_GetJoinRequests() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     std::vector<Client*> cVec;
     sFltSvc.GetJoinRequests(call.client->GetChar()->fleetID(), cVec);
@@ -422,19 +430,19 @@ PyResult FleetBound::GetJoinRequests(PyCallArgs &call) {
     PyDict* rsp = new PyDict();
     for (auto cur : cVec) {
         PyDict* dict = new PyDict();
-        dict->SetItemString("charID", new PyInt(cur->GetCharacterID()));
-        rsp->SetItem(new PyInt(cur->GetCharacterID()), new PyObject("util.KeyVal", dict));
+        dict->set ("charID", new PyInt(cur->GetCharacterID()));
+        rsp->set(new PyInt(cur->GetCharacterID()), new PyObject("util.KeyVal", dict));
     }
 
     if (is_log_enabled(FLEET__DEBUG))
-        rsp->Dump(FLEET__DEBUG, "    ");
+        rsp->dump(FLEET__DEBUG, "    ");
     return rsp;
 }
 
-PyResult FleetBound::RejectJoinRequest(PyCallArgs &call, PyInt* characterID) {
+EVEResult FleetBound::RejectJoinRequest(EVECallArgs&call, PyInt* characterID) {
     //    self.fleet.RejectJoinRequest(charID)
     sLog.Warning("FleetBound", "Handle_RejectJoinRequest() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     Client* pClient = sEntityList.FindClientByCharID(characterID->value());
     sFltSvc.RemoveJoinRequest(call.client->GetChar()->fleetID(), pClient);
@@ -445,9 +453,9 @@ PyResult FleetBound::RejectJoinRequest(PyCallArgs &call, PyInt* characterID) {
     return nullptr;
 }
 
-PyResult FleetBound::GetFleetComposition(PyCallArgs &call) {
+EVEResult FleetBound::GetFleetComposition(EVECallArgs&call) {
     sLog.Warning("FleetBound", "Handle_GetFleetComposition() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     Character* pChar(nullptr);
     PyList* list = new PyList();
@@ -457,52 +465,55 @@ PyResult FleetBound::GetFleetComposition(PyCallArgs &call) {
         pChar = cur->GetChar().get();
         if (pChar == nullptr)
             continue;
-        PyDict* dict = new PyDict();
-        dict->SetItemString("characterID", new PyInt(cur->GetCharacterID()));
-        dict->SetItemString("shipTypeID", new PyInt(cur->GetShip()->typeID()));
-        dict->SetItemString("solarSystemID", new PyInt(cur->GetSystemID()));
+        PyDict* dict = new PyDict{
+            {"characterID", new PyInt (cur->GetCharacterID())},
+            {"shipTypeID", new PyInt (cur->GetShip()->typeID())},
+            {"solarSystemID", new PyInt (cur->GetSystemID())}
+        };
+
         if (pChar->HasSkill(EvESkill::Leadership) or pChar->HasSkill(EvESkill::FleetCommand) or pChar->HasSkill(EvESkill::WingCommand)) {
-            PyTuple* skills = new PyTuple(3);
-                skills->SetItem(0, new PyInt(pChar->GetSkillLevel(EvESkill::Leadership)));
-                skills->SetItem(1, new PyInt(pChar->GetSkillLevel(EvESkill::FleetCommand)));
-                skills->SetItem(2, new PyInt(pChar->GetSkillLevel(EvESkill::WingCommand)));
-            dict->SetItemString("skills", skills);
-            PyTuple* skillIDs = new PyTuple(3);
-                skillIDs->SetItem(0, new PyInt(EvESkill::Leadership));
-                skillIDs->SetItem(1, new PyInt(EvESkill::FleetCommand));
-                skillIDs->SetItem(2, new PyInt(EvESkill::WingCommand));
-            dict->SetItemString("skillIDs", skillIDs);
+            dict->set ("skills", new PyTuple {
+                new PyInt (pChar->GetSkillLevel(EvESkill::Leadership)),
+                new PyInt (pChar->GetSkillLevel(EvESkill::FleetCommand)),
+                new PyInt (pChar->GetSkillLevel(EvESkill::WingCommand))
+            });
+            dict->set ("skillIDs", new PyTuple {
+                new PyInt (EvESkill::Leadership),
+                new PyInt (EvESkill::FleetCommand),
+                new PyInt (EvESkill::WingCommand)
+            });
         }
-        list->AddItem(new PyObject("util.KeyVal", dict));
+
+        list->add(new PyObject("util.KeyVal", dict));
         pChar = nullptr;
     }
 
     if (is_log_enabled(FLEET__DEBUG))
-        list->Dump(FLEET__DEBUG, "    ");
+        list->dump(FLEET__DEBUG, "    ");
     return list;
 }
 
-PyResult FleetBound::GetWings(PyCallArgs &call) {
+EVEResult FleetBound::GetWings(EVECallArgs&call) {
          //    self.fleet.GetWings()
     sLog.Warning("FleetBound", "Handle_GetWings() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     return sFltSvc.GetWings(m_fleetID);
 }
 
 // this is fleet-wide
-PyResult FleetBound::SendBroadcast(PyCallArgs &call, PyRep* message, PyInt* group, PyInt* itemID) {
+EVEResult FleetBound::SendBroadcast(EVECallArgs&call, PyDataType* message, PyInt* group, PyInt* itemID) {
          //    self.fleet.SendBroadcast(name, self.broadcastScope, itemID)
     sLog.Warning("FleetBound", "Handle_SendBroadcast() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
-    sFltSvc.FleetBroadcast(call.client, itemID->value(), Fleet::BCast::Scope::Universe, group->value(), PyRep::StringContent (message));
+    sFltSvc.FleetBroadcast(call.client, itemID->value(), Fleet::BCast::Scope::Universe, group->value(), message->string());
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::UpdateMemberInfo(PyCallArgs &call, std::optional <PyInt*> shipTypeID) {
+EVEResult FleetBound::UpdateMemberInfo(EVECallArgs&call, std::optional <PyInt*> shipTypeID) {
          //    self.fleet.UpdateMemberInfo(self.GetMyShipTypeID())
     /*
      * 13:26:54 W FleetBound: Handle_UpdateMemberInfo() size=1
@@ -511,35 +522,35 @@ PyResult FleetBound::UpdateMemberInfo(PyCallArgs &call, std::optional <PyInt*> s
      * 13:26:54 [FleetDump]         [ 0] (None)
      */
     sLog.Warning("FleetBound", "Handle_UpdateMemberInfo() size=%lli", call.tuple->size());
-    //call.Dump(FLEET__DUMP);
+    //call.dump(FLEET__DUMP);
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::SetMotdEx(PyCallArgs &call, PyRep* motd) {
+EVEResult FleetBound::SetMotdEx(EVECallArgs&call, PyDataType* motd) {
          //    self.fleet.SetMotdEx(motd)
     sLog.Warning("FleetBound", "Handle_SetMotdEx() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
-    sFltSvc.SetMOTD(m_fleetID, PyRep::StringContent(motd));
+    sFltSvc.SetMOTD(m_fleetID, motd->string());
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::GetMotd(PyCallArgs &call) {
+EVEResult FleetBound::GetMotd(EVECallArgs&call) {
     //   self.motd = self.fleet.GetMotd()
     sLog.Warning("FleetBound", "Handle_GetMotd() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     return sFltSvc.GetMOTD(m_fleetID);
 }
 
-PyResult FleetBound::LeaveFleet(PyCallArgs &call) {
+EVEResult FleetBound::LeaveFleet(EVECallArgs&call) {
     //    self.fleet.LeaveFleet()
     sLog.Warning("FleetBound", "Handle_LeaveFleet() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     sFltSvc.LeaveFleet(call.client);
 
@@ -547,10 +558,10 @@ PyResult FleetBound::LeaveFleet(PyCallArgs &call) {
     return nullptr;
 }
 
-PyResult FleetBound::MakeLeader(PyCallArgs &call, PyInt* characterID) {
+EVEResult FleetBound::MakeLeader(EVECallArgs&call, PyInt* characterID) {
     /* self.fleet.MakeLeader(charID)  */
     sLog.Warning("FleetBound", "Handle_MakeLeader() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     // leaders will keep existing fleetJob.
 
@@ -575,10 +586,10 @@ PyResult FleetBound::MakeLeader(PyCallArgs &call, PyInt* characterID) {
     return nullptr;
 }
 
-PyResult FleetBound::SetBooster(PyCallArgs &call, PyInt* characterID, std::optional <PyInt*> roleBooster) {
+EVEResult FleetBound::SetBooster(EVECallArgs&call, PyInt* characterID, std::optional <PyInt*> roleBooster) {
     /*self.fleet.SetBooster(charID, roleBooster):  */
     sLog.Warning("FleetBound", "Handle_SetBooster() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     Character* pOldChar(nullptr);
     Character* pChar = sEntityList.FindClientByCharID(characterID->value())->GetChar().get();
@@ -620,9 +631,9 @@ PyResult FleetBound::SetBooster(PyCallArgs &call, PyInt* characterID, std::optio
     return PyStatic.NewFalse();
 }
 
-PyResult FleetBound::MoveMember(PyCallArgs &call, PyInt* characterID, std::optional <PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyInt*> role, std::optional <PyInt*> booster) {
+EVEResult FleetBound::MoveMember(EVECallArgs&call, PyInt* characterID, std::optional <PyInt*> wingID, std::optional <PyInt*> squadID, std::optional <PyInt*> role, std::optional <PyInt*> booster) {
     sLog.Warning("FleetBound", "Handle_MoveMember() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     Character* pChar = sEntityList.FindClientByCharID(characterID->value())->GetChar().get();
     if (pChar == nullptr)
@@ -637,7 +648,7 @@ PyResult FleetBound::MoveMember(PyCallArgs &call, PyInt* characterID, std::optio
     return PyStatic.NewFalse();
 }
 
-PyResult FleetBound::KickMember(PyCallArgs &call, PyInt* characterID) {
+EVEResult FleetBound::KickMember(EVECallArgs&call, PyInt* characterID) {
     /*
      *        if charID == eve.session.charid:
      *            self.LeaveFleet()
@@ -645,7 +656,7 @@ PyResult FleetBound::KickMember(PyCallArgs &call, PyInt* characterID) {
      *            self.fleet.KickMember(charID)
      */
     sLog.Warning("FleetBound", "Handle_KickMember() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     sFltSvc.LeaveFleet(sEntityList.FindClientByCharID(characterID->value()));
 
@@ -653,18 +664,18 @@ PyResult FleetBound::KickMember(PyCallArgs &call, PyInt* characterID) {
     return PyStatic.NewTrue();
 }
 
-PyResult FleetBound::CreateWing(PyCallArgs &call) {
+EVEResult FleetBound::CreateWing(EVECallArgs&call) {
     /*  wingID = self.fleet.CreateWing()  */
     sLog.Warning("FleetBound", "Handle_CreateWing() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     return sFltSvc.CreateWing(m_fleetID);
 }
 
-PyResult FleetBound::CreateSquad(PyCallArgs &call, PyInt* wingID) {
+EVEResult FleetBound::CreateSquad(EVECallArgs&call, PyInt* wingID) {
     /* self.fleet.CreateSquad(wingID)  */
     sLog.Warning("FleetBound", "Handle_CreateSquad() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     sFltSvc.CreateSquad(m_fleetID, wingID->value());
 
@@ -672,10 +683,10 @@ PyResult FleetBound::CreateSquad(PyCallArgs &call, PyInt* wingID) {
     return nullptr;
 }
 
-PyResult FleetBound::DeleteWing(PyCallArgs &call, PyInt* wingID) {
+EVEResult FleetBound::DeleteWing(EVECallArgs&call, PyInt* wingID) {
     /*    self.fleet.DeleteWing(wingID)  */
     sLog.Warning("FleetBound", "Handle_DeleteWing() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     sFltSvc.DeleteWing(wingID->value());
 
@@ -683,21 +694,21 @@ PyResult FleetBound::DeleteWing(PyCallArgs &call, PyInt* wingID) {
     return nullptr;
 }
 
-PyResult FleetBound::DeleteSquad(PyCallArgs &call, PyInt* squadID) {
+EVEResult FleetBound::DeleteSquad(EVECallArgs&call, PyInt* squadID) {
     /* self.fleet.DeleteSquad(squadID)  */
     sLog.Warning("FleetBound", "Handle_DeleteSquad() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
-    sFltSvc.DeleteSquad(squadID->value());   //call.tuple->AsTuple()->GetItem(0)->AsInt()->value()
+    sFltSvc.DeleteSquad(squadID->value());   //call.tuple->as<PyTuple>()->at (0)->as<PyInt>()->value()
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::AddToVoiceChat(PyCallArgs &call, PyRep* channelName) {
+EVEResult FleetBound::AddToVoiceChat(EVECallArgs&call, PyDataType* channelName) {
     //    self.fleet.AddToVoiceChat(channelName)
     sLog.Warning("FleetBound", "Handle_AddToVoiceChat() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     //sConfig.chat.EnableVoiceChat;
 
@@ -705,25 +716,25 @@ PyResult FleetBound::AddToVoiceChat(PyCallArgs &call, PyRep* channelName) {
     return nullptr;
 }
 
-PyResult FleetBound::SetVoiceMuteStatus(PyCallArgs &call, PyRep* status, PyRep* channel) {
+EVEResult FleetBound::SetVoiceMuteStatus(EVECallArgs&call, PyDataType* status, PyDataType* channel) {
     //    self.fleet.SetVoiceMuteStatus(status, channel)
     sLog.Warning("FleetBound", "Handle_SetVoiceMuteStatus() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::ExcludeFromVoiceMute(PyCallArgs &call, PyInt* characterID, PyRep* channel) {
+EVEResult FleetBound::ExcludeFromVoiceMute(EVECallArgs&call, PyInt* characterID, PyDataType* channel) {
     //    self.fleet.ExcludeFromVoiceMute(charid, channel)
     sLog.Warning("FleetBound", "Handle_ExcludeFromVoiceMute()) size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     // returns nothing
     return nullptr;
 }
 
-PyResult FleetBound::Reconnect(PyCallArgs &call) {
+EVEResult FleetBound::Reconnect(EVECallArgs&call) {
     // no args
     sLog.Warning("FleetBound", "Handle_Reconnect()) size=%lli", call.tuple->size());
 

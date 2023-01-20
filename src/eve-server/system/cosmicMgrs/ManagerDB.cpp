@@ -210,7 +210,7 @@ void ManagerDB::LoadFactionSystemCounts(std::map<uint32, uint32> &into) {
     DBResultToUIntUIntDict(res, into);
 }
 
-void ManagerDB::LoadFactionRegions(std::map<int32, PyRep *> &into) {
+void ManagerDB::LoadFactionRegions(std::map<int32, PyDataType *> &into) {
     DBQueryResult res;
     //this is not quite right, but its good enough.
     if (!sDatabase.RunQuery(res, "SELECT factionID,regionID FROM mapRegions WHERE factionID IS NOT NULL ORDER BY factionID"))
@@ -221,7 +221,7 @@ void ManagerDB::LoadFactionRegions(std::map<int32, PyRep *> &into) {
     DBResultToIntIntlistDict(res, into);
 }
 
-void ManagerDB::LoadFactionConstellations(std::map<int32, PyRep *> &into) {
+void ManagerDB::LoadFactionConstellations(std::map<int32, PyDataType *> &into) {
     DBQueryResult res;
     //this is not quite right, but its good enough.
     if (!sDatabase.RunQuery(res, "SELECT factionID,constellationID FROM mapConstellations WHERE factionID IS NOT NULL ORDER BY factionID" ))
@@ -232,7 +232,7 @@ void ManagerDB::LoadFactionConstellations(std::map<int32, PyRep *> &into) {
     DBResultToIntIntlistDict(res, into);
 }
 
-void ManagerDB::LoadFactionSolarSystems(std::map<int32, PyRep *> &into) {
+void ManagerDB::LoadFactionSolarSystems(std::map<int32, PyDataType *> &into) {
     DBQueryResult res;
     //this is not quite right, but its good enough.
     if (!sDatabase.RunQuery(res, "SELECT factionID,solarSystemID FROM mapSolarSystems WHERE factionID IS NOT NULL ORDER BY factionID"))
@@ -243,7 +243,7 @@ void ManagerDB::LoadFactionSolarSystems(std::map<int32, PyRep *> &into) {
     DBResultToIntIntlistDict(res, into);
 }
 
-void ManagerDB::LoadFactionRaces(std::map<int32, PyRep *> &into) {
+void ManagerDB::LoadFactionRaces(std::map<int32, PyDataType *> &into) {
     DBQueryResult res;
     //this is not quite right, but its good enough.
     if (!sDatabase.RunQuery(res, "SELECT factionID,raceID FROM facRaces WHERE factionID IS NOT NULL ORDER BY factionID"))

@@ -35,12 +35,12 @@ public:
     UserService();
 
 protected:
-    PyResult GetRedeemTokens(PyCallArgs& call);
-    PyResult ReverseRedeem(PyCallArgs& call, PyInt* itemID);
-    PyResult GetCreateDate(PyCallArgs& call);
-    PyResult ReportISKSpammer(PyCallArgs& call, PyInt* characterID, PyInt* channelID);
-    PyResult ReportBot(PyCallArgs& call, PyInt* itemID);
-    PyResult ApplyPilotLicence(PyCallArgs& call, PyInt* itemID);
+  EVEResult GetRedeemTokens(EVECallArgs& call);
+  EVEResult ReverseRedeem(EVECallArgs& call, PyInt* itemID);
+  EVEResult GetCreateDate(EVECallArgs& call);
+  EVEResult ReportISKSpammer(EVECallArgs& call, PyInt* characterID, PyInt* channelID);
+  EVEResult ReportBot(EVECallArgs& call, PyInt* itemID);
+  EVEResult ApplyPilotLicence(EVECallArgs& call, PyInt* itemID);
 };
 
 class MovementService : public Service<MovementService>
@@ -51,7 +51,7 @@ public:
 protected:
     EVEServiceManager* m_manager;
 
-    PyResult ResolveNodeID(PyCallArgs& call, PyInt* newWorldSpaceId);
+    EVEResult ResolveNodeID(EVECallArgs& call, PyInt* newWorldSpaceId);
 };
 
 #endif /* __USER_SERVICE__H__INCL__ */

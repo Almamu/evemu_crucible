@@ -34,11 +34,11 @@ public:
     AuthService();
 
 protected:
-    PyResult Ping(PyCallArgs& call);
-    PyResult GetPostAuthenticationMessage(PyCallArgs& call);
-    PyResult AmUnderage(PyCallArgs& call);
-    PyResult AccruedTime(PyCallArgs& call);
-    PyResult SetLanguageID(PyCallArgs& call, PyRep* languageID);
+  EVEResult Ping(EVECallArgs& call);
+  EVEResult GetPostAuthenticationMessage(EVECallArgs& call);
+  EVEResult AmUnderage(EVECallArgs& call);
+  EVEResult AccruedTime(EVECallArgs& call);
+  EVEResult SetLanguageID(EVECallArgs& call, PyDataType* languageID);
 };
 
 #endif

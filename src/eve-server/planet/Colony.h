@@ -74,14 +74,14 @@ public:
     void SetSchematic(uint32 pinID, uint8 schematicID=0);
     void SetProgramResults(uint32 ecuID, uint16 typeID, uint16 numCycles, float headRadius, float cycleTime, uint32 qtyPerCycle);
 
-    PyRep* LaunchCommodities(uint32 pinID, std::map< uint16, uint32 >& items);
+    PyDataType* LaunchCommodities(uint32 pinID, std::map< uint16, uint32 >& items);
     void PlanetXfer(uint32 spaceportID, std::map< uint32, uint16 > importItems, std::map< uint32, uint16 > exportItems, double taxRate);
 
     void PrioritizeRoute(uint16 routeID, uint8 priority);
 
     uint32 GetOwner();
 
-    PyRep* GetColony();
+    PyDataType* GetColony();
     PyTuple* GetPins();
     PyTuple* GetLinks();
     PyTuple* GetRoutes();

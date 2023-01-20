@@ -34,6 +34,6 @@ public:
     ClientStatLogger();
 
 protected:
-    PyResult LogString(PyCallArgs& call, PyString* arg);
+  EVEResult LogString(EVECallArgs& call, PyString* arg);
 };
 #endif

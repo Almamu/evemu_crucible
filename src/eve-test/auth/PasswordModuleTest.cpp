@@ -41,8 +41,8 @@ const size_t HASH_LEN = sizeof( HASH );
 int auth_PasswordModuleTest( int argc, char* argv[] )
 {
     // Print input data
-    ::printf( "username='%s' (len=%lu)\n"
-              "password='%s' (len=%lu)\n",
+    ::printf( "username='%s' (len=%zu)\n"
+              "password='%s' (len=%zu)\n",
               USERNAME.c_str(), USERNAME.length(),
               PASSWORD.c_str(), PASSWORD.length() );
 

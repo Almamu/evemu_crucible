@@ -36,10 +36,10 @@ public:
     virtual ~AlertService();
 
 protected:
-    PyResult BeanCount(PyCallArgs &call, PyRep* ignored);
-    PyResult BeanDelivery(PyCallArgs &call, PyList* beans);
-    PyResult GroupBeanDelivery(PyCallArgs &call, PyBuffer* compressedBeans);
-    PyResult SendClientStackTraceAlert(PyCallArgs &call, PyTuple* stackId, PyString* stackTrace, PyString* mode, PyRep* nextErrorKeyHash);
+  EVEResult BeanCount(EVECallArgs&call, PyDataType* ignored);
+  EVEResult BeanDelivery(EVECallArgs&call, PyList* beans);
+  EVEResult GroupBeanDelivery(EVECallArgs&call, PyBuffer* compressedBeans);
+  EVEResult SendClientStackTraceAlert(EVECallArgs&call, PyTuple* stackId, PyString* stackTrace, PyString* mode, PyDataType* nextErrorKeyHash);
 
     PyTraceLog* traceLogger;
 };

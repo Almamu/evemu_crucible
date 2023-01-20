@@ -63,11 +63,11 @@ void KeeperService::BoundReleased (KeeperBound* bound) {
     this->m_instance = nullptr;
 }
 
-PyResult KeeperService::GetLevelEditor(PyCallArgs &call)
+EVEResult KeeperService::GetLevelEditor(EVECallArgs&call)
 {
     // self.ed = sm.RemoteSvc('keeper').GetLevelEditor()  (this is to bind new editor object)
     _log(DUNG__CALL,  "KeeperService::Handle_GetLevelEditor  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     if (this->m_instance == nullptr) {
         this->m_instance = new KeeperBound (m_manager, *this, &m_db);
@@ -78,7 +78,7 @@ PyResult KeeperService::GetLevelEditor(PyCallArgs &call)
     return new PySubStruct(new PySubStream(this->m_instance->GetOID()));
 }
 
-PyResult KeeperService::CanWarpToPathPlex(PyCallArgs &call, PyInt* instanceID) {
+EVEResult KeeperService::CanWarpToPathPlex(EVECallArgs&call, PyInt* instanceID) {
     /*
                     resp = sm.RemoteSvc('keeper').CanWarpToPathPlex(node.rec.instanceID)
                 if resp:
@@ -91,14 +91,14 @@ PyResult KeeperService::CanWarpToPathPlex(PyCallArgs &call, PyInt* instanceID) {
 
                         */
     _log(DUNG__CALL,  "KeeperService::Handle_CanWarpToPathPlex  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
 	return nullptr;
 }
 
-PyResult KeeperService::ActivateAccelerationGate(PyCallArgs &call, PyInt* itemID) {
+EVEResult KeeperService::ActivateAccelerationGate(EVECallArgs&call, PyInt* itemID) {
     _log(DUNG__CALL,  "KeeperService::Handle_ActivateAccelerationGate  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     Client *pClient(call.client);
 
@@ -118,7 +118,7 @@ PyResult KeeperService::ActivateAccelerationGate(PyCallArgs &call, PyInt* itemID
     pClient->GetShipSE()->DestinyMgr()->WarpTo(warpToPoint, distanceToDestination);
 
     /* return error msg from this call, if applicable, else nodeid and timestamp */
-    return new PyLong(Win32TimeNow());
+    return new PyInt(Win32TimeNow());
 }
 
 KeeperBound::KeeperBound(EVEServiceManager& mgr, KeeperService& parent, SystemDB* db) :
@@ -137,11 +137,11 @@ KeeperBound::KeeperBound(EVEServiceManager& mgr, KeeperService& parent, SystemDB
     this->Add("BatchEnd", &KeeperBound::BatchEnd);
 }
 
-PyResult KeeperBound::EditDungeon(PyCallArgs &call, PyInt* dungeonID)
+EVEResult KeeperBound::EditDungeon(EVECallArgs&call, PyInt* dungeonID)
 {
     //ed.EditDungeon(dungeonID, roomID=roomID)
     _log(DUNG__CALL,  "KeeperBound::Handle_EditDungeon  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     /*
     Tasks to accomplish
@@ -154,14 +154,14 @@ PyResult KeeperBound::EditDungeon(PyCallArgs &call, PyInt* dungeonID)
 
     GPoint roomPos = pClient->GetShipSE()->GetPosition();
 
-    pClient->GetSession()->SetFloat("editor_room_x", roomPos.x);
-    pClient->GetSession()->SetFloat("editor_room_y", roomPos.y);
-    pClient->GetSession()->SetFloat("editor_room_z", roomPos.z);
+    pClient->GetSession()->set ("editor_room_x", roomPos.x);
+    pClient->GetSession()->set ("editor_room_y", roomPos.y);
+    pClient->GetSession()->set ("editor_room_z", roomPos.z);
 
-    pClient->GetSession()->SetInt("editor_bind_id", this->GetBoundID());
+    pClient->GetSession()->set ("editor_bind_id", this->GetBoundID());
 
     std::vector<Dungeon::RoomObject> objects;
-    DungeonDB::GetRoomObjects(call.byname["roomID"]->AsInt()->value(), objects);
+    DungeonDB::GetRoomObjects(call.byname["roomID"]->as<PyInt>()->value(), objects);
 
     // Spawn the items in the object list
     for (auto cur : objects) {
@@ -183,58 +183,57 @@ PyResult KeeperBound::EditDungeon(PyCallArgs &call, PyInt* dungeonID)
     }
 
     // Send notification to client to update UI
-    PyList* posList = new PyList();
-        posList->AddItem(new PyFloat(roomPos.x));
-        posList->AddItem(new PyFloat(roomPos.y));
-        posList->AddItem(new PyFloat(roomPos.z));
-
-    PyTuple* payload = new PyTuple(3);
-    payload->SetItem(0, dungeonID); //dungeonID
-    payload->SetItem(1, new PyInt(call.byname["roomID"]->AsInt()->value())); //roomID
-    payload->SetItem(2, posList); //roomPos
-
-    pClient->SendNotification("OnDungeonEdit", "charid", payload, false);
+    pClient->SendNotification("OnDungeonEdit", "charid", new PyTuple {
+        dungeonID, // dungeonID
+        new PyInt (call.byname["roomID"]->as<PyInt>()->value()), // roomID
+        new PyList { // roomPos
+            new PyFloat (roomPos.x),
+            new PyFloat (roomPos.y),
+            new PyFloat (roomPos.z)
+        }
+    }, false);
 
     // update local variables with what we're editing right now
-    this->m_currentRoom = call.byname["roomID"]->AsInt()->value();
+    this->m_currentRoom = call.byname["roomID"]->as<PyInt>()->value();
     this->m_currentDungeon = dungeonID->value();
 
     return nullptr;
 }
 
-PyResult KeeperBound::GetRoomObjects(PyCallArgs &call)
+EVEResult KeeperBound::GetRoomObjects(EVECallArgs&call)
 {
     _log(DUNG__CALL,  "KeeperBound:::Handle_GetRoomObjects  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     DBRowDescriptor *header = new DBRowDescriptor();
-    header->AddColumn("objectID", DBTYPE_I4);
-    header->AddColumn("groupID", DBTYPE_I4);
+    header->add("objectID", DBTYPE_I4);
+    header->add("groupID", DBTYPE_I4);
 
-    CRowSet *rowset = new CRowSet(&header);
+    CRowset *rowset = new CRowset(header);
 
     for (auto cur : m_roomObjects) {
-        PyPackedRow *newRow = rowset->NewRow();
-        newRow->SetField("objectID", new PyInt(cur->GetID()));
-        newRow->SetField("groupID", new PyInt(cur->GetData().groupID));
+        PyPackedRow *newRow = rowset->insert({
+            new PyInt (cur->GetID()),
+            new PyInt (cur->GetData().groupID)
+        });
     }
 
     return rowset;
 }
 
-PyResult KeeperBound::GetRoomGroups( PyCallArgs& call, PyInt* roomID )
+EVEResult KeeperBound::GetRoomGroups(EVECallArgs& call, PyInt* roomID )
 {
     _log(DUNG__CALL,  "KeeperBound::Handle_GetRoomGroups  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return DungeonDB::GetRoomGroups(roomID->value());
 }
 
-PyResult KeeperBound::PlayDungeon(PyCallArgs &call, PyInt* dungeonID)
+EVEResult KeeperBound::PlayDungeon(EVECallArgs&call, PyInt* dungeonID)
 {
     //ed.PlayDungeon(dungeonID, roomID=roomID, godmode=godmode)
     _log(DUNG__CALL,  "KeeperBound::Handle_PlayDungeon  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     // Play the currently selected dungeon at the player's current position
     sDunDataMgr.UpdateDungeon(dungeonID->value());
@@ -254,10 +253,10 @@ PyResult KeeperBound::PlayDungeon(PyCallArgs &call, PyInt* dungeonID)
     return nullptr;
 }
 
-PyResult KeeperBound::Reset(PyCallArgs &call)
+EVEResult KeeperBound::Reset(EVECallArgs&call)
 {
     _log(DUNG__CALL,  "KeeperBound::Handle_Reset  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     if (this->m_roomObjects.size())
         // reset means unload everything
@@ -274,45 +273,45 @@ PyResult KeeperBound::Reset(PyCallArgs &call)
     return nullptr;
 }
 
-PyResult KeeperBound::GotoRoom(PyCallArgs &call, PyInt* roomID)
+EVEResult KeeperBound::GotoRoom(EVECallArgs&call, PyInt* roomID)
 {
     _log(DUNG__CALL,  "KeeperBound::Handle_GotoRoom  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult KeeperBound::GetCurrentlyEditedRoomID(PyCallArgs &call)
+EVEResult KeeperBound::GetCurrentlyEditedRoomID(EVECallArgs&call)
 {
 //return sm.RemoteSvc('keeper').GetLevelEditor().GetCurrentlyEditedRoomID()
     _log(DUNG__CALL,  "KeeperBound::Handle_GetCurrentlyEditedRoomID  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult KeeperBound::ObjectSelection(PyCallArgs &call, PyList* objects)
+EVEResult KeeperBound::ObjectSelection(EVECallArgs&call, PyList* objects)
 {
     _log(DUNG__CALL,  "KeeperBound::Handle_ObjectSelection  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     
-    for (auto cur : objects->items) {
-        this->m_selectedObjects.push_back(cur->AsInt()->value());
+    for (auto cur : *objects) {
+        this->m_selectedObjects.push_back(cur->as<PyInt>()->value());
     }
 
     // Return a copy of the list to the client
     return new PyList(*objects);
 }
 
-PyResult KeeperBound::BatchStart(PyCallArgs &call)
+EVEResult KeeperBound::BatchStart(EVECallArgs&call)
 {
     // nothing needed for now
     // might be used by CCP to lock selected items or something
     return nullptr;
 }
 
-PyResult KeeperBound::BatchEnd(PyCallArgs &call)
+EVEResult KeeperBound::BatchEnd(EVECallArgs&call)
 {
     // make sure state is sent, this should call the correct flow in the client to update the item
     call.client->SetStateSent(false);

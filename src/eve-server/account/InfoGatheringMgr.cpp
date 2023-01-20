@@ -34,26 +34,29 @@ InfoGatheringMgr::InfoGatheringMgr() :
     this->Add("LogInfoEventsFromClient", &InfoGatheringMgr::LogInfoEventsFromClient);
 }
 
-PyResult InfoGatheringMgr::GetStateAndConfig(PyCallArgs &call) {
-
-    PyDict *rsp = new PyDict();
-
-    rsp->SetItemString("clientWorkerInterval", new PyInt(600000)); //Default From packetlogs is 600000
-    rsp->SetItemString("isEnabled", new PyInt(0)); //0 = Disabled, 1 = Enabled. Set to 0 becuase jsut gettting rid of exception.
-
-    rsp->SetItemString("infoTypeAggregates", PyStatic.NewNone());
-    rsp->SetItemString("infoTypesOncePerRun", PyStatic.NewNone());
-    rsp->SetItemString("infoTypeParameters", PyStatic.NewNone());
-
-    PyList *infoTypes = new PyList();
-    infoTypes->AddItemInt(999); //Adding a value that was not in live so when its checks list it will always return false for now.
-
-    rsp->SetItemString("infoTypes", new PyObjectEx_Type1( new PyToken("__builtin__.set"), new_tuple(infoTypes)));
-
-    return new PyObject( "util.KeyVal", rsp );
+EVEResult InfoGatheringMgr::GetStateAndConfig(EVECallArgs&call) {
+    return new PyObject (
+        "util.KeyVal",
+        new PyDict {
+            {"clientWorkerInterval", new PyInt (600000)}, // default From packetlogs is 600000
+            {"isEnabled", new PyInt (0)}, // 0 = Disabled, 1 = Enabled. Set to 0 becuase jsut gettting rid of exception.
+            {"infoTypeAggregates", PyStatic.NewNone()},
+            {"infoTypesOncePerRun", PyStatic.NewNone()},
+            {"infoTypeParameters", PyStatic.NewNone()},
+            {"infoTypes", new PyObjectEx_Type1 (
+                     new PyToken ("__builtin__.set"),
+                     new PyTuple {
+                         new PyList {
+                             new PyInt (999) // Adding a value that was not in live so when its checks list it will always return false for now.
+                         }
+                     }
+                )
+            }
+        }
+    );
 }
 
-PyResult InfoGatheringMgr::LogInfoEventsFromClient(PyCallArgs &call, PyList* loggedEvents) {
+EVEResult InfoGatheringMgr::LogInfoEventsFromClient(EVECallArgs&call, PyList* loggedEvents) {
     return PyStatic.NewNone();
 }
 

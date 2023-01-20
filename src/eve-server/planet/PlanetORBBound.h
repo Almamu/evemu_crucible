@@ -38,7 +38,7 @@ public:
 
     void BoundReleased (PlanetORBBound* bound) override;
 protected:
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters) override;
 
 private:
     std::map<uint32, PlanetORBBound*> m_instances;
@@ -50,10 +50,10 @@ public:
 
     uint32 GetSystemID () { return this->m_systemID; }
 protected:
-    PyResult GetTaxRate(PyCallArgs& call, PyInt* itemID);
-    PyResult GetSettingsInfo(PyCallArgs& call, PyInt* orbitalID);
-    PyResult UpdateSettings(PyCallArgs& call, PyInt* orbitalID, PyInt* reinforceValue, PyObject* taxRateValues, PyFloat* standingValue, PyBool* allowAllianceValue, PyBool* allowStandingsValue);
-    PyResult GMChangeSpaceObjectOwner(PyCallArgs& call, PyInt* itemID, PyInt* corpID);
+  EVEResult GetTaxRate(EVECallArgs& call, PyInt* itemID);
+  EVEResult GetSettingsInfo(EVECallArgs& call, PyInt* orbitalID);
+  EVEResult UpdateSettings(EVECallArgs& call, PyInt* orbitalID, PyInt* reinforceValue, PyObject* taxRateValues, PyFloat* standingValue, PyBool* allowAllianceValue, PyBool* allowStandingsValue);
+  EVEResult GMChangeSpaceObjectOwner(EVECallArgs& call, PyInt* itemID, PyInt* corpID);
 
 private:
     uint32 m_systemID;

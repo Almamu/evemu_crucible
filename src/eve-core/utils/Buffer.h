@@ -50,27 +50,22 @@ public:
      */
     template< typename T >
     class const_iterator
-    : public std::iterator< std::random_access_iterator_tag, T >
     {
-        /// Typedef for our base due to readibility.
-        typedef std::iterator< std::random_access_iterator_tag, T > _Base;
-
     public:
         /// Typedef for iterator category.
-        typedef typename _Base::iterator_category iterator_category;
+        typedef std::random_access_iterator_tag iterator_category;
         /// Typedef for value type.
-        typedef typename _Base::value_type        value_type;
+        typedef T                               value_type;
         /// Typedef for difference type.
-        typedef typename _Base::difference_type   difference_type;
+        typedef ptrdiff_t                       difference_type;
         /// Typedef for pointer.
-        typedef typename _Base::pointer           pointer;
+        typedef T*                              pointer;
         /// Typedef for reference.
-        typedef typename _Base::reference         reference;
-
+        typedef T&                              reference;
         /// Typedef for const pointer.
-        typedef const T* const_pointer;
+        typedef const T*                        const_pointer;
         /// Typedef for const reference.
-        typedef const T& const_reference;
+        typedef const T&                        const_reference;
 
         /**
          * @brief Default constructor.

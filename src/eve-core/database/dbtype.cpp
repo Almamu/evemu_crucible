@@ -63,3 +63,45 @@ uint8 DBTYPE_GetSizeBytes( DBTYPE type )
     return ( ( DBTYPE_GetSizeBits( type ) + 7 ) >> 3 );
 }
 
+const char* DBTYPE_GetName (DBTYPE type) {
+    switch (type) {
+        case DBTYPE_EMPTY:
+            return "DBTYPE_EMPTY";
+        case DBTYPE_I2:
+            return "DBTYPE_I2";
+        case DBTYPE_I4:
+            return "DBTYPE_I4";
+        case DBTYPE_R4:
+            return "DBTYPE_R4";
+        case DBTYPE_R8:
+            return "DBTYPE_R8";
+        case DBTYPE_CY:
+            return "DBTYPE_CY";
+        case DBTYPE_ERROR:
+            return "DBTYPE_ERROR";
+        case DBTYPE_BOOL:
+            return "DBTYPE_BOOL";
+        case DBTYPE_I1:
+            return "DBTYPE_I1";
+        case DBTYPE_UI1:
+            return "DBTYPE_UI1";
+        case DBTYPE_UI2:
+            return "DBTYPE_UI2";
+        case DBTYPE_UI4:
+            return "DBTYPE_UI4";
+        case DBTYPE_I8:
+            return "DBTYPE_I8";
+        case DBTYPE_UI8:
+            return "DBTYPE_UI8";
+        case DBTYPE_FILETIME:
+            return "DBTYPE_FILETIME";
+        case DBTYPE_BYTES:
+            return "DBTYPE_BYTES";
+        case DBTYPE_STR:
+            return "DBTYPE_STR";
+        case DBTYPE_WSTR:
+            return "DBTYPE_WSTR";
+        default:
+            return "DBTYPE_UNKNOWN";
+    }
+}

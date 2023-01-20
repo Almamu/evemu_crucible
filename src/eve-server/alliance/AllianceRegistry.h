@@ -40,13 +40,13 @@ public:
     void BoundReleased (AllianceBound* bound) override;
 
 protected:
-    PyResult GetAlliance(PyCallArgs& call, PyInt* allianceID);
-    PyResult GetRankedAlliances(PyCallArgs& call, PyInt* maxLen);
-    PyResult GetEmploymentRecord(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetAllianceMembers(PyCallArgs& call, PyInt* allianceID);
+  EVEResult GetAlliance(EVECallArgs& call, PyInt* allianceID);
+  EVEResult GetRankedAlliances(EVECallArgs& call, PyInt* maxLen);
+  EVEResult GetEmploymentRecord(EVECallArgs& call, PyInt* corporationID);
+  EVEResult GetAllianceMembers(EVECallArgs& call, PyInt* allianceID);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters);
 
 private:
     std::map<uint32, AllianceBound*> m_instances;

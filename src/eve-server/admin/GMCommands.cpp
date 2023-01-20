@@ -50,7 +50,7 @@
 #include "corporation/LPService.h"
 #include "corporation/CorporationDB.h"
 
-PyResult Command_search(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+ EVEResult Command_search(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     if (args.argCount() < 2) {
         throw CustomError ("Correct Usage: /search [text]");
     }
@@ -90,7 +90,7 @@ PyResult Command_search(Client* who, CommandDB* db, EVEServiceManager &services,
         return new PyString(result);
 }
 
-PyResult Command_giveisk(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_giveisk(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount() < 3) {
         throw CustomError ("Correct Usage: /giveisk [entityID ('me'=self)] [amount]");
@@ -131,7 +131,7 @@ PyResult Command_giveisk(Client* who, CommandDB* db, EVEServiceManager &services
     return new PyString("Operation successful.");
 }
 
-PyResult Command_pop(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_pop(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (4 != args.argCount())
         throw CustomError ("Correct Usage: /pop [message type] [key] [text]");
@@ -155,7 +155,7 @@ PyResult Command_pop(Client* who, CommandDB* db, EVEServiceManager &services, co
     return new PyString("Message sent.");
 }
 
-PyResult Command_spawnn(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_spawnn(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     int typeID = 0;
     uint32 actualTypeID = 0;
@@ -236,7 +236,7 @@ PyResult Command_spawnn(Client* who, CommandDB* db, EVEServiceManager &services,
     return new PyString("Spawn successful.");
 }
 
-PyResult Command_spawn(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_spawn(Client* pClient, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     int spawnCount = 1;
     uint32 spawnIndex = 0;
@@ -391,7 +391,7 @@ PyResult Command_spawn(Client* pClient, CommandDB* db, EVEServiceManager &servic
 
 // command to modify blueprint's attributes, we have to give it blueprint's itemID ...
 // isn't much comfortable, but I don't know about better solution ...
-PyResult Command_setbpattr(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_setbpattr(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount() < 6)
         throw CustomError ("Correct Usage: /setbpattr [blueprintID] [0 (not copy) or 1 (copy)] [material level] [productivity level] [remaining runs]");
@@ -420,7 +420,7 @@ PyResult Command_setbpattr(Client* who, CommandDB* db, EVEServiceManager &servic
     return new PyString("Properties modified.");
 }
 
-PyResult Command_getattr(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_getattr(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     /** @todo update to new attrib system
     if (args.argCount() < 3) {
@@ -443,7 +443,7 @@ PyResult Command_getattr(Client* who, CommandDB* db, EVEServiceManager &services
     return nullptr;
 }
 
-PyResult Command_setattr(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_setattr(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     throw CustomError ("disabled");
     if (0) {
@@ -491,7 +491,7 @@ PyResult Command_setattr(Client* who, CommandDB* db, EVEServiceManager &services
     }
 }
 
-PyResult Command_fit(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_fit(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     throw CustomError ("This command is currently disabled.");
 /*
@@ -550,7 +550,7 @@ PyResult Command_fit(Client* who, CommandDB* db, EVEServiceManager &services, co
     */
 }
 
-PyResult Command_giveallskills(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_giveallskills(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     uint8 level = 5;            // Ensure that ALL skills are trained to level 5
     CharacterRef character;
     uint32 ownerID = 0;
@@ -636,13 +636,13 @@ PyResult Command_giveallskills(Client* who, CommandDB* db, EVEServiceManager &se
     return new PyString ("Skill Gifting Failure");
 }
 
-PyResult Command_giveskills(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_giveskills(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     //pass to command_giveskill
     Command_giveskill(who, db, services, args);
     return nullptr;
 }
 
-PyResult Command_giveskill(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
+EVEResult Command_giveskill(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args) {
     uint32 ownerID = 0, skillID = 0, level = 0;
     uint32 newPoints = 0;
     CharacterRef character;
@@ -735,7 +735,7 @@ PyResult Command_giveskill(Client* who, CommandDB* db, EVEServiceManager &servic
     return PyStatic.NewNone();
 }
 
-PyResult Command_online(Client *who, CommandDB *db, EVEServiceManager& services, const Seperator &args) {
+EVEResult Command_online(Client *who, CommandDB *db, EVEServiceManager& services, const Seperator &args) {
     if (args.argCount() == 2) {
         if (strcmp("me", args.arg(1).c_str())!=0)
             if (!args.isNumber(1))
@@ -764,7 +764,7 @@ PyResult Command_online(Client *who, CommandDB *db, EVEServiceManager& services,
     }
 }
 
-PyResult Command_unload(Client *who, CommandDB *db, EVEServiceManager& services, const Seperator &args) {
+EVEResult Command_unload(Client *who, CommandDB *db, EVEServiceManager& services, const Seperator &args) {
 // this means 'remove'
 
     if (args.argCount() >= 2 && args.argCount() <= 3)
@@ -814,7 +814,7 @@ PyResult Command_unload(Client *who, CommandDB *db, EVEServiceManager& services,
         throw CustomError ("Command failed: You got the arguments all wrong.");
 }
 
-PyResult Command_repairmodules(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_repairmodules(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount()==1)
         who->GetShip()->RepairModules();
@@ -832,7 +832,7 @@ PyResult Command_repairmodules(Client* who, CommandDB* db, EVEServiceManager &se
     return(new PyString("Modules repaired successful."));
 }
 
-PyResult Command_dogma(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_dogma(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     //"dogma" "140019878" "agility" "=" "0.2"
 
@@ -869,7 +869,7 @@ PyResult Command_dogma(Client* who, CommandDB* db, EVEServiceManager &services, 
     return nullptr;
 }
 
-PyResult Command_kick(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_kick(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     Client *target;
     if (args.argCount() == 2) {
@@ -901,7 +901,7 @@ PyResult Command_kick(Client* who, CommandDB* db, EVEServiceManager &services, c
     return nullptr;
 }
 
-PyResult Command_ban(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_ban(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     Client *target;
 
@@ -936,7 +936,7 @@ PyResult Command_ban(Client* who, CommandDB* db, EVEServiceManager &services, co
     return nullptr;
 }
 
-PyResult Command_unban(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_unban(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount() == 2) {
         if (!args.isNumber(1)) {
@@ -960,7 +960,7 @@ PyResult Command_unban(Client* who, CommandDB* db, EVEServiceManager &services, 
     return nullptr;
 }
 
-PyResult Command_givelp(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
+EVEResult Command_givelp(Client* who, CommandDB* db, EVEServiceManager &services, const Seperator& args)
 {
     if (args.argCount() == 4) {
         uint32 characterID;

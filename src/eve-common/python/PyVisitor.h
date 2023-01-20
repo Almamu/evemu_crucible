@@ -23,27 +23,22 @@
     Author:     Zhur, mmcs, Bloody.Rabbit
 */
 
-#ifndef __PY_VISITOR_H__INCL__
-#define __PY_VISITOR_H__INCL__
+#pragma once
 
 #include <stack>
 #include <queue>
 
-class PyRep;
 class PyInt;
-class PyLong;
 class PyFloat;
 class PyBool;
 class PyNone;
 class PyBuffer;
 class PyString;
-class PyWString;
 class PyToken;
 class PyObject;
 class PyObjectEx;
 class PySubStruct;
 class PySubStream;
-class PyChecksumedStream;
 class PyDict;
 class PyList;
 class PyTuple;
@@ -54,46 +49,23 @@ class PyVisitor
 public:
     virtual ~PyVisitor() {}
 
-    //! primitive data visitors
-    virtual bool VisitInteger( const PyInt* rep ) { return true; }
-    virtual bool VisitLong( const PyLong* rep ) { return true; }
-    virtual bool VisitReal( const PyFloat* rep ) { return true; }
-    virtual bool VisitBoolean( const PyBool* rep ) { return true; }
-    virtual bool VisitNone( const PyNone* rep ) { return true; }
-    virtual bool VisitBuffer( const PyBuffer* rep ) { return true; }
-    virtual bool VisitString( const PyString* rep ) { return true; }
-    virtual bool VisitWString( const PyWString* rep ) { return true; }
-    virtual bool VisitToken( const PyToken* rep ) { return true; }
+    [[nodiscard]] virtual bool VisitNone (const PyNone* rep) { return true; }
+    [[nodiscard]] virtual bool VisitInteger (const PyInt* rep) { return true; }
+    [[nodiscard]] virtual bool VisitReal (const PyFloat* rep) { return true; }
+    [[nodiscard]] virtual bool VisitString (const PyString* rep) { return true; }
+    [[nodiscard]] virtual bool VisitToken (const PyToken* rep) { return true; }
+    [[nodiscard]] virtual bool VisitBuffer (const PyBuffer* rep) { return true; }
+    [[nodiscard]] virtual bool VisitBoolean (const PyBool* rep) { return true; }
 
-    //! the nested types Visitor
-    virtual bool VisitTuple( const PyTuple* rep );
-    virtual bool VisitList( const PyList* rep );
-    virtual bool VisitDict( const PyDict* rep );
+    [[nodiscard]] virtual bool VisitTuple (const PyTuple* rep);
+    [[nodiscard]] virtual bool VisitList (const PyList* rep);
+    [[nodiscard]] virtual bool VisitDict (const PyDict* rep);
 
-    //! Object type visitor
-    virtual bool VisitObject( const PyObject* rep );
-    virtual bool VisitObjectEx( const PyObjectEx* rep );
+    [[nodiscard]] virtual bool VisitObject (const PyObject* rep);
+    [[nodiscard]] virtual bool VisitObjectEx (const PyObjectEx* rep);
 
-    //! PackedRow type visitor
-    virtual bool VisitPackedRow( const PyPackedRow* rep );
+    [[nodiscard]] virtual bool VisitPackedRow (const PyPackedRow* rep);
 
-    //! wrapper types Visitor
-    virtual bool VisitSubStruct( const PySubStruct* rep );
-    virtual bool VisitSubStream( const PySubStream* rep );
-    virtual bool VisitChecksumedStream( const PyChecksumedStream* rep );
+    [[nodiscard]] virtual bool VisitSubStruct (const PySubStruct* rep);
+    [[nodiscard]] virtual bool VisitSubStream (const PySubStream* rep);
 };
-
-class PyPfxVisitor : public PyVisitor
-{
-public:
-    PyPfxVisitor( const char* pfx = "" );
-
-protected:
-    const char* _pfx() const { return mPfxStack.top().c_str(); }
-    void _pfxExtend( const char* fmt, ... );
-    void _pfxWithdraw() { mPfxStack.pop(); }
-
-    std::stack<std::string> mPfxStack;
-};
-
-#endif /* !__PY_VISITOR_H__INCL__ */

@@ -34,8 +34,8 @@ public:
     IndexManager();
 
 protected:
-    PyResult GetAllDevelopmentIndices(PyCallArgs& call);
-    PyResult GetDevelopmentIndicesForSystem(PyCallArgs& call, PyInt* solarSystemID);
+  EVEResult GetAllDevelopmentIndices(EVECallArgs& call);
+  EVEResult GetDevelopmentIndicesForSystem(EVECallArgs& call, PyInt* solarSystemID);
 };
 
 #endif  // EVEMU_SYSTEM_IDXMGR_H__

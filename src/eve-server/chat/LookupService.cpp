@@ -45,43 +45,47 @@ LookupService::LookupService() :
     this->Add("LookupNoneNPCAccountOwners", &LookupService::LookupNoneNPCAccountOwners);
 }
 
-PyResult LookupService::LookupEvePlayerCharacters(PyCallArgs& call, PyWString* searchString, PyInt* exact) {
+EVEResult LookupService::LookupEvePlayerCharacters(EVECallArgs& call, PyString* searchString, PyInt* exact) {
     return ServiceDB::LookupChars(searchString->content().c_str(), exact->value() ? true : false);
 }
 
-PyResult LookupService::LookupCharacters(PyCallArgs &call, PyWString* searchString, PyInt* exact) {
+EVEResult LookupService::LookupCharacters(EVECallArgs&call, PyString* searchString, PyInt* exact) {
     return ServiceDB::LookupChars(searchString->content().c_str(), exact->value() ? true : false);
 }
 
 // this may actually be a call to search for player corps by name.
-PyResult LookupService::LookupPCOwners(PyCallArgs &call, PyWString* searchString, PyInt* exact) {
+EVEResult LookupService::LookupPCOwners(EVECallArgs&call, PyString* searchString, PyInt* exact) {
     return ServiceDB::LookupChars(searchString->content().c_str(), exact->value() ? true : false);
 }
 //LookupOwners
-PyResult LookupService::LookupOwners(PyCallArgs &call, PyWString* searchString, PyInt* exact) {
+EVEResult LookupService::LookupOwners(EVECallArgs&call, PyString* searchString, PyInt* exact) {
     return ServiceDB::LookupOwners(searchString->content().c_str(), exact->value() ? true : false);
 }
 
-PyResult LookupService::LookupNoneNPCAccountOwners(PyCallArgs &call, PyWString* searchString, PyInt* exact) {
+EVEResult LookupService::LookupNoneNPCAccountOwners(EVECallArgs&call, PyString* searchString, PyInt* exact) {
     return ServiceDB::LookupOwners(searchString->content().c_str(), exact->value() ? true : false);
 }
 
-PyResult LookupService::LookupPlayerCharacters(PyCallArgs &call, PyWString* searchString) {
+EVEResult LookupService::LookupPlayerCharacters(EVECallArgs&call, PyString* searchString) {
     return ServiceDB::LookupChars(searchString->content().c_str(), false);
 }
-PyResult LookupService::LookupCorporations(PyCallArgs &call, PyWString* searchString) {
+
+EVEResult LookupService::LookupCorporations(EVECallArgs&call, PyString* searchString) {
     return ServiceDB::LookupCorporations(searchString->content().c_str());
 }
-PyResult LookupService::LookupFactions(PyCallArgs &call, PyWString* searchString) {
+
+EVEResult LookupService::LookupFactions(EVECallArgs&call, PyString* searchString) {
     return ServiceDB::LookupFactions(searchString->content().c_str());
 }
-PyResult LookupService::LookupCorporationTickers(PyCallArgs &call, PyWString* searchString) {
+
+EVEResult LookupService::LookupCorporationTickers(EVECallArgs&call, PyString* searchString) {
     return ServiceDB::LookupCorporationTickers(searchString->content().c_str());
 }
-PyResult LookupService::LookupStations(PyCallArgs &call, PyWString* searchString) {
+
+EVEResult LookupService::LookupStations(EVECallArgs&call, PyString* searchString) {
     return ServiceDB::LookupStations(searchString->content().c_str());
 }
 
-PyResult LookupService::LookupKnownLocationsByGroup(PyCallArgs &call, PyWString* searchString, PyInt* exact) {
+EVEResult LookupService::LookupKnownLocationsByGroup(EVECallArgs&call, PyString* searchString, PyInt* exact) {
     return ServiceDB::LookupKnownLocationsByGroup(searchString->content().c_str(), exact->value() ? true : false);
 }

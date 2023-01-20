@@ -53,7 +53,7 @@ bool ClassDumpGenerator::ProcessElementDef( const TiXmlElement* field )
     }
 
     fprintf( mOutputFile,
-        "void %s::Dump( LogType l_type, const char* pfx ) const\n"
+        "void %s::dump( LogType l_type, const char* pfx ) const\n"
         "{\n"
         "    _log( l_type, \"%%s%s\", pfx );\n"
         "\n",
@@ -66,6 +66,14 @@ bool ClassDumpGenerator::ProcessElementDef( const TiXmlElement* field )
     fprintf( mOutputFile,
         "}\n"
         "\n"
+    );
+
+    fprintf( mOutputFile,
+        "void %s::Dump(LogType l_type, const char* pfx) const\n"
+        "{\n"
+        "   this->dump(l_type, pfx);"
+        "}\n",
+        name
     );
 
     return true;
@@ -84,7 +92,7 @@ bool ClassDumpGenerator::ProcessElement( const TiXmlElement* field )
         "\n"
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
-        "    %s.Dump( l_type, %s_n.c_str() );\n"
+        "    %s.dump( l_type, %s_n.c_str() );\n"
         "\n",
         name, name, name,
         name, name
@@ -107,7 +115,7 @@ bool ClassDumpGenerator::ProcessElementPtr( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else\n"
         "        _log( l_type, \"%%sERROR: ElementPtr = nullptr.\", %s_n.c_str() );\n"
         "\n",
@@ -132,7 +140,7 @@ bool ClassDumpGenerator::ProcessRaw( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else\n"
         "        _log( l_type, \"%%sERROR: raw = nullptr.\", %s_n.c_str() );\n"
         "\n",
@@ -229,7 +237,7 @@ bool ClassDumpGenerator::ProcessBuffer( const TiXmlElement* field )
         "\n"
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
-        "    %s->Dump( l_type, %s_n.c_str() );\n"
+        "    %s->dump( l_type, %s_n.c_str() );\n"
         "\n",
         name, name, name,
         name, name
@@ -320,7 +328,7 @@ bool ClassDumpGenerator::ProcessToken( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else\n"
         "        _log( l_type, \"%%sERROR: token = nullptr.\", %s_n.c_str() );\n"
         "\n",
@@ -362,7 +370,7 @@ bool ClassDumpGenerator::ProcessObject( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else \n"
         "        _log( l_type, \"%%s    nullptr\", pfx );\n"
         "\n",
@@ -402,7 +410,7 @@ bool ClassDumpGenerator::ProcessObjectEx( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else\n"
         "        _log( l_type, \"%%s    nullptr\", pfx );\n"
         "\n",
@@ -427,7 +435,7 @@ bool ClassDumpGenerator::ProcessTuple( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else\n"
         "        _log( l_type, \"%%sERROR: tuple = nullptr.\", %s_n.c_str() );\n"
         "\n",
@@ -458,7 +466,7 @@ bool ClassDumpGenerator::ProcessList( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else\n"
         "        _log( l_type, \"%%sERROR: list = nullptr.\", %s_n.c_str() );\n"
         "\n",
@@ -551,7 +559,7 @@ bool ClassDumpGenerator::ProcessDict( const TiXmlElement* field )
         "    std::string %s_n( pfx );\n"
         "    %s_n += \"    \";\n"
         "    if (%s != nullptr)\n"
-        "        %s->Dump( l_type, %s_n.c_str() );\n"
+        "        %s->dump( l_type, %s_n.c_str() );\n"
         "    else\n"
         "        _log( l_type, \"%%sERROR: dict = nullptr.\", %s_n.c_str() );\n"
         "\n",
@@ -610,7 +618,7 @@ bool ClassDumpGenerator::ProcessDictRaw( const TiXmlElement* field )
     }
 
     //TODO: un-kludge this with respect to printf placeholders/types
-    //could make PyRep's out of them and use ->Dump, but thats annoying
+    //could make PyDataType's out of them and use ->Dump, but thats annoying
 
     fprintf( mOutputFile,
         "    _log( l_type, \"%%s%s: Dictionary with %%lu entries\", pfx, %s.size() );\n"
@@ -640,7 +648,7 @@ bool ClassDumpGenerator::ProcessDictInt( const TiXmlElement* field )
         "        _log( l_type, \"%%s   Key: %%u\", pfx, cur.first );\n"
         "        std::string n( pfx );\n"
         "        n += \"        \";\n"
-        "        cur.second->Dump( l_type, n.c_str() );\n"
+        "        cur.second->dump( l_type, n.c_str() );\n"
         "    }\n"
         "\n",
         name, name, name
@@ -664,7 +672,7 @@ bool ClassDumpGenerator::ProcessDictStr( const TiXmlElement* field )
         "        _log( l_type, \"%%s Key: %%s\", pfx, cur.first.c_str() );\n"
         "        std::string n( pfx );\n"
         "        n += \"      \";\n"
-        "        cur.second->Dump( l_type, n.c_str() );\n"
+        "        cur.second->dump( l_type, n.c_str() );\n"
         "    }\n"
         "\n",
         name, name, name

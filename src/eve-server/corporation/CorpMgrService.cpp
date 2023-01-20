@@ -58,39 +58,40 @@ CorpMgrService::CorpMgrService() :
  * CORP__DB_MESSAGE
  */
 
-PyResult CorpMgrService::GetPublicInfo(PyCallArgs &call, PyInt* corporationID) {
+EVEResult CorpMgrService::GetPublicInfo(EVECallArgs&call, PyInt* corporationID) {
     return m_db.GetCorpInfo(corporationID->value());
 }
 
-PyResult CorpMgrService::GetCorporations(PyCallArgs &call, PyInt* corporationID) {
+EVEResult CorpMgrService::GetCorporations(EVECallArgs&call, PyInt* corporationID) {
     return m_db.GetCorporations(corporationID->value());
 }
 
-PyResult CorpMgrService::GetCorporationIDForCharacter(PyCallArgs &call, PyInt* characterID) {
+EVEResult CorpMgrService::GetCorporationIDForCharacter(EVECallArgs&call, PyInt* characterID) {
     return new PyInt(m_db.GetCorpIDforChar(characterID->value()));
 }
 
-PyResult CorpMgrService::AuditMember(PyCallArgs &call, PyInt* memberID, PyLong* fromDate, PyLong* toDate, std::optional<PyInt*> rowsPerPage) {
+EVEResult CorpMgrService::AuditMember(EVECallArgs&call, PyInt* memberID, PyInt* fromDate, PyInt* toDate, std::optional<PyInt*> rowsPerPage) {
     // logItemEventRows, crpRoleHistroyRows = sm.RemoteSvc('corpmgr').AuditMember(memberID, fromDate, toDate, rowsPerPage)
 
     _log(CORP__CALL, "CorpMgrService::Handle_AuditMember()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
-    PyTuple* tuple = new PyTuple(2);
-    tuple->SetItem(0, m_db.GetItemEvents(call.client->GetCorporationID(), memberID->value(), fromDate->value(), toDate->value(), rowsPerPage.has_value() ? rowsPerPage.value()->value() : 0));
-    tuple->SetItem(1, m_db.GetRoleHistroy(call.client->GetCorporationID(), memberID->value(), fromDate->value(), toDate->value(), rowsPerPage.has_value() ? rowsPerPage.value()->value() : 0));
+    PyTuple* tuple = new PyTuple {
+        m_db.GetItemEvents(call.client->GetCorporationID(), memberID->value(), fromDate->value(), toDate->value(), rowsPerPage.has_value() ? rowsPerPage.value()->value() : 0),
+        m_db.GetRoleHistroy(call.client->GetCorporationID(), memberID->value(), fromDate->value(), toDate->value(), rowsPerPage.has_value() ? rowsPerPage.value()->value() : 0)
+    };
 
     if (is_log_enabled(CORP__RSP_DUMP))
-        tuple->Dump(CORP__RSP_DUMP, "    ");
+        tuple->dump(CORP__RSP_DUMP, "    ");
 
     return tuple;
 }
 
-PyResult CorpMgrService::GetAssetInventory(PyCallArgs &call, PyInt* corporationID, PyString* which) {
+EVEResult CorpMgrService::GetAssetInventory(EVECallArgs&call, PyInt* corporationID, PyString* which) {
     // rows = sm.RemoteSvc('corpmgr').GetAssetInventory(eve.session.corpid, which)
     // this is called from corp asset screen.  wants a return of locationIDs of stations where corp hangers have items
     _log(CORP__CALL, "CorpMgrService::Handle_GetAssetInventory()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     EVEItemFlags locFlag = flagNone;
     std::ostringstream flags;
@@ -116,18 +117,18 @@ PyResult CorpMgrService::GetAssetInventory(PyCallArgs &call, PyInt* corporationI
 
     flags << ")";
 
-    PyRep* rsp = m_db.GetAssetInventory(corporationID->value(), locFlag, flags.str().c_str());
+    PyDataType* rsp = m_db.GetAssetInventory(corporationID->value(), locFlag, flags.str().c_str());
     if (is_log_enabled(CORP__RSP_DUMP))
-        rsp->Dump(CORP__RSP_DUMP, "    ");
+        rsp->dump(CORP__RSP_DUMP, "    ");
 
     //  returns a CRowSet
     return rsp;
 }
 
-PyResult CorpMgrService::GetAssetInventoryForLocation(PyCallArgs &call, PyInt* corporationID, PyInt* stationID, PyString* which) {
+EVEResult CorpMgrService::GetAssetInventoryForLocation(EVECallArgs&call, PyInt* corporationID, PyInt* stationID, PyString* which) {
     //  items = sm.RemoteSvc('corpmgr').GetAssetInventoryForLocation(eve.session.corpid, stationID, which)
     _log(CORP__CALL, "CorpMgrService::Handle_GetAssetInventoryForLocation()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     EVEItemFlags locFlag = flagNone;
     std::ostringstream flags;
@@ -158,7 +159,7 @@ PyResult CorpMgrService::GetAssetInventoryForLocation(PyCallArgs &call, PyInt* c
 }
 
 // this is called for corp trade
-PyResult CorpMgrService::GetCorporationStations(PyCallArgs &call) {
+EVEResult CorpMgrService::GetCorporationStations(EVECallArgs&call) {
   /**           this is called from trademgr.py (and others)
         stations = sm.RemoteSvc('corpmgr').GetCorporationStations()
         for station in stations:
@@ -168,7 +169,7 @@ PyResult CorpMgrService::GetCorporationStations(PyCallArgs &call) {
 */
 
     _log(CORP__CALL, "CorpMgrService::Handle_GetCorporationStations()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     if (IsPlayerCorp(call.client->GetCorporationID()))
         return m_db.GetStations(call.client->GetCorporationID());
@@ -177,12 +178,11 @@ PyResult CorpMgrService::GetCorporationStations(PyCallArgs &call) {
     return nullptr;
 }
 
-
-PyResult CorpMgrService::SearchAssets(PyCallArgs &call, PyString* which, std::optional<PyInt*> itemCategoryID, std::optional<PyInt*> itemGroupID, std::optional<PyInt*> itemTypeID, std::optional<PyInt*> quantity) {
+EVEResult CorpMgrService::SearchAssets(EVECallArgs&call, PyString* which, std::optional<PyInt*> itemCategoryID, std::optional<PyInt*> itemGroupID, std::optional<PyInt*> itemTypeID, std::optional<PyInt*> quantity) {
     //   rows = sm.RemoteSvc('corpmgr').SearchAssets(which, itemCategoryID, itemGroupID, itemTypeID, qty)
     // 'which' is a filter type or None
     _log(CORP__CALL, "CorpMgrService::Handle_SearchAssets()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }

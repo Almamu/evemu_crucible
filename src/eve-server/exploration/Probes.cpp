@@ -338,7 +338,7 @@ void ProbeSE::RecoverProbe(PyList* list)
 
     /** @todo  verify probe status and controller before adding to "recover success list" */
     // add to list if still controlled by player
-    list->AddItem(new PyInt(m_self->itemID()));
+    list->add(new PyInt(m_self->itemID()));
     m_returnTimer.Start(time * 1000);
     SendStateChange(Probe::State::Returning);
     _log(SCAN__TRACE, "ProbeSE::RecoverProbe()  Probe %u returning.  Return time is %.2fs", \
@@ -348,21 +348,30 @@ void ProbeSE::RecoverProbe(PyList* list)
 void ProbeSE::SendNewProbe()
 {
     ScanResultPos ssr_oed;
-        ssr_oed.x = GetPosition().x;
-        ssr_oed.y = GetPosition().y;
-        ssr_oed.z = GetPosition().z;
-    PyToken* token = new PyToken("foo.Vector3");
-    PyTuple* oed_tuple = new PyTuple(2);
-        oed_tuple->SetItem(0, token);
-        oed_tuple->SetItem(1, ssr_oed.Encode());
-    PyDict* newProbe = new PyDict();
-        newProbe->SetItemString("probeID",      new PyLong(m_self->itemID()));
-        newProbe->SetItemString("typeID",       new PyInt(m_self->typeID()));
-        newProbe->SetItemString("scanRange",    new PyFloat(m_scanRange));
-        newProbe->SetItemString("expiry",       new PyLong(m_expiry));
-        newProbe->SetItemString("pos",          new PyObjectEx(false, oed_tuple));
-    PyTuple* ev = new PyTuple(1);
-        ev->SetItem(0, new PyObject("util.KeyVal", newProbe));
+    ssr_oed.x = GetPosition().x;
+    ssr_oed.y = GetPosition().y;
+    ssr_oed.z = GetPosition().z;
+
+    PyTuple* ev = new PyTuple {
+        new PyObject (
+            "util.KeyVal",
+            new PyDict {
+                {"probeID", new PyInt (m_self->itemID())},
+                {"typeID", new PyInt (m_self->typeID())},
+                {"scanRange", new PyFloat (m_scanRange)},
+                {"expiry", new PyInt (m_expiry)},
+                {"pos", new PyObjectEx (
+                            false,
+                            new PyTuple {
+                                new PyToken ("foo.Vector3"),
+                                ssr_oed.Encode()
+                            }
+                        )
+                }
+            }
+        )
+    };
+
     m_client->SendNotification("OnNewProbe", "clientID", &ev);  // this is sequenced
 }
 
@@ -375,9 +384,11 @@ void ProbeSE::SendStateChange(uint8 state)
     m_state = state;
     if (m_client == nullptr)
         return;
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyLong(m_self->itemID()));
-        tuple->SetItem(1, new PyInt(state));
+    PyTuple* tuple = new PyTuple {
+        new PyInt (m_self->itemID()),
+        new PyInt (state)
+    };
+
     m_client->SendNotification("OnProbeStateChanged", "clientID", &tuple);  // this is sequenced
 }
 
@@ -397,8 +408,11 @@ void ProbeSE::RemoveProbe()
 
     if (m_client == nullptr)
         return;
-    PyTuple* ev = new PyTuple(1);
-        ev->SetItem(0, new PyLong(m_self->itemID()));
+
+    PyTuple* ev = new PyTuple {
+        new PyInt (m_self->itemID())
+    };
+
     m_client->SendNotification("OnRemoveProbe", "clientID", &ev);  // this is sequenced
 }
 
@@ -409,26 +423,34 @@ void ProbeSE::SendWarpStart(float travelTime/*0*/)
 
     PyToken* token = new PyToken("foo.Vector3");
     ScanResultPos posFrom;
-        posFrom.x = m_self->position().x;
-        posFrom.y = m_self->position().y;
-        posFrom.z = m_self->position().z;
+    posFrom.x = m_self->position().x;
+    posFrom.y = m_self->position().y;
+    posFrom.z = m_self->position().z;
     ScanResultPos posTo;
-        posTo.x = m_destination.x;
-        posTo.y = m_destination.y;
-        posTo.z = m_destination.z;
-    PyTuple* from = new PyTuple(2);
-        from->SetItem(0, token);
-        from->SetItem(1, posFrom.Encode());
-    PyTuple* to = new PyTuple(2);
-        to->SetItem(0, token);
-        to->SetItem(1, posTo.Encode());
+    posTo.x = m_destination.x;
+    posTo.y = m_destination.y;
+    posTo.z = m_destination.z;
     // OnProbeWarpStart(self, probeID, fromPos, toPos, startTime, duration)
-    PyTuple* tuple = new PyTuple(5);
-        tuple->SetItem(0, new PyLong(m_self->itemID()));    //probeID
-        tuple->SetItem(1, new PyObjectEx(false, from));     //from
-        tuple->SetItem(2, new PyObjectEx(false, to));       //to
-        tuple->SetItem(3, new PyLong(GetFileTimeNow()));    //startTime
-        tuple->SetItem(4, new PyFloat(travelTime));         //duration in ms
+    PyTuple* tuple = new PyTuple {
+        new PyInt (m_self->itemID()), // probeID
+        new PyObjectEx ( // from
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                posFrom.Encode()
+            }
+        ),
+        new PyObjectEx ( // to
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                posTo.Encode()
+            }
+        ),
+        new PyInt (GetFileTimeNow()), // startTime
+        new PyFloat (travelTime) //duration in ms
+    };
+
     m_client->SendNotification("OnProbeWarpStart", "clientID", &tuple);  // this is sequenced
 
     // not sure if this will work right...slimItem is removed when probe warps out
@@ -441,8 +463,11 @@ void ProbeSE::SendWarpEnd()
     sBubbleMgr.Add(this);
     if (m_client == nullptr)
         return;
-    PyTuple* tuple = new PyTuple(1);
-        tuple->SetItem(0, new PyLong(m_self->itemID()));
+
+    PyTuple* tuple = new PyTuple {
+        new PyInt (m_self->itemID())
+    };
+
     m_client->SendNotification("OnProbeWarpEnd", "clientID", &tuple);  // this is sequenced
 }
 
@@ -490,15 +515,15 @@ PyDict* ProbeSE::MakeSlimItem()
 {
     _log(SE__SLIMITEM, "MakeSlimItem for ProbeSE %s(%u)", GetName(), m_self->itemID());
     PyDict* slim = new PyDict();
-    slim->SetItemString("itemID",                   new PyLong(m_self->itemID()));
-    slim->SetItemString("typeID",                   new PyInt(m_self->typeID()));
-    slim->SetItemString("ownerID",                  new PyInt(m_ownerID));
-    slim->SetItemString("corpID",                   IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-    slim->SetItemString("allianceID",               IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-    slim->SetItemString("warFactionID",             IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
-    slim->SetItemString("numLaunchers",             PyStatic.NewOne());
-    slim->SetItemString("sourceModuleID",           m_moduleRef.get() != nullptr? new PyInt(m_moduleRef->itemID()): PyStatic.NewNone());
-    slim->SetItemString("securityStatus",           new PyFloat(m_secStatus));
+    slim->set ("itemID",                   new PyInt(m_self->itemID()));
+    slim->set ("typeID",                   new PyInt(m_self->typeID()));
+    slim->set ("ownerID",                  new PyInt(m_ownerID));
+    slim->set ("corpID",                   IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+    slim->set ("allianceID",               IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+    slim->set ("warFactionID",             IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+    slim->set ("numLaunchers",             PyStatic.NewOne());
+    slim->set ("sourceModuleID",           m_moduleRef.get() != nullptr? new PyInt(m_moduleRef->itemID()): PyStatic.NewNone());
+    slim->set ("securityStatus",           new PyFloat(m_secStatus));
     return slim;
 }
 
@@ -512,24 +537,29 @@ void ProbeSE::MakeDamageState(DoDestinyDamageState &into) {
 
 void ProbeSE::SendSlimChange()
 {
-    PyDict* slim = new PyDict();
-        slim->SetItemString("itemID",                   new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",                   new PyInt(m_self->typeID()));
-        slim->SetItemString("categoryID",               new PyInt(m_self->categoryID()));
-        slim->SetItemString("ownerID",                  new PyInt(m_ownerID));
-        slim->SetItemString("corpID",                   IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-        slim->SetItemString("allianceID",               IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-        slim->SetItemString("warFactionID",             IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
-        slim->SetItemString("numLaunchers",             PyStatic.NewOne());
-        slim->SetItemString("sourceModuleID",           m_moduleRef.get() != nullptr? new PyInt(m_moduleRef->itemID()):PyStatic.NewNone());
-        slim->SetItemString("securityStatus",           new PyFloat(m_secStatus));
-        slim->SetItemString("warpingAway",              m_state == Probe::State::Returning ? PyStatic.NewFalse() : PyStatic.NewTrue());    // this is sent when probe warps
-    PyTuple* probeData = new PyTuple(2);
-        probeData->SetItem(0, new PyLong(m_self->itemID()));
-        probeData->SetItem(1, new PyObject("foo.SlimItem", slim));
-    PyTuple* updates = new PyTuple(2);
-        updates->SetItem(0, new PyString("OnSlimItemChange"));
-        updates->SetItem(1, probeData);
+    PyTuple* updates = new PyTuple {
+        new PyString ("OnSlimItemChange"),
+        new PyTuple {
+            new PyInt (m_self->itemID()),
+            new PyObject (
+                "foo.SlimItem",
+                new PyDict {
+                    {"itemID", new PyInt (m_self->itemID ())},
+                    {"typeID", new PyInt (m_self->typeID ())},
+                    {"categoryID", new PyInt (m_self->categoryID ())},
+                    {"ownerID", new PyInt (m_ownerID)},
+                    {"corpID", IsCorp (m_corpID) ? new PyInt (m_corpID) : PyStatic.NewNone ()},
+                    {"allianceID", IsAlliance (m_allyID) ? new PyInt (m_allyID) : PyStatic.NewNone ()},
+                    {"warFactionID", IsFaction (m_warID) ? new PyInt (m_warID) : PyStatic.NewNone ()},
+                    {"numLaunchers", PyStatic.NewOne ()},
+                    {"sourceModuleID", m_moduleRef.get () != nullptr ? new PyInt (m_moduleRef->itemID ()) : PyStatic.NewNone ()},
+                    {"securityStatus", new PyFloat (m_secStatus)},
+                    {"warpingAway", m_state == Probe::State::Returning ? PyStatic.NewFalse () : PyStatic.NewTrue ()}, // this is sent when probe warps
+                }
+            )
+        }
+    };
+
     m_destiny->SendSingleDestinyUpdate(&updates, true);
 }
 

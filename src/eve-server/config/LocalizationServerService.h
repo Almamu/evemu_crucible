@@ -35,8 +35,8 @@ public:
     LocalizationServerService();
 
 protected:
-    PyResult GetAllTextChanges(PyCallArgs& call, PyDict* hashDict);
-    PyResult UpdateLocalizationQASettings(PyCallArgs& call);
+  EVEResult GetAllTextChanges(EVECallArgs& call, PyDict* hashDict);
+  EVEResult UpdateLocalizationQASettings(EVECallArgs& call);
 };
 
 #endif

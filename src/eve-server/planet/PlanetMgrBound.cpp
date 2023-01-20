@@ -62,16 +62,16 @@ PlanetMgrService::PlanetMgrService(EVEServiceManager &mgr) :
     this->Add("GetMyLaunchesDetails", &PlanetMgrService::GetMyLaunchesDetails);
 }
 
-BoundDispatcher* PlanetMgrService::BindObject(Client *client, PyRep* bindParameters) {
+BoundDispatcher* PlanetMgrService::BindObject(Client *client, PyDataType* bindParameters) {
     /* sends planetID */
     _log(PLANET__INFO, "PlanetMgrService bind request for:");
-    bindParameters->Dump(PLANET__INFO, "    ");
-    if (!bindParameters->IsInt()) {
+    bindParameters->dump(PLANET__INFO, "    ");
+    if (!bindParameters->is<PyInt>()) {
         _log(SERVICE__ERROR, "%s Service: invalid bind argument type %s", GetName().c_str(), bindParameters->TypeString());
         return nullptr;
     }
 
-    uint32 planetID = bindParameters->AsInt()->value();
+    uint32 planetID = bindParameters->as<PyInt>()->value();
     auto it = this->m_instances.find (planetID);
 
     if (it != this->m_instances.end ())
@@ -106,25 +106,25 @@ void PlanetMgrService::BoundReleased (PlanetMgrBound* bound) {
     this->m_instances.erase (it);
 }
 
-PyResult PlanetMgrService::GetPlanetsForChar(PyCallArgs &call) {
+EVEResult PlanetMgrService::GetPlanetsForChar(EVECallArgs&call) {
     return PlanetDB::GetPlanetsForChar(call.client->GetCharacterID());
 }
 
-PyResult PlanetMgrService::GetMyLaunchesDetails(PyCallArgs &call) {
+EVEResult PlanetMgrService::GetMyLaunchesDetails(EVECallArgs&call) {
     return PlanetDB::GetMyLaunchesDetails(call.client->GetCharacterID());
 }
 
-PyResult PlanetMgrService::GetPlanet(PyCallArgs& call, PyInt* planetID) {
+EVEResult PlanetMgrService::GetPlanet(EVECallArgs& call, PyInt* planetID) {
     _log(PLANET__DEBUG, "PlanetMgrService::Handle_GetPlanet() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return nullptr;
 }
 
-PyResult PlanetMgrService::DeleteLaunch(PyCallArgs& call, PyInt* launchID) {
+EVEResult PlanetMgrService::DeleteLaunch(EVECallArgs& call, PyInt* launchID) {
     //sm.RemoteSvc('planetMgr').DeleteLaunch
     _log(PLANET__DEBUG, "PlanetMgrService::Handle_DeleteLaunch() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return nullptr;
 }
@@ -159,7 +159,7 @@ PlanetMgrBound::PlanetMgrBound (EVEServiceManager& mgr, PlanetMgrService& parent
     this->Add("GMRunDepletionSim", &PlanetMgrBound::GMRunDepletionSim);
 }
 
-PyResult PlanetMgrBound::GetPlanetResourceInfo(PyCallArgs &call) {
+EVEResult PlanetMgrBound::GetPlanetResourceInfo(EVECallArgs&call) {
     if (!sConfig.cosmic.PIEnabled) {
         call.client->SendErrorMsg("The PI system is currently disabled.");
         return nullptr;
@@ -168,36 +168,36 @@ PyResult PlanetMgrBound::GetPlanetResourceInfo(PyCallArgs &call) {
     return m_planet->GetPlanetResourceInfo();
 }
 
-PyResult PlanetMgrBound::GetPlanetInfo(PyCallArgs &call) {
+EVEResult PlanetMgrBound::GetPlanetInfo(EVECallArgs&call) {
     if (!sConfig.cosmic.PIEnabled) {
         call.client->SendErrorMsg("The PI system is currently disabled.");
         return nullptr;
     }
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GetPlanetInfo() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
-    PyRep* res = m_planet->GetPlanetInfo(m_colony);
-        res->Dump(PLANET__RES_DUMP, "    ");
+    PyDataType* res = m_planet->GetPlanetInfo(m_colony);
+        res->dump(PLANET__RES_DUMP, "    ");
 
     return res;
 }
 
-PyResult PlanetMgrBound::GetExtractorsForPlanet(PyCallArgs &call, PyInt* planetID) {
+EVEResult PlanetMgrBound::GetExtractorsForPlanet(EVECallArgs&call, PyInt* planetID) {
     return m_planet->GetExtractorsForPlanet(planetID->value());
 }
 
-PyResult PlanetMgrBound::UserUpdateNetwork(PyCallArgs &call, PyList* commandList) {
+EVEResult PlanetMgrBound::UserUpdateNetwork(EVECallArgs&call, PyList* commandList) {
     if (!sConfig.cosmic.PIEnabled) {
         call.client->SendErrorMsg("The PI system is currently disabled.");
         return nullptr;
     }
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_UserUpdateNetwork() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return m_planetMgr->UpdateNetwork(commandList);
 }
 
-PyResult PlanetMgrBound::GetProgramResultInfo(PyCallArgs &call, PyInt* ecuID, PyInt* typeID, PyList* heads, PyFloat* headRadius) {
+EVEResult PlanetMgrBound::GetProgramResultInfo(EVECallArgs&call, PyInt* ecuID, PyInt* typeID, PyList* heads, PyFloat* headRadius) {
     /*
         qtyToDistribute, cycleTime, numCycles = self.remoteHandler.GetProgramResultInfo(pinID, typeID, pin.heads, headRadius)
 
@@ -224,14 +224,14 @@ PyResult PlanetMgrBound::GetProgramResultInfo(PyCallArgs &call, PyInt* ecuID, Py
      * 09:13:36 [PlanetCallDump]         [ 3] Real field: 0.050000                  << largest size.  14d
 
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GetProgramResultInfo() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
      */
     return sPIDataMgr.GetProgramResultInfo(m_colony, ecuID->value(), typeID->value(), heads, headRadius->value());
 }
 
-PyResult PlanetMgrBound::GetResourceData(PyCallArgs &call, PyObject* info) {
+EVEResult PlanetMgrBound::GetResourceData(EVECallArgs&call, PyObject* info) {
     //_log(PLANET__DEBUG, "PlanetMgrBound::Handle_GetResourceData() size=%lli", call.tuple->size());
-    //call.Dump(PLANET__DUMP);
+    //call.dump(PLANET__DUMP);
     /*
         inRange, sh = planet.GetResourceData(resourceTypeID)        << check packets for this call --- none.  :(
 */
@@ -258,7 +258,7 @@ PyResult PlanetMgrBound::GetResourceData(PyCallArgs &call, PyObject* info) {
 
 
     Call_ResourceDataDict dict;
-    PyDict* input = info->arguments()->AsDict();
+    PyDict* input = info->arguments()->as<PyDict>();
     //input->Dump(PLANET__DUMP, "   ");
     if (!dict.Decode(&input)) {
         codelog(SERVICE__ERROR, "PlanetMgrBound: Failed to decode arguments.");
@@ -269,22 +269,22 @@ PyResult PlanetMgrBound::GetResourceData(PyCallArgs &call, PyObject* info) {
 }
 
 //01:52:23 [PlanetDebug] PlanetMgrBound::Handle_UserAbandonPlanet() size=0
-PyResult PlanetMgrBound::UserAbandonPlanet(PyCallArgs &call) {
+EVEResult PlanetMgrBound::UserAbandonPlanet(EVECallArgs&call) {
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_UserAbandonPlanet() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     m_planet->AbandonColony(m_colony);
 
     return nullptr;
 }
 
-PyResult PlanetMgrBound::UserLaunchCommodities(PyCallArgs &call, PyInt* commandPinID, PyDict* commoditiesToLaunch) {
+EVEResult PlanetMgrBound::UserLaunchCommodities(EVECallArgs&call, PyInt* commandPinID, PyDict* commoditiesToLaunch) {
     /*
             lastLaunchTime = self.remoteHandler.UserLaunchCommodities(commandPinID, commoditiesToLaunch)
             for typeID, qty in commoditiesToLaunch.iteritems():
             */
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_UserLaunchCommodities() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
     /* 20:00:35 L PlanetMgrBound: Handle_UserLaunchCommodities() size=2
      * 20:00:35 [PlanetCallDump]   Call Arguments:
      * 20:00:35 [PlanetCallDump]       Tuple: 2 elements
@@ -300,20 +300,20 @@ PyResult PlanetMgrBound::UserLaunchCommodities(PyCallArgs &call, PyInt* commandP
 21:44:05 [PlanetCallDump]    Dictionary: 1 entries
 21:44:05 [PlanetCallDump]      [ 0] Key: Integer field: 3645
 21:44:05 [PlanetCallDump]      [ 0] Value: Real field: 120.000000   << no clue why this changed to float from int.
-eve-server: /usr/local/src/eve/EVEmu/src/eve-common/python/PyRep.h:141: PyInt* PyRep::AsInt(): Assertion `IsInt()' failed.
+eve-server: /usr/local/src/eve/EVEmu/src/eve-common/python/PyRep.h:141: PyInt* PyRep::as<PyInt>(): Assertion `IsInt()' failed.
      */
     //dict->Dump(PLANET__DUMP, "   ");
     std::map<uint16, uint32> items;
     PyDict::const_iterator itr = commoditiesToLaunch->begin();
     for (; itr != commoditiesToLaunch->end(); ++itr)
-        items.insert(std::pair<uint16, uint32>(PyRep::IntegerValue(itr->first), PyRep::IntegerValue(itr->second)));
+        items.insert(std::pair<uint16, uint32>(itr->first->i64(), itr->second->i64()));
 
     return m_colony->LaunchCommodities(commandPinID->value(), items);
 }
 
-PyResult PlanetMgrBound::UserTransferCommodities(PyCallArgs &call, PyList* path, PyDict* commodities) {
+EVEResult PlanetMgrBound::UserTransferCommodities(EVECallArgs&call, PyList* path, PyDict* commodities) {
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_UserTransferCommodities() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 /*
         simTime, sourceRunTime = self.remoteHandler.UserTransferCommodities(path, commodities)
         {{ simTime = time to stop (complete time), sourceRunTime = previous runtime}}
@@ -336,9 +336,9 @@ PyResult PlanetMgrBound::UserTransferCommodities(PyCallArgs &call, PyList* path,
     std::map<uint16, uint32> items;
     PyDict::const_iterator itr = commodities->begin();
     for (; itr != commodities->end(); ++itr)
-        items.insert(std::pair<uint16, uint32>(PyRep::IntegerValue(itr->first), PyRep::IntegerValue(itr->second)));
+        items.insert(std::pair<uint16, uint32>(itr->first->i64(), itr->second->i64()));
 
-    return m_colony->TransferCommodities(PyRep::IntegerValue(path->items.front()), PyRep::IntegerValue(path->items.back()), items);
+    return m_colony->TransferCommodities(path->mItems.front()->i64(), path->mItems.back()->i64(), items);
 }
 
 
@@ -346,7 +346,7 @@ PyResult PlanetMgrBound::UserTransferCommodities(PyCallArgs &call, PyList* path,
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult PlanetMgrBound::GetCommandPinsForPlanet(PyCallArgs &call, PyInt* planetID) {
+EVEResult PlanetMgrBound::GetCommandPinsForPlanet(EVECallArgs&call, PyInt* planetID) {
     /*  called by "get other character's networks" in planet menu
      * 16:42:42 [PlanetDebug] PlanetMgrBound::Handle_GetCommandPinsForPlanet() size=1
      * 16:42:42 [PlanetCallDump]   Call Arguments:
@@ -354,30 +354,30 @@ PyResult PlanetMgrBound::GetCommandPinsForPlanet(PyCallArgs &call, PyInt* planet
      * 16:42:42 [PlanetCallDump]         [ 0] Integer field: 40159411
      */
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GetCommandPinsForPlanet() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     // returns empty dict if none
     return new PyDict();
 }
 
-PyResult PlanetMgrBound::GetFullNetworkForOwner(PyCallArgs &call, PyInt* planetID, PyInt* characterID) {
+EVEResult PlanetMgrBound::GetFullNetworkForOwner(EVECallArgs&call, PyInt* planetID, PyInt* characterID) {
     /*
      */
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GetFullNetworkForOwner() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     // returns empty dict if none
     return new PyDict();
 }
 
-PyResult PlanetMgrBound::GMAddCommodity(PyCallArgs &call, PyInt* pinID, PyInt* typeID, PyInt* quantity) {
+EVEResult PlanetMgrBound::GMAddCommodity(EVECallArgs&call, PyInt* pinID, PyInt* typeID, PyInt* quantity) {
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GMAddCommodity() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return nullptr;
 }
 
-PyResult PlanetMgrBound::GMConvertCommandCenter(PyCallArgs &call, PyInt* pinID) {
+EVEResult PlanetMgrBound::GMConvertCommandCenter(EVECallArgs&call, PyInt* pinID) {
     //self.remoteHandler.GMConvertCommandCenter(pinID)
     //  this is an option in the GM planet menu.  no clue what it's for or what it does.....
     /*
@@ -388,14 +388,14 @@ PyResult PlanetMgrBound::GMConvertCommandCenter(PyCallArgs &call, PyInt* pinID) 
      */
 
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GMConvertCommandCenter() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return nullptr;
 }
 
-PyResult PlanetMgrBound::GMForceInstallProgram(PyCallArgs &call, PyInt* pinID, PyInt* typeID, PyInt* cycleTime, PyInt* lifetimeHours, PyInt* qtyPerCycle, PyFloat* radius) {
+EVEResult PlanetMgrBound::GMForceInstallProgram(EVECallArgs&call, PyInt* pinID, PyInt* typeID, PyInt* cycleTime, PyInt* lifetimeHours, PyInt* qtyPerCycle, PyFloat* radius) {
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GMForceInstallProgram() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
     /*
      *        if typeID not in resourceInfo or qtyPerCycle < 0 or cycleTime < 10 * SEC or lifetimeHours < 1 or headRadius <= 0.0:
      *            return
@@ -417,7 +417,7 @@ PyResult PlanetMgrBound::GMForceInstallProgram(PyCallArgs &call, PyInt* pinID, P
 }
 
 //15:15:02[00m L [37;01mPlanetMgrBound: [00mHandle_GMGetLocalDistributionReport() size=2
-PyResult PlanetMgrBound::GMGetLocalDistributionReport(PyCallArgs &call, PyInt* planetID, PyTuple* surfacePoint) {
+EVEResult PlanetMgrBound::GMGetLocalDistributionReport(EVECallArgs&call, PyInt* planetID, PyTuple* surfacePoint) {
     /*
      *      return self.remoteHandler.GMGetLocalDistributionReport(self.planetID, (surfacePoint.theta, surfacePoint.phi))
      */
@@ -429,13 +429,13 @@ PyResult PlanetMgrBound::GMGetLocalDistributionReport(PyCallArgs &call, PyInt* p
      *     15:15:02 [PlanetCallDump]         [ 1]   [ 0] Real field: 0.359286  << theta
      *     15:15:02 [PlanetCallDump]         [ 1]   [ 1] Real field: 1.014020  << phi
      *     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GMGetLocalDistributionReport() size=%lli", call.tuple->size());
-     *     call.Dump(PLANET__DUMP);
+     *     call.dump(PLANET__DUMP);
      */
 
     return nullptr;
 }
 
-PyResult PlanetMgrBound::GMGetSynchedServerState(PyCallArgs &call, PyInt* characterID) {
+EVEResult PlanetMgrBound::GMGetSynchedServerState(EVECallArgs&call, PyInt* characterID) {
     /*
      *    def GMVerifySimulation(self):
      *        self.LogNotice('VerifySimulation -- starting')
@@ -463,12 +463,12 @@ PyResult PlanetMgrBound::GMGetSynchedServerState(PyCallArgs &call, PyInt* charac
      *        self.LogNotice('VerifySimulation -- finished')
      */
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GMGetSynchedServerState() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return nullptr;
 }
 
-PyResult PlanetMgrBound::GMRunDepletionSim(PyCallArgs &call) {
+EVEResult PlanetMgrBound::GMRunDepletionSim(EVECallArgs&call) {
     /*
      * 18:37:58 [ClientCallRep] GMRunDepletionSim call made to
      * 18:37:58 [PlanetDebug] PlanetMgrBound::Handle_GMRunDepletionSim() size=2
@@ -497,7 +497,7 @@ PyResult PlanetMgrBound::GMRunDepletionSim(PyCallArgs &call) {
      * 18:37:58 [PlanetCallDump]         [ 1]   Args:   [ 1] Value:   [ 0]   Args:   [ 4] Value: Real field: 1.104679
      */
     _log(PLANET__DEBUG, "PlanetMgrBound::Handle_GMRunDepletionSim() size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return nullptr;
 }

@@ -27,17 +27,16 @@
 #include "eve-common.h"
 
 #include "database/EVEDBUtils.h"
-#include "packets/General.h"
-#include "python/classes/PyDatabase.h"
-#include "python/PyVisitor.h"
-#include "python/PyRep.h"
+#include "python/database/CRowset.h"
+#include "python/database/CIndexedRowset.h"
+#include "python/database/CFilterRowset.h"
 
 
-PyRep* DBColumnToPyRep(const DBResultRow& row, uint32 index)
+PyDataType* DBColumnToPyDataType(const DBResultRow& row, uint32 index, PythonArena* arena)
 {
     /* check for valid column */
     if (row.IsNull(index))
-        return PyStatic.NewNone();      // this doesnt work right.  client still sees this as 0 instead of None
+        return arena->None ();      // this doesnt work right.  client still sees this as 0 instead of None
 
     switch(row.ColumnType(index)) {
         case DBTYPE_I1:
@@ -46,99 +45,101 @@ PyRep* DBColumnToPyRep(const DBResultRow& row, uint32 index)
         case DBTYPE_UI2:
         case DBTYPE_I4:
         case DBTYPE_UI4:
-            return new PyInt(row.GetInt(index));
+            return arena->Int(row.GetInt(index));
 
         case DBTYPE_I8:
         case DBTYPE_UI8:
-            return new PyLong(row.GetInt64(index));
+            return arena->Int(row.GetInt64(index));
 
         case DBTYPE_R8:
         case DBTYPE_R4:
-            return new PyFloat(row.GetDouble(index));
+            return arena->Float(row.GetDouble(index));
 
         case DBTYPE_BOOL:
-            return new PyBool(row.GetBool(index));
+            return arena->Bool(row.GetBool(index));
 
         case DBTYPE_STR:
-            return new PyString(row.GetText(index), row.ColumnLength(index));
+            return arena->String(row.GetText(index), row.ColumnLength(index));
 
         case DBTYPE_WSTR:
-            return new PyWString(row.GetText(index), row.ColumnLength(index));
+            return arena->String(row.GetText(index), row.ColumnLength(index), true);
 
         case DBTYPE_BYTES: {
             const uint8* data = (const uint8*)row.GetText(index);
             const uint32 len = row.ColumnLength(index);
-            return new PyBuffer(data, data + len);
+            return arena->Buffer(data, data + len);
         }
 
         default: {
-            sLog.Error("DBColumnToPyRep", "invalid column type: %u", row.ColumnType(index));
-            return PyStatic.NewNone();
+            sLog.Error("DBColumnToPyDataType", "invalid column type: %u", row.ColumnType(index));
+            return arena->None ();
         }
     }
 }
 
-PyObject *DBResultToRowset(DBQueryResult &result)
+PyObject *DBResultToRowset(DBQueryResult &result, PythonArena* arena)
 {
-    uint32 cc(result.ColumnCount());
+    uint32 cc = result.ColumnCount ();
 
-    PyDict *args = new PyDict();
+    PyDict *args = arena->Dict();
 
     /* check if we have a empty query result and return a empty RowSet */
     if (cc == 0)
-        return new PyObject("util.Rowset" , args);
+        return arena->Object(arena->String ("util.Rowset"), args);
 
-    //list off the column names:
-    PyList *header = new PyList(cc);
-    for(uint32 r(0); r < cc; ++r)
-        header->SetItemString(r, result.ColumnName(r));
-    args->SetItemString("header", header);
+    // list off the column names
+    PyList* header = arena->List (cc);
+
+    for (uint32 r = 0; r < cc; ++r)
+        header->set (r, arena->String (result.ColumnName (r)));
+
+    args->set (arena->String ("header"), header);
 
     //RowClass:
-    args->SetItemString("RowClass", new PyToken("util.Row"));
+    args->set (arena->String ("RowClass"), arena->Token ("util.Row"));
 
-    //lines:
-    PyList *rowlist = new PyList();
+    // lines
+    PyList* rowlist = arena->List ();
+
     //add a line entry for each result row:
-    uint32 r(0);
     DBResultRow row;
-    while(result.GetRow(row)) {
-        PyList *linedata = new PyList(cc);
-        for (r = 0; r < cc; ++r)
-            linedata->SetItem(r, DBColumnToPyRep(row, r));
-        rowlist->AddItem(linedata);
-    }
-    args->SetItemString("lines", rowlist);
 
-    return new PyObject("util.Rowset" , args);
+    while (result.GetRow (row)) {
+        PyList* linedata = arena->List (cc);
+        for (uint32 r = 0; r < cc; ++r)
+            linedata->set (r, DBColumnToPyDataType (row, r, arena));
+
+        rowlist->add (linedata);
+    }
+
+    args->set (arena->String ("lines"), rowlist);
+
+    return arena->Object (arena->String ("util.Rowset"), args);
 }
 
-PyTuple *DBResultToTupleSet(DBQueryResult &result) {
-    uint32 cc(result.ColumnCount());
+PyTuple *DBResultToTupleSet(DBQueryResult &result, PythonArena* arena) {
+    uint32 cc = result.ColumnCount ();
     if (cc == 0)
-        return new PyTuple(0);
-
-    PyTuple *res = new PyTuple(2);
+        return arena->Tuple();
 
     //list off the column names:
-    PyList *cols = new PyList(cc);
-    for(uint32 r(0); r < cc; ++r)
-        cols->SetItemString(r, result.ColumnName(r));
-    res->items[0] = cols;
+    PyList* cols = arena->List (cc);
+    for(uint32 r = 0; r < cc; ++r)
+        cols->set(r, arena->String (result.ColumnName(r)));
 
     //add a line entry for each result row:
-    uint32 r(0);
     DBResultRow row;
-    PyList *reslist = new PyList();
+    PyList* reslist = arena->List ();
     while(result.GetRow(row)) {
-        PyList *linedata = new PyList(cc);
-        for(r = 0; r < cc; ++r)
-            linedata->SetItem(r, DBColumnToPyRep(row, r));
-        reslist->items.push_back(linedata);
+        PyList *linedata = arena->List (cc);
+        for (uint32 r = 0; r < cc; ++r)
+            linedata->set (r, DBColumnToPyDataType(row, r, arena));
+        reslist->add (linedata);
     }
-    res->items[1] = reslist;
 
-    return res;
+    return arena->Tuple ({
+        cols, reslist
+    });
 }
 
 /**
@@ -148,23 +149,22 @@ PyTuple *DBResultToTupleSet(DBQueryResult &result) {
  * @param result - DBQueryResult object
  * @param into - PyList to dump values into
  */
-void populateResListWithValues(DBQueryResult &result, PyList *into) {
+void populateResListWithValues(DBQueryResult &result, PyList *into, PythonArena* arena) {
     uint32 cc = result.ColumnCount();
     if (cc == 0) {
         return;
     }
 
     DBResultRow row;
-    uint32 r(0);
     while(result.GetRow(row)) {
-        PyList *linedata = new PyList(cc);
+        PyList *linedata = arena->List (cc);
         for(auto index = 0; index < cc; index++)
-            linedata->SetItem(index, DBColumnToPyRep(row, index));
-        into->items.push_back(linedata);
+            linedata->set (index, DBColumnToPyDataType (row, index, arena));
+        into->add (linedata);
     }
 }
 
-PyObject *DBResultToIndexRowset(DBQueryResult &result, const char *key) {
+PyObject *DBResultToIndexRowset(DBQueryResult &result, const char *key, PythonArena* arena) {
     uint32 cc(result.ColumnCount());
     uint32 key_index(0);
 
@@ -177,124 +177,122 @@ PyObject *DBResultToIndexRowset(DBQueryResult &result, const char *key) {
         return nullptr;
     }
 
-    return DBResultToIndexRowset(result, key_index);
+    return DBResultToIndexRowset(result, key_index, arena);
 }
 
-PyObject *DBResultToIndexRowset(DBQueryResult &result, uint32 key_index) {
+PyObject *DBResultToIndexRowset(DBQueryResult &result, uint32 key_index, PythonArena* arena) {
     uint32 cc(result.ColumnCount());
 
     //start building the IndexRowset
-    PyDict *args = new PyDict();
+    PyDict *args = arena->Dict();
 
     if (cc == 0 || cc < key_index)
-        return new PyObject("util.IndexRowset", args);
+        return arena->Object (arena->String ("util.IndexRowset"), args);
 
     //list off the column names:
-    PyList *header = new PyList(cc);
-    args->SetItemString("header", header);
+    PyList *header = arena->List(cc);
+    args->set (arena->String ("header"), header);
     for (uint32 i(0); i < cc; ++i)
-        header->SetItemString(i, result.ColumnName(i));
+        header->set(i, arena->String (result.ColumnName(i)));
 
     //RowClass:
-    args->SetItemString("RowClass", new PyToken("util.Row"));
+    args->set (arena->String ("RowClass"), arena->Token("util.Row"));
     //idName:
-    args->SetItemString("idName", new PyString(result.ColumnName(key_index)));
+    args->set(arena->String ("idName"), arena->String(result.ColumnName(key_index)));
 
     //items:
-    PyDict *items = new PyDict();
+    PyDict *items = arena->Dict();
     //add a line entry for each result row:
     uint32 i(0);
     DBResultRow row;
     while(result.GetRow(row)) {
-        PyRep *key = DBColumnToPyRep(row, key_index);
-        PyList *line = new PyList(cc);
+        PyDataType *key = DBColumnToPyDataType(row, key_index, arena);
+        PyList *line = arena->List(cc);
         for (i = 0; i < cc; ++i)
-            line->SetItem(i, DBColumnToPyRep(row, i));
+            line->set (i, DBColumnToPyDataType(row, i, arena));
 
-        items->SetItem(key, line);
+        items->set (key, line);
     }
 
-    args->SetItemString("items", items);
-    return new PyObject("util.IndexRowset", args);
+    args->set(arena->String ("items"), items);
+    return arena->Object(arena->String ("util.IndexRowset"), args);
 }
 
-PyObject *DBRowToKeyVal(DBResultRow &row) {
-    PyDict *args = new PyDict();
+PyObject *DBRowToKeyVal(DBResultRow &row, PythonArena* arena) {
+    PyDict *args = arena->Dict();
     uint32 cc(row.ColumnCount());
     for (uint32 r(0); r < cc; ++r)
-        args->SetItemString(row.ColumnName(r), DBColumnToPyRep(row, r));
+        args->set (arena->String (row.ColumnName(r)), DBColumnToPyDataType(row, r, arena));
 
-    return new PyObject("util.KeyVal", args);
+    return arena->Object(arena->String ("util.KeyVal"), args);
 }
 
-PyObject *DBRowToRow(DBResultRow &row, const char *type)
+PyObject *DBRowToRow(DBResultRow &row, const char *type, PythonArena* arena)
 {
-    PyDict *args = new PyDict();
+    PyDict *args = arena->Dict();
 
     //list off the column names:
     uint32 cc(row.ColumnCount());
-    PyList *header = new PyList(cc);
+    PyList *header = arena->List(cc);
     for (uint32 r(0); r < cc; ++r)
-        header->SetItemString(r, row.ColumnName(r));
+        header->set (r, arena->String (row.ColumnName(r)));
 
-    args->SetItemString("header", header);
+    args->set (arena->String ("header"), header);
 
     //lines:
-    PyList *rowlist = new PyList(cc);
+    PyList *rowlist = arena->List(cc);
     //add a line entry for the row:
     for (uint32 r(0); r < cc; ++r)
-        rowlist->SetItem(r, DBColumnToPyRep(row, r));
+        rowlist->set (r, DBColumnToPyDataType(row, r, arena));
 
-    args->SetItemString("line", rowlist);
+    args->set (arena->String ("line"), rowlist);
 
-    return new PyObject(type, args);
+    return arena->Object(arena->String (type), args);
 }
 
-PyTuple *DBResultToRowList(DBQueryResult &result, const char *type) {
+PyTuple *DBResultToRowList(DBQueryResult &result, PythonArena* arena, const char *type) {
     uint32 cc(result.ColumnCount());
     if (cc == 0)
-        return(new PyTuple(0));
+        return arena->Tuple();
 
-    PyList *cols = new PyList(cc);
+    PyList *cols = arena->List(cc);
     //list off the column names:
     for(uint32 r(0); r < cc; ++r)
-        cols->SetItemString(r, result.ColumnName(r));
-
-    PyTuple *res = new PyTuple(2);
-    res->SetItem(0, cols);
+        cols->set (r, arena->String (result.ColumnName(r)));
 
     //add a line entry for each result row:
     DBResultRow row;
-    PyList *reslist = new PyList();
+    PyList *reslist = arena->List();
     while(result.GetRow(row)) {
         //this could be more efficient by not building the column list each time, but cloning it instead.
-        PyObject *o = DBRowToRow(row, type);
-        reslist->items.push_back(o);
+        PyObject *o = DBRowToRow(row, type, arena);
+        reslist->add(o);
     }
-    res->SetItem(1, reslist);
 
-    return res;
+    return arena->Tuple ({
+        cols, reslist
+    });
 }
 
-PyDict* DBResultToIntRowDict(DBQueryResult &result, uint32 key_index, const char *type) {
-    PyDict* res = new PyDict();
+PyDict* DBResultToIntRowDict(DBQueryResult &result, uint32 key_index, PythonArena* arena, const char *type) {
+    PyDict* res = arena->Dict();
     int32 k(0);
     //add a line entry for each result row:
     DBResultRow row;
     while (result.GetRow(row)) {
         //this could be more efficient by not building the column list each time, but cloning it instead.
-        PyObject *r = DBRowToRow(row, type);
+        PyObject *r = DBRowToRow(row, type, arena);
         k = row.GetInt(key_index);
         if (k == 0)
             continue;   //likely a non-integer key
-        res->SetItem(new PyInt(k), r);
+        res->set(arena->Int(k), r);
     }
 
     return res;
 }
 
-PyDict* DBResultToIntIntDict(DBQueryResult &result) {
-    PyDict* res = new PyDict();
+PyDict* DBResultToIntIntDict(DBQueryResult &result, PythonArena* arena) {
+    PyDict* res = arena->Dict();
     int32 k(0);
     //add a line entry for each result row:
     DBResultRow row;
@@ -305,37 +303,37 @@ PyDict* DBResultToIntIntDict(DBQueryResult &result) {
         if (k == 0)
             continue;   //likely a non-integer key
         if (row.IsNull(1))
-            res->SetItem(new PyInt(k), PyStatic.NewNone());
+            res->set(arena->Int(k), PyStatic.NewNone());
         else
-            res->SetItem(new PyInt(k), new PyInt(row.GetInt(1)));
+            res->set(arena->Int(k), arena->Int(row.GetInt(1)));
     }
 
     return res;
 }
 
-void FillPackedRow(const DBResultRow& row, PyPackedRow* into)
+void FillPackedRow(const DBResultRow& row, PyPackedRow* into, PythonArena* arena = HeapPythonArena::instance)
 {
     uint32 cc(row.ColumnCount());
     for (uint32 i(0); i < cc; ++i)
-        into->SetField(i, DBColumnToPyRep(row, i));
+        into->set (i, DBColumnToPyDataType(row, i, arena));
 }
 
-PyPackedRow* CreatePackedRow(const DBResultRow& row, DBRowDescriptor* header)
+PyPackedRow* CreatePackedRow(const DBResultRow& row, DBRowDescriptor* header, PythonArena* arena)
 {
-    PyPackedRow* res = new PyPackedRow(header);
-    FillPackedRow(row, res);
+    PyPackedRow* res = arena->PackedRow(header);
+    FillPackedRow(row, res, arena);
     return res;
 }
 
-PyList* DBResultToPackedRowList(DBQueryResult &result)
+PyList* DBResultToPackedRowList(DBQueryResult &result, PythonArena* arena)
 {
-    DBRowDescriptor *header = new DBRowDescriptor(result);
-    PyList * list = new PyList(result.GetRowCount());
+    DBRowDescriptor *header = new(arena) DBRowDescriptor(result);
+    PyList * list = arena->List(result.GetRowCount());
 
     uint32 i(0);
     DBResultRow row;
     while(result.GetRow(row)) {
-        list->SetItem(i++, CreatePackedRow(row, header));
+        list->set (i++, CreatePackedRow(row, header, arena));
         PyIncRef(header);
     }
 
@@ -343,25 +341,24 @@ PyList* DBResultToPackedRowList(DBQueryResult &result)
     return list;
 }
 
-PyTuple* DBResultToPackedRowListTuple(DBQueryResult &result)
+PyTuple* DBResultToPackedRowListTuple(DBQueryResult &result, PythonArena* arena)
 {
-    DBRowDescriptor* header = new DBRowDescriptor(result);
-    PyList* list = new PyList(result.GetRowCount());
+    DBRowDescriptor* header = new(arena) DBRowDescriptor(result);
+    PyList* list = arena->List(result.GetRowCount());
 
     DBResultRow row;
     uint32 i(0);
     while(result.GetRow(row)) {
-        list->SetItem(i++, CreatePackedRow(row, header));
+        list->set (i++, CreatePackedRow(row, header, arena));
         PyIncRef(header);
     }
 
-    PyTuple* res = new PyTuple(2);
-        res->SetItem(0, header);
-        res->SetItem(1, list);
-    return res;
+    return arena->Tuple ({
+        header, list
+    });
 }
 
-PyDict *DBResultToPackedRowDict(DBQueryResult &result, const char *key)
+PyDict *DBResultToPackedRowDict(DBQueryResult &result, const char *key, PythonArena* arena)
 {
     uint32 cc(result.ColumnCount());
     uint32 key_index(0);
@@ -376,18 +373,18 @@ PyDict *DBResultToPackedRowDict(DBQueryResult &result, const char *key)
         return nullptr;
     }
 
-    return DBResultToPackedRowDict(result, key_index);
+    return DBResultToPackedRowDict(result, key_index, arena);
 }
 
-PyDict *DBResultToPackedRowDict(DBQueryResult &result, uint32 key_index)
+PyDict *DBResultToPackedRowDict(DBQueryResult &result, uint32 key_index, PythonArena* arena)
 {
-    DBRowDescriptor *header = new DBRowDescriptor(result);
+    DBRowDescriptor *header = new(arena) DBRowDescriptor(result);
 
-    PyDict *res = new PyDict();
+    PyDict *res = arena->Dict();
 
     DBResultRow row;
     while(result.GetRow(row)) {
-        res->SetItem(DBColumnToPyRep(row, key_index), CreatePackedRow(row, header));
+        res->set(DBColumnToPyDataType(row, key_index, arena), CreatePackedRow(row, header, arena));
         PyIncRef(header);
     }
 
@@ -423,24 +420,22 @@ PyDict *DBResultToPackedRowDict(DBQueryResult &result, uint32 key_index)
 
 /* this is a very monstrous implementation of a Python Class/Function call
  */
-PyObjectEx *DBResultToCRowset(DBQueryResult &result)
+PyObjectEx *DBResultToCRowset(DBQueryResult &result, PythonArena* arena)
 {
     /** @todo Mem leak.  `header` never freed */
-    DBRowDescriptor *header = new DBRowDescriptor(result);
-    CRowSet *rowset = new CRowSet(&header);
+    DBRowDescriptor *header = new(arena) DBRowDescriptor(result);
+    CRowset *rowset = new(arena) CRowset(header);
 
     DBResultRow row;
-    while(result.GetRow(row))
-    {
-        PyPackedRow* into = rowset->NewRow();
-        FillPackedRow(row, into);
+    while(result.GetRow(row)) {
+        FillPackedRow(row, rowset->insert (), arena);
     }
 
     //PyDecRef(header);
     return rowset;
 }
 
-PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, const char *key)
+PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, const char *key, PythonArena* arena)
 {
     uint32 cc(result.ColumnCount());
     uint32 key_index(0);
@@ -454,28 +449,28 @@ PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, const char *key)
         return nullptr;
     }
 
-    return DBResultToCIndexedRowset(result, key_index);
+    return DBResultToCIndexedRowset(result, key_index, arena);
 }
 
-PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, uint32 key_index) {
+PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, uint32 key_index, PythonArena* arena) {
     /** @todo Mem leak.  `header` never freed */
-    DBRowDescriptor *header = new DBRowDescriptor(result);
-    CIndexedRowSet *rowset = new CIndexedRowSet(&header);
+    DBRowDescriptor *header = new(arena) DBRowDescriptor(result);
+    CIndexedRowset *rowset = new(arena) CIndexedRowset(header, result.ColumnName (key_index));
 
     DBResultRow row;
     while (result.GetRow(row)) {
-        PyPackedRow* into = rowset->NewRow(DBColumnToPyRep(row, key_index));
-        FillPackedRow(row, into);
+        PyPackedRow* into = rowset->insert(DBColumnToPyDataType(row, key_index, arena));
+        FillPackedRow(row, into, arena);
     }
 
     //PyDecRef(header);
     return rowset;
 }
 
-PyPackedRow *DBRowToPackedRow(DBResultRow &row)
+PyPackedRow *DBRowToPackedRow(DBResultRow &row, PythonArena* arena)
 {
-    DBRowDescriptor *header = new DBRowDescriptor(row);
-    return CreatePackedRow(row, header);
+    DBRowDescriptor *header = new(arena) DBRowDescriptor(row);
+    return CreatePackedRow(row, header, arena);
 }
 
 void DBResultToIntIntDict(DBQueryResult &result, std::map<int32, int32> &into) {
@@ -518,14 +513,14 @@ void DBResultToUIntUIntDict(DBQueryResult &result, std::map<uint32, uint32> &int
     }
 }
 
-void DBResultToIntIntlistDict(DBQueryResult &result, std::map<int32, PyRep *> &into) {
+void DBResultToIntIntlistDict(DBQueryResult &result, std::map<int32, PyDataType *> &into, PythonArena* arena) {
     /* this builds a map from the int in result[0], to a list of each result[1]
      * which is has the same result[0]. This function assumes the result is
      * ORDER BY result[0]
      */
     uint32 last_key = 0xFFFFFFFF;
 
-    PyList *l(nullptr);
+    PyList* l = nullptr;
 
     DBResultRow row;
     while(result.GetRow(row))
@@ -534,15 +529,15 @@ void DBResultToIntIntlistDict(DBQueryResult &result, std::map<int32, PyRep *> &i
         if (k != last_key)
         {
             //watch for overwrite, no guarantee we are dealing with a key.
-            std::map<int32, PyRep *>::iterator res = into.find(k);
+            std::map<int32, PyDataType *>::iterator res = into.find(k);
             if (res != into.end())
                 PyDecRef(res->second);
             //log an error or warning?
 
-            into[k] = (l = new PyList());
+            into[k] = (l = arena->List());
             last_key = k;
         }
 
-        l->AddItemInt(row.GetInt(1));
+        l->add (arena->Int (row.GetInt (1)));
     }
 }

@@ -38,7 +38,7 @@ class ObjectCachedMethodID {
 public:
     ObjectCachedMethodID(const char *service, const char *method);
     ~ObjectCachedMethodID();
-    PyRep *objectID;
+    PyDataType *objectID;
 };
 
 //little helper class for repeated code and memory management
@@ -46,7 +46,7 @@ class ObjectCachedSessionMethodID {
 public:
     ObjectCachedSessionMethodID(const char *service, const char *method, int32 sessionValue);
     ~ObjectCachedSessionMethodID();
-    PyRep *objectID;
+    PyDataType *objectID;
 };
 
 class ObjCacheService : public Service <ObjCacheService> {
@@ -64,26 +64,26 @@ public:
     } hintSet;
     void InsertCacheHints(hintSet hset, PyDict *into);
 
-    PyRep *GetCacheHint(const PyRep* objectID);
+    PyDataType *GetCacheHint(PyDataType* objectID);
 
     PySubStream* LoadCachedFile(const char *filename, const char *oname);
 
     //handlers for simple cached method calls.
-    bool IsCacheLoaded(const PyRep *objectID) const;
+    bool IsCacheLoaded(PyDataType *objectID) const;
     bool IsCacheLoaded(const ObjectCachedMethodID &m) const { return(IsCacheLoaded(m.objectID)); }
     bool IsCacheLoaded(const ObjectCachedSessionMethodID &m) const { return(IsCacheLoaded(m.objectID)); }
 
-    void InvalidateCache(const PyRep *objectID);
+    void InvalidateCache(PyDataType *objectID);
     void InvalidateCache(const ObjectCachedMethodID &m) { InvalidateCache(m.objectID); }
 
-    void GiveCache(const PyRep *objectID, PyRep **contents);
-    void GiveCache(const ObjectCachedMethodID &m, PyRep **contents) { GiveCache(m.objectID, contents); }
-    void GiveCache(const ObjectCachedSessionMethodID &m, PyRep **contents) { GiveCache(m.objectID, contents); }
+    void GiveCache(PyDataType *objectID, PyDataType **contents);
+    void GiveCache(const ObjectCachedMethodID &m, PyDataType **contents) { GiveCache(m.objectID, contents); }
+    void GiveCache(const ObjectCachedSessionMethodID &m, PyDataType **contents) { GiveCache(m.objectID, contents); }
 
-    PyObject *MakeObjectCachedMethodCallResult(const PyRep *objectID, const char *versionCheck="run");
+    PyObject *MakeObjectCachedMethodCallResult(PyDataType *objectID, const char *versionCheck="run");
     PyObject *MakeObjectCachedMethodCallResult(const ObjectCachedMethodID &m, const char *versionCheck="run") { return(MakeObjectCachedMethodCallResult(m.objectID, versionCheck)); }
 
-    PyObject *MakeObjectCachedSessionMethodCallResult(const PyRep *objectID, const char *sessionInfoName, const char *clientWhen="always");
+    PyObject *MakeObjectCachedSessionMethodCallResult(PyDataType *objectID, const char *sessionInfoName, const char *clientWhen="always");
     PyObject *MakeObjectCachedSessionMethodCallResult(const ObjectCachedSessionMethodID &m, const char *sessionInfoName, const char *clientWhen="always") { return(MakeObjectCachedSessionMethodCallResult(m.objectID, sessionInfoName, clientWhen)); }
 
 protected:
@@ -102,7 +102,7 @@ protected:
     std::string m_cacheDir;
     CachedObjectMgr m_cache;
 
-    bool _LoadCachableObject(const PyRep *objectID);
+    bool _LoadCachableObject(PyDataType *objectID);
 
     typedef std::map<std::string, std::string>  CacheKeysMap;
     typedef CacheKeysMap::iterator              CacheKeysMapItr;
@@ -110,7 +110,7 @@ protected:
 
     CacheKeysMap m_cacheKeys;
 
-    PyResult GetCachableObject(PyCallArgs& call, PyRep* shared, PyRep* objectID, PyTuple* cacheVersion, PyInt* nodeID);
+    EVEResult GetCachableObject(EVECallArgs& call, PyDataType* shared, PyDataType* objectID, PyTuple* cacheVersion, PyInt* nodeID);
 };
 
 #endif

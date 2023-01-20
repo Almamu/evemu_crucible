@@ -44,8 +44,8 @@ public:
     CharUnboundMgrService(EVEServiceManager& mgr);
 
 private:
-    PyResult SelectCharacterID(PyCallArgs& call, PyInt* characterID, std::optional <PyInt*> loadDungeon, std::optional <PyInt*> secondChoiceID);
-    PyResult SelectCharacterID(PyCallArgs& call, PyInt* characterID, std::optional <PyBool*> loadDungeon, std::optional <PyInt*> secondChoiceID);
+  EVEResult SelectCharacterID(EVECallArgs& call, PyInt* characterID, std::optional <PyInt*> loadDungeon, std::optional <PyInt*> secondChoiceID);
+  EVEResult SelectCharacterID(EVECallArgs& call, PyInt* characterID, std::optional <PyBool*> loadDungeon, std::optional <PyInt*> secondChoiceID);
 
     /**
      * \brief Get details on a character id
@@ -55,7 +55,7 @@ private:
      * @param[in] call character id
      * @return PyResult character details
      */
-    PyResult GetCharacterToSelect(PyCallArgs& call, PyInt* characterID);
+  EVEResult GetCharacterToSelect(EVECallArgs& call, PyInt* characterID);
 
     /**
      * \brief Get a list of characters on this account
@@ -65,7 +65,7 @@ private:
      * @param[in] call empty
      * @return PyResult list of characters
      */
-    PyResult GetCharactersToSelect(PyCallArgs& call);
+  EVEResult GetCharactersToSelect(EVECallArgs& call);
 
     /**
      * \brief Get a lightweight list of characters on this account
@@ -75,7 +75,7 @@ private:
      * @param[in] call empty
      * @return PyResult list of characters with characterID and characterName
      */
-    PyResult GetCharacterInfo(PyCallArgs& call);
+  EVEResult GetCharacterInfo(EVECallArgs& call);
 
     /**
      * \brief Client check if this account is currently receiving a character from an character transfer
@@ -85,11 +85,11 @@ private:
      * @param[in] call empty
      * @return PyResult true if there is a character transfer queued for this account, false if not
      */
-    PyResult IsUserReceivingCharacter(PyCallArgs& call);
+  EVEResult IsUserReceivingCharacter(EVECallArgs& call);
 
-    PyResult DeleteCharacter(PyCallArgs& call, PyInt* characterID);
-    PyResult PrepareCharacterForDelete(PyCallArgs& call, PyInt* characterID);
-    PyResult CancelCharacterDeletePrepare(PyCallArgs& call, PyInt* characterID);
+  EVEResult DeleteCharacter(EVECallArgs& call, PyInt* characterID);
+  EVEResult PrepareCharacterForDelete(EVECallArgs& call, PyInt* characterID);
+  EVEResult CancelCharacterDeletePrepare(EVECallArgs& call, PyInt* characterID);
 
     /**
      * \brief Client check to see if a name may be used for a new character
@@ -99,11 +99,11 @@ private:
      * @param[in] call name to check
      * @return PyResult true if the name may be used
      */
-    PyResult ValidateNameEx(PyCallArgs& call, PyRep* name);
+  EVEResult ValidateNameEx(EVECallArgs& call, PyDataType* name);
 
-    PyResult GetCharCreationInfo(PyCallArgs& call);
-    PyResult GetCharNewExtraCreationInfo(PyCallArgs& call);
-    PyResult CreateCharacterWithDoll(PyCallArgs& call, PyRep* characterName, PyInt* bloodlineID, PyInt* genderID, PyInt* ancestryID, PyObject* characterInfo, PyObject* portraitInfo, PyInt* schoolID);
+  EVEResult GetCharCreationInfo(EVECallArgs& call);
+  EVEResult GetCharNewExtraCreationInfo(EVECallArgs& call);
+  EVEResult CreateCharacterWithDoll(EVECallArgs& call, PyDataType* characterName, PyInt* bloodlineID, PyInt* genderID, PyInt* ancestryID, PyObject* characterInfo, PyObject* portraitInfo, PyInt* schoolID);
 
 private:
     ObjCacheService* m_cache;

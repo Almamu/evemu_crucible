@@ -54,10 +54,10 @@ public:
     virtual bool                LoadExtras();
 
     /* specific functions for this class */
-    PyRep*                      GetPlanetInfo(Colony* pColony);
-    PyRep*                      GetResourceData(Call_ResourceDataDict& dict);
-    PyRep*                      GetPlanetResourceInfo();
-    PyRep*                      GetExtractorsForPlanet(int32 planetID);
+    PyDataType*                      GetPlanetInfo(Colony* pColony);
+    PyDataType*                      GetResourceData(Call_ResourceDataDict& dict);
+    PyDataType*                      GetPlanetResourceInfo();
+    PyDataType*                      GetExtractorsForPlanet(int32 planetID);
 
     void                        AbandonColony(Colony* pColony);
     Colony*                     GetColony(Client* pClient);

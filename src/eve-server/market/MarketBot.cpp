@@ -8,7 +8,7 @@
   */
 
 #include "eve-server.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "market/MarketBot.h"
 #include "market/MarketMgr.h"
 #include "market/MarketProxyService.h"

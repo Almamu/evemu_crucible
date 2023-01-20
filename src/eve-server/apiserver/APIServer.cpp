@@ -25,7 +25,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "apiserver/APIAccountManager.h"
 #include "apiserver/APIActiveObjectManager.h"
 #include "apiserver/APIAdminManager.h"

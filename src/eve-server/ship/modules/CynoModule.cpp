@@ -140,12 +140,12 @@ void CynoModule::SendOnJumpBeaconChange(bool active/*false*/) {
         if (cSE != nullptr)
             fieldID = cSE->GetID();
 
-        PyTuple* data = new PyTuple(4);
-            data->SetItem(0, new PyInt(pClient->GetCharacterID()));
-            data->SetItem(1, new PyInt(m_sysMgr->GetID()));
-            data->SetItem(2, new PyInt(fieldID));
-            data->SetItem(3, new PyBool(active));
-
+        PyTuple* data = new PyTuple {
+            new PyInt (pClient->GetCharacterID()),
+            new PyInt (m_sysMgr->GetID()),
+            new PyInt (fieldID),
+            new PyBool (active)
+        };
         std::vector<Client *> fleetClients;
         fleetClients = sFltSvc.GetFleetClients(pClient->GetFleetID());
         for (auto cur : fleetClients)

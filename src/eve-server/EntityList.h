@@ -39,7 +39,7 @@
 
 class Agent;
 class Client;
-class PyAddress;
+class EVEPacketAddress;
 class EVENotificationStream;
 class SystemManager;
 class ProbeSE;
@@ -102,7 +102,7 @@ public:
     SystemManager* FindOrBootSystem(uint32 systemID);
 
     bool IsOnline(uint32 charID);
-    PyRep* PyIsOnline(uint32 charID);
+    PyDataType* PyIsOnline(uint32 charID);
 
     uint32 GetNPCCount()                                { return m_npcs; }
     uint32 GetClientCount() const                       { return m_clients.size(); }
@@ -145,10 +145,10 @@ public:
     // current crazy notification sending methods
     /** @todo this shit needs removal, after new notification methods are completed */
     void Broadcast(const char* notifyType, const char* idType, PyTuple** payload) const;
-    void Broadcast(const PyAddress &dest, EVENotificationStream &noti) const;
+    void Broadcast(const EVEPacketAddress &dest, EVENotificationStream &noti) const;
     void Multicast(const char* notifyType, const char* idType, PyTuple** in_payload, NotificationDestination target, uint32 target_id, bool seq = true);
     void Multicast(const char* notifyType, const char* idType, PyTuple** payload, const MulticastTarget &mcset, bool seq=true);
-    void Multicast(const character_set &cset, const PyAddress &dest, EVENotificationStream &noti) const;
+    void Multicast(const character_set &cset, const EVEPacketAddress &dest, EVENotificationStream &noti) const;
     void Multicast(const character_set &cset, const char* notifyType, const char* idType, PyTuple** payload, bool seq=true) const;
     void Unicast(uint32 charID, const char* notifyType, const char* idType, PyTuple** payload, bool seq=true);
 

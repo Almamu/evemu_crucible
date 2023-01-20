@@ -37,17 +37,17 @@ public:
 
 protected:
     // most of these don't seem to be in the client code anymore and should probably be removed
-    PyResult LookupEvePlayerCharacters(PyCallArgs& call, PyWString* searchString, PyInt* exact);
-    PyResult LookupCharacters(PyCallArgs& call, PyWString* searchString, PyInt* exact);
-    PyResult LookupPCOwners(PyCallArgs& call, PyWString* searchString, PyInt* exact);
-    PyResult LookupOwners(PyCallArgs& call, PyWString* searchString, PyInt* exact);
-    PyResult LookupNoneNPCAccountOwners(PyCallArgs& call, PyWString* searchString, PyInt* exact);
-    PyResult LookupPlayerCharacters(PyCallArgs& call, PyWString* searchString);
-    PyResult LookupCorporations(PyCallArgs& call, PyWString* searchString);
-    PyResult LookupFactions(PyCallArgs& call, PyWString* searchString);
-    PyResult LookupCorporationTickers(PyCallArgs& call, PyWString* searchString);
-    PyResult LookupStations(PyCallArgs& call, PyWString* searchString);
-    PyResult LookupKnownLocationsByGroup(PyCallArgs& call, PyWString* searchString, PyInt* exact);
+  EVEResult LookupEvePlayerCharacters(EVECallArgs& call, PyString* searchString, PyInt* exact);
+  EVEResult LookupCharacters(EVECallArgs& call, PyString* searchString, PyInt* exact);
+  EVEResult LookupPCOwners(EVECallArgs& call, PyString* searchString, PyInt* exact);
+  EVEResult LookupOwners(EVECallArgs& call, PyString* searchString, PyInt* exact);
+  EVEResult LookupNoneNPCAccountOwners(EVECallArgs& call, PyString* searchString, PyInt* exact);
+  EVEResult LookupPlayerCharacters(EVECallArgs& call, PyString* searchString);
+  EVEResult LookupCorporations(EVECallArgs& call, PyString* searchString);
+  EVEResult LookupFactions(EVECallArgs& call, PyString* searchString);
+  EVEResult LookupCorporationTickers(EVECallArgs& call, PyString* searchString);
+  EVEResult LookupStations(EVECallArgs& call, PyString* searchString);
+  EVEResult LookupKnownLocationsByGroup(EVECallArgs& call, PyString* searchString, PyInt* exact);
 };
 
 

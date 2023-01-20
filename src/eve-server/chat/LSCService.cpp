@@ -66,8 +66,8 @@ LSCService::LSCService(EVEServiceManager &mgr, CommandDispatcher* cd) :
     this->Add("GetChannels", &LSCService::GetChannels);
     this->Add("GetRookieHelpChannel", &LSCService::GetRookieHelpChannel);
     this->Add("JoinChannels", &LSCService::JoinChannels);
-    this->Add("LeaveChannels", static_cast <PyResult (LSCService::*)(PyCallArgs& call, PyList* channels, PyBool* usubscribe, PyLong* role)> (&LSCService::LeaveChannels));
-    this->Add("LeaveChannels", static_cast <PyResult (LSCService::*)(PyCallArgs& call, PyList* channels, PyInt* usubscribe, PyLong* role)> (&LSCService::LeaveChannels));
+    this->Add("LeaveChannels", static_cast <EVEResult (LSCService::*)(EVECallArgs& call, PyList* channels, PyBool* usubscribe, PyInt* role)> (&LSCService::LeaveChannels));
+    this->Add("LeaveChannels", static_cast <EVEResult (LSCService::*)(EVECallArgs& call, PyList* channels, PyInt* usubscribe, PyInt* role)> (&LSCService::LeaveChannels));
     this->Add("LeaveChannel", &LSCService::LeaveChannel);
     this->Add("CreateChannel", &LSCService::CreateChannel);
     this->Add("Configure", &LSCService::Configure);
@@ -126,8 +126,7 @@ LSC__RSP_DUMP=0
 
 const int cspa = 2950; // CONCORD Spam Prevention Act
 
-
-PyResult LSCService::GetChannels(PyCallArgs &call)
+EVEResult LSCService::GetChannels(EVECallArgs&call)
 {
     ChannelInfo info;
     info.lines = new PyList();
@@ -156,7 +155,7 @@ PyResult LSCService::GetChannels(PyCallArgs &call)
             } break;
         }
 
-        info.lines->AddItem(cur->second->EncodeStaticChannel(call.client->GetCharacterID()));
+        info.lines->add(cur->second->EncodeStaticChannel(call.client->GetCharacterID()));
     }
 
     if (is_log_enabled(LSC__RSP_DUMP))
@@ -164,36 +163,35 @@ PyResult LSCService::GetChannels(PyCallArgs &call)
     return info.Encode();
 }
 
-
-PyResult LSCService::GetRookieHelpChannel(PyCallArgs &call) {
+EVEResult LSCService::GetRookieHelpChannel(EVECallArgs&call) {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_GetRookieHelpChannel()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
 
     return PyStatic.NewOne();
 }
 
-PyResult LSCService::CreateChannel(PyCallArgs& call, PyRep* channelName)
+EVEResult LSCService::CreateChannel(EVECallArgs& call, PyDataType* channelName)
 {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_CreateChannel()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
 
-    std::string name = PyRep::StringContent(channelName);
+    std::string name = channelName->string();
 
     bool create = false, temporary = false, joinExisting = false, noCallThrottling = false, memberless = false;
     if (call.byname.find("create") != call.byname.end())
-        create =  call.byname.find("create")->second->AsBool()->value();
+        create =  call.byname.find("create")->second->as<PyBool>()->value();
     if (call.byname.find("temporary") != call.byname.end())
-        temporary = call.byname.find("temporary")->second->AsBool()->value();
+        temporary = call.byname.find("temporary")->second->as<PyBool>()->value();
     if (call.byname.find("joinExisting") != call.byname.end())
-        joinExisting = call.byname.find("joinExisting")->second->AsBool()->value();
+        joinExisting = call.byname.find("joinExisting")->second->as<PyBool>()->value();
     if (call.byname.find("noCallThrottling") != call.byname.end())
-        noCallThrottling = call.byname.find("noCallThrottling")->second->AsBool()->value();
+        noCallThrottling = call.byname.find("noCallThrottling")->second->as<PyBool>()->value();
     if (call.byname.find("memberless") != call.byname.end())
-        memberless = (call.byname.find("memberless")->second->AsInt()->value() ? true : false);
+        memberless = (call.byname.find("memberless")->second->as<PyInt>()->value() ? true : false);
 
     Client* pClient = call.client;
     ChannelCreateReply reply;
@@ -270,38 +268,38 @@ PyResult LSCService::CreateChannel(PyCallArgs& call, PyRep* channelName)
     return nullptr;
 }
 
-PyResult LSCService::JoinChannels(PyCallArgs &call, PyList* channelIDs, PyLong* role) {
+EVEResult LSCService::JoinChannels(EVECallArgs&call, PyList* channelIDs, PyInt* role) {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_JoinChannels()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
 
     std::set<int32> toJoin;
 
     PyList::const_iterator cur = channelIDs->begin();
     for (; cur != channelIDs->end(); cur++) {
-        if ((*cur)->IsInt()) {
-            toJoin.insert((*cur)->AsInt()->value());
-        } else if ((*cur)->IsTuple()) {
-            PyTuple* prt = (*cur)->AsTuple();
-            if (prt->items.size() != 1 or !prt->items[0]->IsTuple()) {
-                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+        if ((*cur)->is<PyInt>()) {
+            toJoin.insert((*cur)->as<PyInt>()->value());
+        } else if ((*cur)->is<PyTuple>()) {
+            PyTuple* prt = (*cur)->as<PyTuple>();
+            if (prt->size() != 1 or !prt->at(0)->is<PyTuple>()) {
+                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
                 continue;
             }
-            prt = prt->items[0]->AsTuple();
+            prt = prt->at<PyTuple>(0);
 
-            if (prt->items.size() != 2 or /* !prt->items[0]->IsString() or unnessecary */ !prt->items[1]->IsInt()) {
-                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+            if (prt->size() != 2 or /* !prt->items[0]->is<PyString>() or unnessecary */ !prt->at(1)->is<PyInt>()) {
+                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
                 continue;
             }
-            toJoin.insert(prt->items[1]->AsInt()->value());
+            toJoin.insert(prt->at<PyInt>(1)->value());
         } else {
             codelog(SERVICE__ERROR, "%s: Failed to decode argument ", call.client->GetName());
             return nullptr;
         }
     }
 
-    PyList *ml = new PyList();
+    PyList *ml = call.arena.List();
     LSCChannel* channel(nullptr);
     uint32 charID = call.client->GetCharacterID();
 
@@ -349,44 +347,45 @@ PyResult LSCService::JoinChannels(PyCallArgs &call, PyList* channelIDs, PyLong* 
             chjr.JoinRsp = cjnok.Encode();
             chjr.ok = 0;
         }
-        ml->AddItem(chjr.Encode());
+        // TODO: REMOVE THIS CLONE ONCE THE CLASSES USED ARE MIGRATED TO THE NEW WAY OF DOING THINGS
+        ml->add(chjr.Encode()->clone (&call.arena));
     }
 
     if (is_log_enabled(LSC__RSP_DUMP))
-        ml->Dump(LSC__RSP_DUMP, "   ");
+        ml->dump(LSC__RSP_DUMP, "   ");
     return ml;
 }
 
-PyResult LSCService::SendMessage(PyCallArgs& call, PyRep* channelInfo, PyWString* cMessage)
+EVEResult LSCService::SendMessage(EVECallArgs& call, PyDataType* channelInfo, PyString* cMessage)
 {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_SendMessage()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
 
     int32 channel_id = 0;
     std::string message = "";
 
-    if ((call.tuple->IsTuple()) and (call.tuple->AsTuple()->items[0]->IsInt())) {
+    if ((call.tuple->is<PyTuple>()) and (call.tuple->at(0)->is<PyInt>())) {
         // Decode All User-created chat channel messages here:
-        if (!call.tuple->IsTuple()) {
+        if (!call.tuple->is<PyTuple>()) {
             _log(LSC__ERROR, "LSCService::Handle_SendMessage failed: tuple0 is the wrong type: %s", call.tuple->TypeString());
             return PyStatic.NewNone();
         }
-        PyTuple* tuple0 = call.tuple->AsTuple();
+        PyTuple* tuple0 = call.tuple->as<PyTuple>();
 
         if (tuple0->size() != 2) {
             _log(LSC__ERROR, "LSCService::Handle_SendMessage failed: tuple0 is the wrong size: expected 2, but got %u", tuple0->size());
             return PyStatic.NewNone();
         }
 
-        channel_id = call.tuple->AsTuple()->items[0]->AsInt()->value();
+        channel_id = call.tuple->at<PyInt>(0)->value();
         message = cMessage->content();
         _log(LSC__INFO, "Handle_SendMessage: call is player channel chat.");
     } else {
         Call_SendMessage args;
         if (!args.Decode(&call.tuple)) {
-            codelog(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+            codelog(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
             return PyStatic.NewNone();
         }
         channel_id = args.channel.id;
@@ -411,11 +410,11 @@ PyResult LSCService::SendMessage(PyCallArgs& call, PyRep* channelInfo, PyWString
     return PyStatic.NewNone();
 }
 
-PyResult LSCService::AccessControl(PyCallArgs& call, PyRep* channelInfo, PyInt* characterID, PyInt* role)
+EVEResult LSCService::AccessControl(EVECallArgs& call, PyDataType* channelInfo, PyInt* characterID, PyInt* role)
 {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_AccessControl()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
     /*  args passed as channelID, charID, mode
      *
@@ -444,16 +443,16 @@ PyResult LSCService::AccessControl(PyCallArgs& call, PyRep* channelInfo, PyInt* 
     // in access mode.  Is this really needed though, since the owner will change the mode and the owner's client will know
     // immediately, and anyone wanting to join will get that mode value when the JoinChannel has been called.
 
-    // call.tuple->GetItem(0)->AsInt()->value() = channel ID
-    // call.tuple->GetItem(1)->IsNone() == true  <---- change made to "" field
-    // call.tuple->GetItem(2)->AsInt()->value() =
+    // call.tuple->at (0)->as<PyInt>()->value() = channel ID
+    // call.tuple->at (1)->is<PyNone>() == true  <---- change made to "" field
+    // call.tuple->at (2)->as<PyInt>()->value() =
     //     0 = ??
     //     1 = Moderated
     //     2 = ??
     //     3 = Allowed
 
-    // call.tuple->GetItem(1)->IsInt() == true  <---- character ID for character add to one of the lists specified by GetItem(2):
-    // call.tuple->GetItem(2)->AsInt()->value() =
+    // call.tuple->at (1)->is<PyInt>() == true  <---- character ID for character add to one of the lists specified by GetItem(2):
+    // call.tuple->at (2)->as<PyInt>()->value() =
     //     3 = Add to Allowed List
     //     -2 = Add to Blocked List
     //     7 = Add to Moderators List
@@ -463,7 +462,7 @@ PyResult LSCService::AccessControl(PyCallArgs& call, PyRep* channelInfo, PyInt* 
     return PyStatic.NewOne();
 }
 
-PyResult LSCService::Invite(PyCallArgs& call, PyInt* characterID, PyInt* channelID)
+EVEResult LSCService::Invite(EVECallArgs& call, PyInt* characterID, PyInt* channelID)
 {
     // WARNING: This call contains manual packet decoding to handle chat messages sent inside user-created
     // chat channels since I didn't want to monkey around with the LSCPkts.xmlp.
@@ -507,7 +506,7 @@ PyResult LSCService::Invite(PyCallArgs& call, PyInt* characterID, PyInt* channel
             //chatInvitePacket.integer1 = 1;
             //chatInvitePacket.integer2 = invited_char_ID;
             //chatInvitePacket.boolean = true;
-            //chatInvitePacket.displayName = call.tuple->GetItem(2)->AsString()->content();
+            //chatInvitePacket.displayName = call.tuple->at (2)->as<PyString>()->content();
             //chatInvitePacket.integer3 = 1;
             //chatInvitePacket.integer4 = 0;
             //chatInvitePacket.integer5 = 1;
@@ -525,11 +524,11 @@ PyResult LSCService::Invite(PyCallArgs& call, PyInt* characterID, PyInt* channel
     return PyStatic.NewOne();
 }
 
-PyResult LSCService::Configure(PyCallArgs& call, PyInt* channelID)
+EVEResult LSCService::Configure(EVECallArgs& call, PyInt* channelID)
 {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_Configure()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
     /*
      * 20:43:44 W LSCService::Handle_Configure(): size=1
@@ -582,8 +581,8 @@ PyResult LSCService::Configure(PyCallArgs& call, PyInt* channelID)
 
     channel = m_channels.find(channel_id)->second;
     if (call.byname.find("displayName") != call.byname.end()) {
-        if (call.byname.find("displayName")->second->IsWString()) {
-            channel->SetDisplayName(call.byname.find("displayName")->second->AsWString()->content());
+        if (call.byname.find("displayName")->second->is<PyString>()) {
+            channel->SetDisplayName(call.byname.find("displayName")->second->as<PyString>()->content());
         } else {
             _log(LSC__ERROR, "%s: displayName contained wrong type: '%s'", call.client->GetName(), call.byname.find("displayName")->second->TypeString());
             return nullptr;
@@ -591,8 +590,8 @@ PyResult LSCService::Configure(PyCallArgs& call, PyInt* channelID)
     }
 
     if (call.byname.find("memberless") != call.byname.end()) {
-        if (call.byname.find("memberless")->second->IsInt()) {
-            channel->SetMemberless(call.byname.find("memberless")->second->AsInt()->value() ? true : false);
+        if (call.byname.find("memberless")->second->is<PyInt>()) {
+            channel->SetMemberless(call.byname.find("memberless")->second->as<PyInt>()->value() ? true : false);
         } else {
             _log(LSC__ERROR, "%s: memberless contained wrong type: '%s'", call.client->GetName(), call.byname.find("memberless")->second->TypeString());
             return nullptr;
@@ -600,8 +599,8 @@ PyResult LSCService::Configure(PyCallArgs& call, PyInt* channelID)
     }
 
     if (call.byname.find("motd") != call.byname.end()) {
-        if (call.byname.find("motd")->second->IsWString()) {
-            channel->SetMOTD(call.byname.find("motd")->second->AsWString()->content());
+        if (call.byname.find("motd")->second->is<PyString>()) {
+            channel->SetMOTD(call.byname.find("motd")->second->as<PyString>()->content());
         } else {
             _log(LSC__ERROR, "%s: motd contained wrong type: '%s'", call.client->GetName(), call.byname.find("motd")->second->TypeString());
             return nullptr;
@@ -609,11 +608,11 @@ PyResult LSCService::Configure(PyCallArgs& call, PyInt* channelID)
     }
 
     if (call.byname.find("oldPassword") != call.byname.end()) {
-        if (call.byname.find("oldPassword")->second->IsWString()) {
-            if (channel->GetPassword() == call.byname.find("oldPassword")->second->AsWString()->content()) {
+        if (call.byname.find("oldPassword")->second->is<PyString>()) {
+            if (channel->GetPassword() == call.byname.find("oldPassword")->second->as<PyString>()->content()) {
                 if (call.byname.find("newPassword") != call.byname.end()) {
-                    if (call.byname.find("newPassword")->second->IsWString()) {
-                        channel->SetPassword(call.byname.find("newPassword")->second->AsWString()->content());
+                    if (call.byname.find("newPassword")->second->is<PyString>()) {
+                        channel->SetPassword(call.byname.find("newPassword")->second->as<PyString>()->content());
                     } else {
                         _log(LSC__ERROR, "%s: newPassword contained wrong type: '%s'", call.client->GetName(), call.byname.find("newPassword")->second->TypeString());
                         return nullptr;
@@ -623,10 +622,10 @@ PyResult LSCService::Configure(PyCallArgs& call, PyInt* channelID)
                 _log(LSC__ERROR, "%s: incorrect oldPassword supplied. Password NOT changed.", call.client->GetName());
                 return nullptr;
             }
-        } else if (call.byname.find("oldPassword")->second->IsNone()) {
+        } else if (call.byname.find("oldPassword")->second->is<PyNone>()) {
             if (call.byname.find("newPassword") != call.byname.end()) {
-                if (call.byname.find("newPassword")->second->IsWString()) {
-                    channel->SetPassword(call.byname.find("newPassword")->second->AsWString()->content());
+                if (call.byname.find("newPassword")->second->is<PyString>()) {
+                    channel->SetPassword(call.byname.find("newPassword")->second->as<PyString>()->content());
                 } else {
                     _log(LSC__ERROR, "%s: newPassword contained wrong type: '%s'", call.client->GetName(), call.byname.find("newPassword")->second->TypeString());
                     return nullptr;
@@ -642,41 +641,40 @@ PyResult LSCService::Configure(PyCallArgs& call, PyInt* channelID)
 
     channel->UpdateConfig();
 
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
-
-PyResult LSCService::LeaveChannel(PyCallArgs &call, PyRep* channelInfo, PyInt* unsubscribe) {
+EVEResult LSCService::LeaveChannel(EVECallArgs&call, PyDataType* channelInfo, PyInt* unsubscribe) {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_LeaveChannel()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
 
     uint32 toLeave = 0;
 
-    if (channelInfo->IsInt()) {
-        toLeave = channelInfo->AsInt()->value();
-    } else if (channelInfo->IsTuple()) {
-        PyTuple* prt = channelInfo->AsTuple();
+    if (channelInfo->is<PyInt>()) {
+        toLeave = channelInfo->as<PyInt>()->value();
+    } else if (channelInfo->is<PyTuple>()) {
+        PyTuple* prt = channelInfo->as<PyTuple>();
 
-        if (prt->GetItem(0)->IsInt()) {
-            toLeave = prt->GetItem(0)->AsInt()->value();
-        } else if (prt->GetItem(0)->IsTuple()) {
-            prt = prt->GetItem(0)->AsTuple();
+        if (prt->at (0)->is<PyInt>()) {
+            toLeave = prt->at (0)->as<PyInt>()->value();
+        } else if (prt->at (0)->is<PyTuple>()) {
+            prt = prt->at (0)->as<PyTuple>();
 
-            if (prt->items.size() != 2 or !prt->GetItem(1)->IsInt()) {
-                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
-                return PyStatic.NewNone();
+            if (prt->size() != 2 or !prt->at (1)->is<PyInt>()) {
+                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
+                return call.arena.None();
             }
 
-            toLeave = prt->GetItem(1)->AsInt()->value();
+            toLeave = prt->at (1)->as<PyInt>()->value();
         } else {
-            _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
-            return PyStatic.NewNone();
+            _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
+            return call.arena.None();
         }
     } else {
-        _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
-        return PyStatic.NewNone();
+        _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
+        return call.arena.None();
     }
 
     if (unsubscribe->value())
@@ -692,17 +690,17 @@ PyResult LSCService::LeaveChannel(PyCallArgs &call, PyRep* channelInfo, PyInt* u
         }
     }
 
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
-PyResult LSCService::LeaveChannels(PyCallArgs &call, PyList* channels, PyBool* unsubscribe, PyLong* role) {
-    return this->LeaveChannels (call, channels, new PyInt (unsubscribe->value ()), role);
+EVEResult LSCService::LeaveChannels(EVECallArgs&call, PyList* channels, PyBool* unsubscribe, PyInt* role) {
+    return this->LeaveChannels (call, channels, call.arena.Int (unsubscribe->value ()), role);
 }
 
-PyResult LSCService::LeaveChannels(PyCallArgs &call, PyList* channels, PyInt* unsubscribe, PyLong* role) {
+EVEResult LSCService::LeaveChannels(EVECallArgs&call, PyList* channels, PyInt* unsubscribe, PyInt* role) {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_LeaveChannels()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
 
     std::set<uint32> toLeave;
@@ -710,33 +708,33 @@ PyResult LSCService::LeaveChannels(PyCallArgs &call, PyList* channels, PyInt* un
 
     PyList::const_iterator cur = channels->begin();
     for (; cur != channels->end(); cur++) {
-        if ((*cur)->IsInt()) {
-            toLeave.insert((*cur)->AsInt()->value());
-        } else if ((*cur)->IsTuple()) {
-            PyTuple* prt = (*cur)->AsTuple();
+        if ((*cur)->is<PyInt>()) {
+            toLeave.insert((*cur)->as<PyInt>()->value());
+        } else if ((*cur)->is<PyTuple>()) {
+            PyTuple* prt = (*cur)->as<PyTuple>();
 
-            if (prt->GetItem(0)->IsInt()) {
-                toLeave.insert(prt->GetItem(0)->AsInt()->value());
+            if (prt->at (0)->is<PyInt>()) {
+                toLeave.insert(prt->at (0)->as<PyInt>()->value());
                 continue;
             }
 
-            if (!prt->GetItem(0)->IsTuple()) {
-                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+            if (!prt->at (0)->is<PyTuple>()) {
+                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
                 continue;
             }
-            prt = prt->GetItem(0)->AsTuple();
+            prt = prt->at (0)->as<PyTuple>();
 
-            if (prt->GetItem(0)->IsTuple())
-                prt = prt->GetItem(0)->AsTuple();
+            if (prt->at (0)->is<PyTuple>())
+                prt = prt->at (0)->as<PyTuple>();
 
-            if (prt->size() != 2 or !prt->GetItem(1)->IsInt()) {
-                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+            if (prt->size() != 2 or !prt->at (1)->is<PyInt>()) {
+                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
                 continue;
             }
 
-            toLeave.insert(prt->GetItem(1)->AsInt()->value());
+            toLeave.insert(prt->at (1)->as<PyInt>()->value());
         } else {
-            _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+            _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
             continue;
         }
     }
@@ -761,11 +759,11 @@ PyResult LSCService::LeaveChannels(PyCallArgs &call, PyList* channels, PyInt* un
     return PyStatic.NewNone();
 }
 
-PyResult LSCService::DestroyChannel(PyCallArgs& call, PyInt* channelID)
+EVEResult LSCService::DestroyChannel(EVECallArgs& call, PyInt* channelID)
 {
     if (is_log_enabled(LSC__CALL_DUMP)) {
         sLog.Warning("LSCService::Handle_DestroyChannel()", "size=%lu", call.tuple->size());
-        call.Dump(LSC__CALL_DUMP);
+        call.dump(LSC__CALL_DUMP);
     }
 
     std::map<int32, LSCChannel*>::iterator itr = m_channels.find(channelID->value());
@@ -791,32 +789,31 @@ PyResult LSCService::DestroyChannel(PyCallArgs& call, PyInt* channelID)
     return PyStatic.NewNone();
 }
 
-
-PyResult LSCService::GetMembers(PyCallArgs &call, PyRep* channelInfo) {
+EVEResult LSCService::GetMembers(EVECallArgs&call, PyDataType* channelInfo) {
     uint32 channelID;
-    if (channelInfo->IsInt()) {
-        channelID = channelInfo->AsInt()->value();
-    } else if (channelInfo->IsTuple()) {
-        PyTuple* prt = channelInfo->AsTuple();
+    if (channelInfo->is<PyInt>()) {
+        channelID = channelInfo->as<PyInt>()->value();
+    } else if (channelInfo->is<PyTuple>()) {
+        PyTuple* prt = channelInfo->as<PyTuple>();
 
-        if (prt->GetItem(0)->IsInt()) {
-            channelID = prt->GetItem(0)->AsInt()->value();
-        } else if (prt->GetItem(0)->IsTuple()) {
-            prt = prt->GetItem(0)->AsTuple();
+        if (prt->at (0)->is<PyInt>()) {
+            channelID = prt->at (0)->as<PyInt>()->value();
+        } else if (prt->at (0)->is<PyTuple>()) {
+            prt = prt->at (0)->as<PyTuple>();
 
-            if (prt->items.size() != 2 or !prt->GetItem(1)->IsInt())
+            if (prt->size() != 2 or !prt->at (1)->is<PyInt>())
             {
-                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+                _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
                 return nullptr;
             }
 
-            channelID = prt->GetItem(1)->AsInt()->value();
+            channelID = prt->at (1)->as<PyInt>()->value();
         } else {
-            _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+            _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
             return nullptr;
         }
     } else {
-        _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName());
+        _log(SERVICE__ERROR, "%s: Failed to decode arguments.", GetName().c_str());
         return nullptr;
     }
 
@@ -826,8 +823,7 @@ PyResult LSCService::GetMembers(PyCallArgs &call, PyRep* channelInfo) {
     return nullptr;
 }
 
-
-PyResult LSCService::GetMember(PyCallArgs &call) {
+EVEResult LSCService::GetMember(EVECallArgs&call) {
     return nullptr;
 }
 
@@ -1100,34 +1096,32 @@ void LSCService::SendServerMOTD(Client* pClient)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-PyResult LSCService::GetMyMessages(PyCallArgs &call) {
+EVEResult LSCService::GetMyMessages(EVECallArgs&call) {
     return(m_db.GetMailHeaders(call.client->GetCharacterID()));
 }
 
-
-PyResult LSCService::GetMessageDetails(PyCallArgs &call, PyInt* readerID, PyInt* messageID) {
+EVEResult LSCService::GetMessageDetails(EVECallArgs&call, PyInt* readerID, PyInt* messageID) {
     //TODO: verify ability to read this message...
 
     return(m_db.GetMailDetails(messageID->value(), readerID->value()));
 }
 
-
-PyResult LSCService::Page(PyCallArgs &call, PyList* recipientIDs, PyRep* subject, PyRep* body) {
+EVEResult LSCService::Page(EVECallArgs&call, PyList* recipientIDs, PyDataType* subject, PyDataType* body) {
     std::vector <int32> recipients;
 
     PyList::const_iterator list_2_cur = recipientIDs->begin();
     for (size_t list_2_index(0); list_2_cur != recipientIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_Page failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         recipients.push_back(t->value());
     }
 
-    std::string subjectStr = PyRep::StringContent(subject);
-    std::string bodyStr = PyRep::StringContent(body);
+    std::string subjectStr = subject->string();
+    std::string bodyStr = body->string();
 
     _log(SERVICE__MESSAGE, "%s: Received evemail msg with subject '%s': %s", call.client->GetName(), subjectStr.c_str(), bodyStr.c_str());
 
@@ -1193,18 +1187,17 @@ void Client::SelfEveMail(const char* subject, const char* fmt, ...)
     SafeFree(str);
 }
 
-
-PyResult LSCService::MarkMessagesRead(PyCallArgs &call, PyList* messageIDs) {
+EVEResult LSCService::MarkMessagesRead(EVECallArgs&call, PyList* messageIDs) {
     std::vector <int32> messages;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_Page failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messages.push_back(t->value());
     }
 
@@ -1217,18 +1210,17 @@ PyResult LSCService::MarkMessagesRead(PyCallArgs &call, PyList* messageIDs) {
     return nullptr;
 }
 
-
-PyResult LSCService::DeleteMessages(PyCallArgs &call, PyInt* channelID, PyList* messageIDs) {
+EVEResult LSCService::DeleteMessages(EVECallArgs&call, PyInt* channelID, PyList* messageIDs) {
     std::vector<int32> messages;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_DeleteMessages failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messages.push_back(t->value());
     }
 
@@ -1247,6 +1239,6 @@ PyResult LSCService::DeleteMessages(PyCallArgs &call, PyInt* channelID, PyList* 
     return nullptr;
 }
 
-PyResult LSCService::ExecuteCommand(Client *from, const char *msg) {
+EVEResult LSCService::ExecuteCommand(Client *from, const char *msg) {
     return(m_commandDispatch->Execute(from, msg));
 }

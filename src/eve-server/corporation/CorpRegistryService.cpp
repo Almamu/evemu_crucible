@@ -25,7 +25,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 
 #include "cache/ObjCacheService.h"
@@ -67,15 +67,15 @@ CorpRegistryService::CorpRegistryService(EVEServiceManager& mgr) :
     this->Add("ResignFromCEO", &CorpRegistryService::ResignFromCEO);
 }
 
-BoundDispatcher* CorpRegistryService::BindObject(Client* client, PyRep* bindParameters)
+BoundDispatcher* CorpRegistryService::BindObject(Client* client, PyDataType* bindParameters)
 {
-    if (!bindParameters->IsTuple()){
+    if (!bindParameters->is<PyTuple>()){
         sLog.Error( "CorpRegistryService::CreateBoundObject", "%s: bind_args is not tuple: '%s'. ", client->GetName(), bindParameters->TypeString() );
         client->SendErrorMsg("Could not bind object for Corp Registry.  Ref: ServerError 02808.");
         return nullptr;
     }
 
-    uint32 corporationID = PyRep::IntegerValue(bindParameters->AsTuple()->GetItem(0));
+    uint32 corporationID = bindParameters->as<PyTuple>()->at (0)->i64();
     auto it = this->m_instances.find (corporationID);
 
     if (it != this->m_instances.end ())
@@ -97,7 +97,7 @@ void CorpRegistryService::BoundReleased (CorpRegistryBound* bound) {
     this->m_instances.erase (it);
 }
 
-PyResult CorpRegistryService::GetCorporateContacts(PyCallArgs &call)
+EVEResult CorpRegistryService::GetCorporateContacts(EVECallArgs&call)
 {
     return m_db.GetContacts(call.client->GetCorporationID());
 }
@@ -112,122 +112,121 @@ PyResult CorpRegistryService::GetCorporateContacts(PyCallArgs &call)
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult CorpRegistryService::ResignFromCEO(PyCallArgs &call, PyInt* newCeoID) {
+EVEResult CorpRegistryService::ResignFromCEO(EVECallArgs&call, PyInt* newCeoID) {
     //    self.GetCorpRegistry().ResignFromCEO(newCeoID)
     _log(CORP__CALL, "CorpRegistryService::Handle_ResignFromCEO()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::CreateAlliance(PyCallArgs &call, PyRep* allianceName, PyRep* shortName, PyRep* description, PyRep* url) {
+EVEResult CorpRegistryService::CreateAlliance(EVECallArgs&call, PyDataType* allianceName, PyDataType* shortName, PyDataType* description, PyDataType* url) {
     _log(CORP__CALL, "CorpRegistryService::Handle_CreateAlliance()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::GetRecentKillsAndLosses(PyCallArgs &call) {
+EVEResult CorpRegistryService::GetRecentKillsAndLosses(EVECallArgs&call) {
     _log(CORP__CALL, "CorpRegistryService::Handle_GetRecentKillsAndLosses()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-
-PyResult CorpRegistryService::AddCorporateContact(PyCallArgs &call, PyInt* contactID, PyInt* relationshipID) {
+EVEResult CorpRegistryService::AddCorporateContact(EVECallArgs&call, PyInt* contactID, PyInt* relationshipID) {
  /*    def AddCorporateContact(self, contactID, relationshipID):
   *        self.GetCorpRegistry().AddCorporateContact(contactID, relationshipID)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_AddCorporateContact()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::EditCorporateContact(PyCallArgs &call, PyInt* contactID, PyInt* relationshipID) {
+EVEResult CorpRegistryService::EditCorporateContact(EVECallArgs&call, PyInt* contactID, PyInt* relationshipID) {
  /*    def EditCorporateContact(self, contactID, relationshipID):
   *        self.GetCorpRegistry().EditCorporateContact(contactID, relationshipID)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_EditCorporateContact)");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::RemoveCorporateContacts(PyCallArgs &call, PyList* contactIDs) {
+EVEResult CorpRegistryService::RemoveCorporateContacts(EVECallArgs&call, PyList* contactIDs) {
  /*    def RemoveCorporateContacts(self, contactIDs):
   *        self.GetCorpRegistry().RemoveCorporateContacts(contactIDs)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_RemoveCorporateContacts()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::EditContactsRelationshipID(PyCallArgs &call, PyList* contactIDs, PyInt* relationshipID) {
+EVEResult CorpRegistryService::EditContactsRelationshipID(EVECallArgs&call, PyList* contactIDs, PyInt* relationshipID) {
  /*    def EditContactsRelationshipID(self, contactIDs, relationshipID):
   *        self.GetCorpRegistry().EditContactsRelationshipID(contactIDs, relationshipID)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_EditContactsRelationshipID()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::GetLabels(PyCallArgs &call) {
+EVEResult CorpRegistryService::GetLabels(EVECallArgs&call) {
     _log(CORP__CALL, "CorpRegistryService::Handle_GetLabels()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return m_db.GetLabels(call.client->GetCorporationID());
 }
 
-PyResult CorpRegistryService::CreateLabel(PyCallArgs &call, PyWString* name, std::optional <PyInt*> color) {
+EVEResult CorpRegistryService::CreateLabel(EVECallArgs&call, PyString* name, std::optional <PyInt*> color) {
  /*    def CreateLabel(self, name, color = 0):
   *        return self.GetCorpRegistry().CreateLabel(name, color)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_CreateLabel()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::DeleteLabel(PyCallArgs &call, PyInt* labelID) {
+EVEResult CorpRegistryService::DeleteLabel(EVECallArgs&call, PyInt* labelID) {
  /*    def DeleteLabel(self, labelID):
   *        self.GetCorpRegistry().DeleteLabel(labelID)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_DeleteLabel()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::EditLabel(PyCallArgs &call, PyInt* labelID, std::optional <PyWString*> name, std::optional <PyInt*> color) {
+EVEResult CorpRegistryService::EditLabel(EVECallArgs&call, PyInt* labelID, std::optional <PyString*> name, std::optional <PyInt*> color) {
  /*    def EditLabel(self, labelID, name = None, color = None):
   *        self.GetCorpRegistry().EditLabel(labelID, name, color)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_EditLabel()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::AssignLabels(PyCallArgs &call, PyList* contactIDs, PyInt* labelMask) {
+EVEResult CorpRegistryService::AssignLabels(EVECallArgs&call, PyList* contactIDs, PyInt* labelMask) {
  /*    def AssignLabels(self, contactIDs, labelMask):
   *        self.GetCorpRegistry().AssignLabels(contactIDs, labelMask)
   */
     _log(CORP__CALL, "CorpRegistryService::Handle_AssignLabels()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryService::RemoveLabels(PyCallArgs &call, PyList* contactIDs, PyInt* labelMask) {
+EVEResult CorpRegistryService::RemoveLabels(EVECallArgs&call, PyList* contactIDs, PyInt* labelMask) {
 /*    def RemoveLabels(self, contactIDs, labelMask):
  *        self.GetCorpRegistry().RemoveLabels(contactIDs, labelMask)
  */
     _log(CORP__CALL, "CorpRegistryService::Handle_RemoveLabels()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
 
     return nullptr;

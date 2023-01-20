@@ -33,7 +33,7 @@
  * FACWAR__DB_MESSAGE
  */
 
-PyRep *FactionWarMgrDB::GetWarFactions() {
+PyDataType *FactionWarMgrDB::GetWarFactions() {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -48,7 +48,7 @@ PyRep *FactionWarMgrDB::GetWarFactions() {
     return DBResultToIntIntDict(res);
 }
 
-PyRep* FactionWarMgrDB::GetFacWarSystems()
+PyDataType* FactionWarMgrDB::GetFacWarSystems()
 {   /* done  -allan 03May16 */
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -61,12 +61,14 @@ PyRep* FactionWarMgrDB::GetFacWarSystems()
     PyDict* result = new PyDict();
     PyDict* dict;
     DBResultRow row;
+
     while (res.GetRow(row)) {
-        dict = new PyDict();
-        dict->SetItemString("occupierID", new PyInt(row.GetInt(1)));
-        dict->SetItemString("factionID", new PyInt(row.GetInt(2)));
-        result->SetItem(new PyInt(row.GetInt(0)), dict );
+        result->set (new PyInt (row.GetInt(0)), new PyDict {
+            {"occupierID", new PyInt (row.GetInt(1))},
+            {"factionID", new PyInt (row.GetInt(2))}
+        });
     }
+
     return result;
 }
 

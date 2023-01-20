@@ -132,7 +132,7 @@ bool ClassCloneGenerator::ProcessRaw( const TiXmlElement* field )
         "        %s = nullptr;\n"
         "        _log(NET__PACKET_WARNING, \"oth.%s is null.  %s = nullptr \");\n"
         "    } else\n"
-        "       %s = oth.%s->Clone();\n"
+        "       %s = oth.%s->clone();\n"
         "\n",
         name,
         name,
@@ -301,7 +301,7 @@ bool ClassCloneGenerator::ProcessToken( const TiXmlElement* field )
         "        %s = nullptr;\n"
         "        _log(NET__PACKET_WARNING, \"oth.%s is null.  %s = nullptr \");\n"
         "    } else\n"
-        "       %s = oth.%s->Clone();\n"
+        "       %s = oth.%s->clone();\n"
         "\n",
         name,
         name,
@@ -563,7 +563,7 @@ bool ClassCloneGenerator::ProcessDictInt( const TiXmlElement* field )
     }
 
     fprintf( mOutputFile,
-            "    std::map<int32, PyRep*>::const_iterator %s_cur = %s.begin();\n"
+            "    std::map<int32, PyDataType*>::const_iterator %s_cur = %s.begin();\n"
             "    //free any existing elements first\n"
             "    for (; %s_cur != %s.end(); %s_cur++)\n"
             "        PyDecRef( %s_cur->second );\n"
@@ -571,7 +571,7 @@ bool ClassCloneGenerator::ProcessDictInt( const TiXmlElement* field )
             "\n"
             "    //now we can copy in the new ones...\n"
             "    for (%s_cur = oth.%s.begin(); %s_cur != oth.%s.end(); %s_cur++)\n"
-            "        %s[ %s_cur->first ] = %s_cur->second->Clone();\n"
+            "        %s[ %s_cur->first ] = %s_cur->second->clone();\n"
             "\n",
             name, name,
             name, name, name,
@@ -593,7 +593,7 @@ bool ClassCloneGenerator::ProcessDictStr( const TiXmlElement* field )
     }
 
     fprintf( mOutputFile,
-            "    std::map<std::string, PyRep*>::const_iterator %s_cur = %s.begin();\n"
+            "    std::map<std::string, PyDataType*>::const_iterator %s_cur = %s.begin();\n"
             "    //free any existing elements first\n"
             "    for (; %s_cur != %s.end(); %s_cur++)\n"
             "        PyDecRef( %s_cur->second );\n"
@@ -601,7 +601,7 @@ bool ClassCloneGenerator::ProcessDictStr( const TiXmlElement* field )
             "\n"
             "    //now we can copy in the new ones...\n"
             "    for (%s_cur = oth.%s.begin(); %s_cur != oth.%s.end(); %s_cur++)\n"
-            "        %s[ %s_cur->first ] = %s_cur->second->Clone();\n"
+            "        %s[ %s_cur->first ] = %s_cur->second->clone();\n"
             "\n",
             name, name,
             name, name, name,

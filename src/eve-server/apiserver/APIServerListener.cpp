@@ -25,7 +25,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "apiserver/APIServerListener.h"
 
 APIServerListener::APIServerListener(boost::asio::io_context& io)

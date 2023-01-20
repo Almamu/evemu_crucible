@@ -97,7 +97,7 @@ void Scan::ProcessScan(bool useProbe/*false*/)
 }
 
 
-PyRep* Scan::ConeScan(Call_ConeScan args) {
+PyDataType* Scan::ConeScan(Call_ConeScan args) {
     //  WORKING CODE...DONT FUCK WITH THIS!!  -allan 7Dec15
 
     // NOTE:  max distance is 14.4AU or maxInt (2417482647 in km)
@@ -128,7 +128,7 @@ PyRep* Scan::ConeScan(Call_ConeScan args) {
             res.id         = cur->GetID();
             res.typeID     = cur->GetSelf()->typeID();
             res.groupID    = cur->GetSelf()->groupID();
-            list->AddItem(res.Encode());
+            list->add(res.Encode());
         }
         _log(SCAN__TRACE, "ConeScan() - tested %s(%u).  dot %.5f, acDP %.5f, result %s", cur->GetName(), cur->GetID(), dot, acDP, test?"true":"false");
         test = false;
@@ -160,7 +160,7 @@ void Scan::RequestScans(PyDict* dict) {
     PyDict::const_iterator cItr = dict->begin();
     for (; cItr != dict->end(); ++cItr) {
         // find probe in map....
-        probeID = PyRep::IntegerValueU32(cItr->first);  // key
+        probeID = cItr->first->u32();  // key
         std::map<uint32, ProbeSE*>::iterator pItr = m_probeMap.find(probeID);
         if (pItr == m_probeMap.end()) {
             _log(SCAN__ERROR, "Probe %u wasnt found in the probeMap for %s(%u)", \
@@ -184,11 +184,11 @@ void Scan::RequestScans(PyDict* dict) {
             data.rangeStep = args.rangeStep;
             data.scanRange = args.scanRange;
         // set probe target
-        PyObjectEx* obj = args.destination->AsObjectEx();
-        PyTuple* dest = obj->header()->AsTuple()->GetItem(1)->AsTuple();
-            data.dest.x = dest->GetItem(0)->AsFloat()->value();
-            data.dest.y = dest->GetItem(1)->AsFloat()->value();
-            data.dest.z = dest->GetItem(2)->AsFloat()->value();
+        PyObjectEx* obj = args.destination->as<PyObjectEx>();
+        PyTuple* dest = obj->header()->as<PyTuple>()->at (1)->as<PyTuple>();
+            data.dest.x = dest->at (0)->as<PyFloat>()->value();
+            data.dest.y = dest->at (1)->as<PyFloat>()->value();
+            data.dest.z = dest->at (2)->as<PyFloat>()->value();
         pItr->second->UpdateProbe(data);
     }
 
@@ -224,14 +224,16 @@ void Scan::SystemScanStarted(uint16 duration)
             srp.x = pos.x;
             srp.y = pos.y;
             srp.z = pos.z;
-        PyToken* token = new PyToken("foo.Vector3");
-        PyTuple* oed_tuple = new PyTuple(2);
-            oed_tuple->SetItem(0, token);
-            oed_tuple->SetItem(1, srp.Encode());
-        spd.pos = new PyObjectEx(false, oed_tuple);  // oed goes here
+        spd.pos = new PyObjectEx(
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                srp.Encode ()
+            }
+        );  // oed goes here
         PyIncRef(spd.pos);
         spd.destination = spd.pos;
-        probeDict->SetItem(new PyInt(cur.first), spd.Encode());
+        probeDict->set(new PyInt(cur.first), spd.Encode());
     }
 
     OnSystemScanStarted ossst;
@@ -239,7 +241,7 @@ void Scan::SystemScanStarted(uint16 duration)
         ossst.duration = duration;
         ossst.scanProbesDict = probeDict;
     PyTuple* ev = ossst.Encode();
-    ev->Dump(SCAN__RSPDUMP, "sss-    ");
+    ev->dump(SCAN__RSPDUMP, "sss-    ");
     m_client->SendNotification("OnSystemScanStarted", "charid", &ev, false);
 }
 
@@ -275,11 +277,14 @@ void Scan::ShipScanResult() {
             ssr_oed.x = anoms.position.x;
             ssr_oed.y = anoms.position.y;
             ssr_oed.z = anoms.position.z;
-        PyTuple* oed_tuple = new PyTuple(2);
-            oed_tuple->SetItem(0, new PyToken("foo.Vector3"));
-            oed_tuple->SetItem(1, ssr_oed.Encode());
-        ssr.data = new PyObjectEx(false, oed_tuple);  // oed goes here
-        resultList->AddItem(ssr.Encode());
+        ssr.data = new PyObjectEx(
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                ssr_oed.Encode ()
+            }
+        );// oed goes here
+        resultList->add(ssr.Encode());
     }
 
     OnSystemScanStopped osss;
@@ -288,7 +293,7 @@ void Scan::ShipScanResult() {
         osss.scanProbesDict = new PyDict();
         osss.absentTargets = new PyList();
     PyTuple* ev = osss.Encode();
-    ev->Dump(SCAN__RSPDUMP, "ssr-    ");
+    ev->dump(SCAN__RSPDUMP, "ssr-    ");
     m_client->SendNotification("OnSystemScanStopped", "charid", &ev);
 }
 
@@ -337,12 +342,14 @@ void Scan::ProbeScanResult()
             ssr_oed.x = anoms.position.x;
             ssr_oed.y = anoms.position.y;
             ssr_oed.z = anoms.position.z;
-        PyToken* token = new PyToken("foo.Vector3");
-        PyTuple* oed_tuple = new PyTuple(2);
-            oed_tuple->SetItem(0, token);
-            oed_tuple->SetItem(1, ssr_oed.Encode());
-        ssr.data = new PyObjectEx(false, oed_tuple);  // oed goes here
-        resultList->AddItem(ssr.Encode());
+        ssr.data = new PyObjectEx(
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                ssr_oed.Encode ()
+            }
+        );// oed goes here
+        resultList->add(ssr.Encode());
     }
 
     m_system->GetAnomMgr()->GetSignatureList(sig);
@@ -368,12 +375,14 @@ void Scan::ProbeScanResult()
                 ssr_oed.x = data.sig.position.x;
                 ssr_oed.y = data.sig.position.y;
                 ssr_oed.z = data.sig.position.z;
-            PyToken* token = new PyToken("foo.Vector3");
-            PyTuple* oed_tuple = new PyTuple(2);
-                oed_tuple->SetItem(0, token);
-                oed_tuple->SetItem(1, ssr_oed.Encode());
-            ssr.data = new PyObjectEx(false, oed_tuple);  // oed goes here
-            resultList->AddItem(ssr.Encode());
+            ssr.data = new PyObjectEx(
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                ssr_oed.Encode ()
+            }
+        );// oed goes here
+            resultList->add(ssr.Encode());
         }
     }
 
@@ -389,11 +398,13 @@ void Scan::ProbeScanResult()
             ssr_oed.x = pos.x;
             ssr_oed.y = pos.y;
             ssr_oed.z = pos.z;
-        PyToken* token = new PyToken("foo.Vector3");
-        PyTuple* oed_tuple = new PyTuple(2);
-            oed_tuple->SetItem(0, token);
-            oed_tuple->SetItem(1, ssr_oed.Encode());
-        spd.pos = new PyObjectEx(false, oed_tuple);  // oed goes here
+        spd.pos = new PyObjectEx(
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                ssr_oed.Encode ()
+            }
+        );// oed goes here
         spd.destination = spd.pos;
         spd.probeID = cur.first;
         spd.state = cur.second->GetState();
@@ -401,7 +412,7 @@ void Scan::ProbeScanResult()
         spd.scanRange = cur.second->GetScanRange();
         spd.scanStrength = cur.second->GetScanStrength();
         spd.typeID = cur.second->GetSelf()->typeID();
-        probeDict->SetItem(new PyInt(cur.first), spd.Encode());
+        probeDict->set(new PyInt(cur.first), spd.Encode());
     }
 
     // this will be sigs that are no longer present in current scan range
@@ -414,7 +425,7 @@ void Scan::ProbeScanResult()
         osssp.systemScanResult = resultList;
         osssp.absentTargets = absentList;
     PyTuple* ev = osssp.Encode();
-    ev->Dump(SCAN__RSPDUMP, "psr-    ");
+    ev->dump(SCAN__RSPDUMP, "psr-    ");
     m_client->SendNotification("OnSystemScanStopped", "charid", &ev);
 }
 
@@ -519,24 +530,24 @@ struct CosmicSignature {
         PyList* ring = new PyList();
         PyTuple* tuple = new PyTuple(probeVec.size());
         for (auto cur : probeVec) {
-            tuple->SetItem(count++, new PyInt(cur->GetID()));
+            tuple->mItems [count++] = new PyInt(cur->GetID());
             pos = cur->GetPosition();
             ScanResultPos ssr_oed;
                 ssr_oed.x = pos.x;
                 ssr_oed.y = pos.y;
                 ssr_oed.z = pos.z;
-            PyToken* token = new PyToken("foo.Vector3");
-            PyTuple* oed_tuple = new PyTuple(2);
-                oed_tuple->SetItem(0, token);
-                oed_tuple->SetItem(1, ssr_oed.Encode());
-            list->AddItem(new PyObjectEx(false, oed_tuple));
+            PyTuple* oed_tuple = new PyTuple {
+                new PyToken ("foo.Vector3"),
+                ssr_oed.Encode ()
+            };
+            list->add(new PyObjectEx(false, oed_tuple));
             if (cur->IsRing()) {
                 isRing = true;
-                ring->AddItem(new PyObjectEx(false, oed_tuple));
+                ring->add(new PyObjectEx(false, oed_tuple));
             }
         }
         if (isRing)
-            list->AddItem(ring);
+            list->add(ring);
         data.probes = tuple;
         data.probePos = list;
         // there is *something* here where one of the positions is given as a nested list of objects
@@ -566,14 +577,16 @@ struct CosmicSignature {
             ssr_oed.x = probeVec.at(0)->GetPosition().x;
             ssr_oed.y = probeVec.at(0)->GetPosition().y;
             ssr_oed.z = probeVec.at(0)->GetPosition().z;
-        PyToken* token = new PyToken("foo.Vector3");
-        PyTuple* oed_tuple = new PyTuple(2);
-            oed_tuple->SetItem(0, token);
-            oed_tuple->SetItem(1, ssr_oed.Encode());
         data.probes = new PyInt(probeVec.at(0)->GetID());
         if (probeVec.at(0)->IsSphere())
             ; // placeholder.  no clue how to do this yet
-        data.probePos = new PyObjectEx(false, oed_tuple);
+        data.probePos = new PyObjectEx(
+            false,
+            new PyTuple {
+                new PyToken ("foo.Vector3"),
+                ssr_oed.Encode ()
+            }
+        );
     }
     return true;
 }

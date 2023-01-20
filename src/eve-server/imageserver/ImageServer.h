@@ -30,7 +30,7 @@
 
 #include "eve-common.h"
 #include "utils/Singleton.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 class ImageServerListener;
 

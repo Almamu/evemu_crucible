@@ -27,7 +27,7 @@
 #include <algorithm>
 
 #include "eve-server.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 #include "Client.h"
 #include "EntityList.h"
@@ -723,7 +723,7 @@ void SystemBubble::SendAddBalls(SystemEntity* to_who) {
                 continue;
         if (!cur.second->IsMissileSE() or !cur.second->IsFieldSE())
             addballs.damageDict[cur.first] = cur.second->MakeDamageState();
-        addballs.slims->AddItem( new PyObject( "foo.SlimItem", cur.second->MakeSlimItem() ) );
+        addballs.slims->add( new PyObject( "foo.SlimItem", cur.second->MakeSlimItem() ) );
         cur.second->EncodeDestiny( *destinyBuffer );
     }
 
@@ -770,12 +770,12 @@ void SystemBubble::SendAddBalls2( SystemEntity* to_who ) {
 
     for (auto cur : m_dynamicEntities) {
         if (cur.second->IsMissileSE() or cur.second->IsContainerSE()) {
-            addballs2.extraBallData->AddItem(cur.second->MakeSlimItem());
+            addballs2.extraBallData->add(cur.second->MakeSlimItem());
         } else {
-            PyTuple* balls = new PyTuple(2);
-                balls->SetItem(0, cur.second->MakeSlimItem());
-                balls->SetItem(1, cur.second->MakeDamageState());
-            addballs2.extraBallData->AddItem(balls);
+            addballs2.extraBallData->add(new PyTuple {
+                cur.second->MakeSlimItem(),
+                cur.second->MakeDamageState()
+            });
         }
         cur.second->EncodeDestiny(*destinyBuffer);
     }
@@ -826,8 +826,9 @@ void SystemBubble::AddBallExclusive( SystemEntity* pSE ) {
 	//encode damage state
     addballs.damageDict[ pSE->GetID() ] = pSE->MakeDamageState();
 	//encode SlimItem
-    addballs.slims = new PyList();
-    addballs.slims->AddItem( new PyObject( "foo.SlimItem", pSE->MakeSlimItem() ) );
+    addballs.slims = new PyList {
+        new PyObject( "foo.SlimItem", pSE->MakeSlimItem() )
+    };
 
     _log(DESTINY__BUBBLE_TRACE, "SystemBubble::AddBallExclusive() - Adding entity %u to bubble %u", pSE->GetID(), m_bubbleID);
     if (is_log_enabled(DESTINY__BALL_DUMP))
@@ -931,31 +932,34 @@ void SystemBubble::RemoveBalls(SystemEntity *to_who) {
 
 PyObject* SystemBubble::GetDroneState() const
 {
-    PyList* header = new PyList(7);
-        header->SetItemString(0, "droneID");
-        header->SetItemString(1, "ownerID");
-        header->SetItemString(2, "controllerID");
-        header->SetItemString(3, "activityState");
-        header->SetItemString(4, "typeID");
-        header->SetItemString(5, "controllerOwnerID");
-        header->SetItemString(6, "targetID");
+    PyList* header = new PyList {
+        new PyString ("droneID"),
+        new PyString ("ownerID"),
+        new PyString ("controllerID"),
+        new PyString ("activityState"),
+        new PyString ("typeID"),
+        new PyString ("controllerOwnerID"),
+        new PyString ("targetID")
+    };
+
     PyList* lines = new PyList();
     for (auto cur : m_drones) {
-        PyList* line = new PyList(7);
-            line->SetItem(0, new PyInt(cur.first));
-            line->SetItem(1, new PyInt(cur.second->GetOwnerID()));
-            line->SetItem(2, new PyInt(cur.second->GetControllerID()));
-            line->SetItem(3, new PyInt(cur.second->GetState()));
-            line->SetItem(4, new PyInt(cur.second->GetSelf()->typeID()));
-            line->SetItem(5, new PyInt(cur.second->GetControllerOwnerID()));
-            line->SetItem(6, new PyInt(cur.second->GetTargetID()));
-        lines->AddItem(line);
+        lines->add(new PyList {
+            new PyInt(cur.first),
+            new PyInt(cur.second->GetOwnerID()),
+            new PyInt(cur.second->GetControllerID()),
+            new PyInt(cur.second->GetState()),
+            new PyInt(cur.second->GetSelf()->typeID()),
+            new PyInt(cur.second->GetControllerOwnerID()),
+            new PyInt(cur.second->GetTargetID()),
+        });
     }
 
-    PyDict* dict = new PyDict();
-        dict->SetItemString("header", header);
-        dict->SetItemString("RowClass", new PyToken("util.Row"));
-        dict->SetItemString("lines", lines);
+    PyDict* dict = new PyDict {
+        {"header", header},
+        {"RowClass", new PyToken ("util.Row")},
+        {"lines", lines}
+    };
 
     return new PyObject("util.Rowset", dict);
 }
@@ -1135,7 +1139,7 @@ void SystemBubble::BubblecastDestinyEvent(std::vector<PyTuple *> &events, const 
 void SystemBubble::BubblecastDestinyUpdate( PyTuple** payload, const char* desc ) const
 {
     if (is_log_enabled(DESTINY__BUBBLECAST_DUMP))
-        (*payload)->Dump(DESTINY__BUBBLECAST_DUMP, "    ");
+        (*payload)->dump(DESTINY__BUBBLECAST_DUMP, "    ");
     for (auto cur : m_players) {
         _log( DESTINY__BUBBLECAST, "Bubblecast %s update to %s(%u)", desc, cur.second->GetName(), cur.first );
         PyIncRef(*payload);
@@ -1159,7 +1163,7 @@ void SystemBubble::BubblecastDestinyUpdateExclusive( PyTuple** payload, const ch
 void SystemBubble::BubblecastDestinyEvent( PyTuple** payload, const char* desc ) const
 {
     if (is_log_enabled(DESTINY__BUBBLECAST_DUMP))
-        (*payload)->Dump(DESTINY__BUBBLECAST_DUMP, "    ");
+        (*payload)->dump(DESTINY__BUBBLECAST_DUMP, "    ");
     for (auto cur : m_players) {
         _log( DESTINY__BUBBLECAST, "Bubblecast %s event to %s(%u)", desc, cur.second->GetName(), cur.first );
         PyIncRef(*payload);

@@ -105,30 +105,30 @@ public:
     static bool GetCharHomeStation(uint32 charID, uint32 &stationID);
     //if you want to get the typeID of the clone use GetActiveCloneType
     static bool GetActiveCloneID(uint32 charID, uint32 &itemID);
-    static PyRep *GetInfoWindowDataForChar(uint32 charID);
+    static PyDataType *GetInfoWindowDataForChar(uint32 charID);
     static uint32 GetStartingStationByCareer(uint32 careerID);
 
     static void SetCharacterOnlineStatus(uint32 char_id, bool online=false);
 
-    static PyRep* List(uint32 ownerID);
-    static PyRep* ListStations(uint32 ownerID, std::ostringstream& flagIDs, bool forCorp=false, bool bpOnly=false);
-    static PyRep* ListStationItems(uint32 ownerID, uint32 stationID);
-    static PyRep* ListStationBlueprintItems(uint32 ownerID, uint32 stationID, bool forCorp=false);
+    static PyDataType* List(uint32 ownerID);
+    static PyDataType* ListStations(uint32 ownerID, std::ostringstream& flagIDs, bool forCorp=false, bool bpOnly=false);
+    static PyDataType* ListStationItems(uint32 ownerID, uint32 stationID);
+    static PyDataType* ListStationBlueprintItems(uint32 ownerID, uint32 stationID, bool forCorp=false);
 
-    static PyRep *GetCharacterList(uint32 accountID);
-    static PyRep *GetCharSelectInfo(uint32 charID);
-    void SetAvatar(uint32 charID, PyRep* hairDarkness);
+    static PyDataType *GetCharacterList(uint32 accountID, PythonArena* arena);
+    static PyDataType *GetCharSelectInfo(uint32 charID, PythonArena* arena);
+    void SetAvatar(uint32 charID, PyDataType* hairDarkness);
     void SetAvatarColors(uint32 charID, uint32 colorID, uint32 colorNameA, uint32 colorNameBC, double weight, double gloss);
-    void SetAvatarModifiers(uint32 charID, PyRep* modifierLocationID,  PyRep* paperdollResourceID, PyRep* paperdollResourceVariation);
-    void SetAvatarSculpts(uint32 charID, PyRep* sculptLocationID, PyRep* weightUpDown, PyRep* weightLeftRight, PyRep* weightForwardBack);
+    void SetAvatarModifiers(uint32 charID, PyDataType* modifierLocationID,  PyDataType* paperdollResourceID, PyDataType* paperdollResourceVariation);
+    void SetAvatarSculpts(uint32 charID, PyDataType* sculptLocationID, PyDataType* weightUpDown, PyDataType* weightLeftRight, PyDataType* weightForwardBack);
     void SetPortraitInfo(uint32 charID, PortraitInfo &data);
-    PyRep *GetCharPublicInfo(uint32 charID);
-    PyRep *GetCharPublicInfo3(uint32 charID);
-    PyRep *GetCharPrivateInfo(uint32 charID);
+    PyDataType *GetCharPublicInfo(uint32 charID);
+    PyDataType *GetCharPublicInfo3(uint32 charID);
+    PyDataType *GetCharPrivateInfo(uint32 charID);
 
     //PyObject *GetAgentPublicInfo(uint32 agentID);
-    PyRep *GetOwnerNoteLabels(uint32 charID);
-    PyRep *GetOwnerNote(uint32 charID, uint32 noteID);
+    PyDataType *GetOwnerNoteLabels(uint32 charID);
+    PyDataType *GetOwnerNote(uint32 charID, uint32 noteID);
     uint32 PickAlternateShip(uint32 charID, uint32 locationID);
     void SetCurrentShip(uint32 charID, uint32 shipID);
     void SetCurrentPod(uint32 charID, uint32 podID);
@@ -139,7 +139,7 @@ public:
     bool GetActiveCloneType(uint32 charID, uint32 &typeID);
     std::string GetCharName(uint32 charID);
 
-    PyRep* GetContacts(uint32 charID, bool blocked);
+    PyDataType* GetContacts(uint32 charID, bool blocked);
     void AddContact(uint32 ownerID, uint32 charID, int32 standing, bool inWatchlist);
     void UpdateContact(int32 standing, uint32 charID, uint32 ownerID);
     void RemoveContact(uint32 charID, uint32 ownerID);
@@ -191,7 +191,7 @@ public:
     static void        CancelCharacterDeletePrepare(uint32 accountID, uint32 charID);
 
     bool        ReportRespec(uint32 characterId);
-    PyRep*      GetRespecInfo(uint32 characterId);
+    PyDataType*      GetRespecInfo(uint32 characterId);
 
     /**
      * Loads skill queue.
@@ -212,7 +212,7 @@ public:
     bool        SaveSkillQueue(uint32 charID, SkillQueue &queue);
     bool        SavePausedSkillQueue(uint32 charID, SkillQueue &queue);
     void        SaveSkillHistory(uint16 eventID, double logDate, uint32 characterID, uint32 skillTypeID, uint8 skillLevel, uint32 absolutePoints);
-    PyRep*      GetSkillHistory(uint32 charID);
+    PyDataType*      GetSkillHistory(uint32 charID);
     void        UpdateSkillQueueEndTime(int64 endtime, uint32 charID);
 
     void        SetLogInTime(uint32 charID);
@@ -220,23 +220,23 @@ public:
 
     static void        AddOwnerCache(uint32 ownerID, std::string ownerName, uint32 typeID);
 
-    PyRep*      GetBounty(uint32 charID, uint32 ownerID);
-    PyRep*      GetTopBounties();
+    PyDataType*      GetBounty(uint32 charID, uint32 ownerID);
+    PyDataType*      GetTopBounties();
     void        AddBounty(uint32 charID, uint32 ownerID, uint32 amount);
 
-    PyRep*      GetKillOrLoss(uint32 charID);
+    PyDataType*      GetKillOrLoss(uint32 charID);
 
     static void SetCorpRole(uint32 charID, int64 role);
     static int64 GetCorpRole(uint32 charID);
     static uint32 GetCorpID(uint32 charID);
     static float GetCorpTaxRate(uint32 charID);
-    static PyRep* GetMyCorpMates(uint32 corpID);
+    static PyDataType* GetMyCorpMates(uint32 corpID);
     static bool GetCharCorpData(uint32 characterID, CorpData &into);
 
     // get skill level for given skill for offline character (used by market tax)
     static uint8 GetSkillLevel(uint32 charID, uint16 skillTypeID);
 
-    PyRep*      GetLabels(uint32 charID);
+    PyDataType*      GetLabels(uint32 charID);
     void        SetLabel(uint32 charID, uint32 color, std::string name);
     void        EditLabel(uint32 charID, uint32 labelID, uint32 color, std::string name);
     void        DeleteLabel(uint32 charID, uint32 labelID);
@@ -247,7 +247,7 @@ public:
     // called on CreateCharacterWithDoll() and will throw on error
     static void        ValidateCharName(std::string name);
     // called by "Check Name" button in char creation.  returns integer
-    static PyRep*      ValidateCharNameRep(std::string name);
+    static PyDataType*      ValidateCharNameRep(std::string name);
 
     /**
      * Loads character type data.

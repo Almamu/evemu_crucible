@@ -38,7 +38,7 @@ public:
 
     void BoundReleased (WarRegistryBound* bound) override;
 protected:
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters) override;
 
 private:
     std::map<uint32, WarRegistryBound*> m_instances;
@@ -47,7 +47,7 @@ private:
 class WarRegistryBound : public EVEBoundObject<WarRegistryBound> {
     friend WarRegistryService;
 public:
-    PyResult GetWars(PyCallArgs& args, PyInt* ownerID, std::optional<PyInt*> forceRefresh);
+  EVEResult GetWars(EVECallArgs& args, PyInt* ownerID, std::optional<PyInt*> forceRefresh);
 
     uint32 GetCorporationID() { return this->mCorporationID; }
     /*

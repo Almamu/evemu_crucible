@@ -34,7 +34,7 @@ public:
     DogmaService();
 
 protected:
-    PyResult GetOperandsForChar(PyCallArgs& call);
+  EVEResult GetOperandsForChar(EVECallArgs& call);
 };
 
 #endif

@@ -8,7 +8,7 @@
 
 
 #include "CrimeWatch.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 /*
  * each client(character) will have it's own cw code.

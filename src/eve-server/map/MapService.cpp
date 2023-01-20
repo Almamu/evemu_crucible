@@ -62,56 +62,56 @@ MapService::MapService() :
     this->Add ("GetCurrentEntities", &MapService::GetCurrentEntities);
 }
 
-PyResult MapService::GetCurrentEntities(PyCallArgs &call)
+EVEResult MapService::GetCurrentEntities(EVECallArgs&call)
 {
     return call.client->SystemMgr()->GetCurrentEntities();
 }
 
-PyResult MapService::GetSolarSystemVisits(PyCallArgs &call)
+EVEResult MapService::GetSolarSystemVisits(EVECallArgs&call)
 {
     return MapDB::GetSolSystemVisits(call.client->GetCharacterID());
 }
 
-PyResult MapService::GetMyExtraMapInfoAgents(PyCallArgs &call)
+EVEResult MapService::GetMyExtraMapInfoAgents(EVECallArgs&call)
 {
     return StandingDB::GetMyStandings(call.client->GetCharacterID());
 }
 
-PyResult MapService::GetMyExtraMapInfo(PyCallArgs &call)
+EVEResult MapService::GetMyExtraMapInfo(EVECallArgs&call)
 {
     return CharacterDB::GetMyCorpMates(call.client->GetCorporationID());
 }
 
-PyResult MapService::GetBeaconCount(PyCallArgs &call)
+EVEResult MapService::GetBeaconCount(EVECallArgs&call)
 {
     return MapDB::GetDynamicData(2, 24);
 }
 
-PyResult MapService::GetStationExtraInfo(PyCallArgs &call)
+EVEResult MapService::GetStationExtraInfo(EVECallArgs&call)
 {
     return sMapData.GetStationExtraInfo();
 }
 
-PyResult MapService::GetSolarSystemPseudoSecurities(PyCallArgs &call)
+EVEResult MapService::GetSolarSystemPseudoSecurities(EVECallArgs&call)
 {
     // cant find a call to this in client (possible old call)
     return sMapData.GetPseudoSecurities();
 }
 
-PyResult MapService::GetStationCount(PyCallArgs &call)
+EVEResult MapService::GetStationCount(EVECallArgs&call)
 {
     // cached on client side.  if cache is empty, this call is made.
     return sDataMgr.GetStationCount();
 }
 
-PyResult MapService::GetHistory(PyCallArgs &call, PyInt* int1, PyInt* int2) {
+EVEResult MapService::GetHistory(EVECallArgs&call, PyInt* int1, PyInt* int2) {
     if (is_log_enabled(SERVICE__CALLS))
         sLog.Cyan( "MapService::Handle_GetHistory()", "type: %i, timeframe: %i", int1, int2 );
 
     return MapDB::GetDynamicData(int1->value(), int2->value());
 }
 
-PyResult MapService::GetLinkableJumpArrays(PyCallArgs &call)
+EVEResult MapService::GetLinkableJumpArrays(EVECallArgs&call)
 {   // working
     DBQueryResult res;
     PosMgrDB::GetLinkableJumpArrays(call.client->GetCorporationID(), res);
@@ -119,10 +119,10 @@ PyResult MapService::GetLinkableJumpArrays(PyCallArgs &call)
     DBResultRow row;
     while (res.GetRow(row)) {
         // SELECT systemID, itemID
-        PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(row.GetInt(0)));
-        tuple->SetItem(1, new PyInt(row.GetInt(1)));
-        list->AddItem(tuple);
+        list->add(new PyTuple {
+            new PyInt (row.GetInt(0)),
+            new PyInt (row.GetInt(1))
+        });
     }
 
     return list;
@@ -130,13 +130,13 @@ PyResult MapService::GetLinkableJumpArrays(PyCallArgs &call)
 
 /** not handled */
 
-PyResult MapService::GetAllianceJumpBridges(PyCallArgs &call)
+EVEResult MapService::GetAllianceJumpBridges(EVECallArgs&call)
 {
     /**     bridgesByLocation = m.GetAllianceJumpBridges()
      *      for toLocID, fromLocID in bridgesByLocation:
      */
     sLog.Warning( "MapService::Handle_GetAllianceJumpBridges()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     DBQueryResult res;
     PosMgrDB::GetAllianceJumpArrays(call.client->GetAllianceID(), res);
@@ -144,36 +144,38 @@ PyResult MapService::GetAllianceJumpBridges(PyCallArgs &call)
     DBResultRow row;
     while (res.GetRow(row)) {
         // SELECT systemID, itemID
-        PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(row.GetInt(0)));
-        tuple->SetItem(1, new PyInt(row.GetInt(1)));
-        list->AddItem(tuple);
+        list->add(new PyTuple {
+            new PyInt (row.GetInt(0)),
+            new PyInt (row.GetInt(1))
+        });
     }
 
     return list;
 }
 
-PyResult MapService::GetAllianceBeacons(PyCallArgs &call)
+EVEResult MapService::GetAllianceBeacons(EVECallArgs&call)
 {
     sLog.Warning( "MapService::Handle_GetAllianceBeacons()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     // Get data directly from sovereignty manager, avoiding db hits
     return svDataMgr.GetAllianceBeacons(call.client->GetAllianceID());
 }
 
-PyResult MapService::GetCurrentSovData(PyCallArgs &call, PyInt* locationID)
+EVEResult MapService::GetCurrentSovData(
+    EVECallArgs&call, PyInt* locationID)
 {/**
     data = sm.RemoteSvc('map').GetCurrentSovData(constellationID)
     returns locationID, ?
     return sm.RemoteSvc('map').GetCurrentSovData(locationID)
     */
     sLog.Warning( "MapService::Handle_GetCurrentSovData()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return svDataMgr.GetCurrentSovData(locationID->value());
 }
-PyResult MapService::GetRecentSovActivity(PyCallArgs &call)
+
+EVEResult MapService::GetRecentSovActivity(EVECallArgs&call)
 {
     /** @todo will have to make db table for this one.  */
     /*
@@ -205,19 +207,21 @@ PyResult MapService::GetRecentSovActivity(PyCallArgs &call)
 }
 
 //   DED Agent Site Report
-PyResult MapService::GetDeadspaceAgentsMap(PyCallArgs &call, PyInt* languageID)
+EVEResult MapService::GetDeadspaceAgentsMap(
+    EVECallArgs&call, PyInt* languageID)
 {/* no packet data
         dungeons = sm.RemoteSvc('map').GetDeadspaceAgentsMap(eve.session.languageID)
         solarSystemID, dungeonID, difficulty, dungeonName = dungeons
 */
-    PyRep *result = new PyDict();
+    PyDataType *result = new PyDict();
 
     return result;
 }
 
 //  DED Deadspace Report
 //22:37:54 L MapService::Handle_GetDeadspaceComplexMap(): size= 1
-PyResult MapService::GetDeadspaceComplexMap(PyCallArgs &call, PyInt* languageID)
+EVEResult MapService::GetDeadspaceComplexMap(
+    EVECallArgs&call, PyInt* languageID)
 {/* no packet data
         dungeons = sm.RemoteSvc('map').GetDeadspaceComplexMap(eve.session.languageID)
         solarSystemID, dungeonID, difficulty, dungeonName = dungeons
@@ -226,13 +230,13 @@ PyResult MapService::GetDeadspaceComplexMap(PyCallArgs &call, PyInt* languageID)
         res =  sysSignatures (sigID,sigItemID,dungeonType,sigName,systemID,sigTypeID,sigGroupID,scanGroupID,scanAttributeID,x,y,z)
 */
     sLog.Warning( "MapService::Handle_GetDeadspaceComplexMap()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
-    PyRep *result = new PyDict();
+    call.dump(SERVICE__CALL_DUMP);
+    PyDataType *result = new PyDict();
 
     return result;
 }
 
-PyResult MapService::GetSystemsInIncursions(PyCallArgs &call) {
+EVEResult MapService::GetSystemsInIncursions(EVECallArgs&call) {
     /**  EVE_Incursion.h
      *        participatingSystems = ms.GetSystemsInIncursions()
      *        for solarSystemID, sceneType in participatingSystems:
@@ -246,16 +250,16 @@ PyResult MapService::GetSystemsInIncursions(PyCallArgs &call) {
     DBResultRow row;
     while (res.GetRow(row)) {
         // SELECT systemID, sceneType
-        PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(row.GetInt(0)));   //solarSystemID
-        tuple->SetItem(1, new PyInt(row.GetInt(1)));   //sceneType
-        list->AddItem(tuple);
+        list->add(new PyTuple {
+            new PyInt (row.GetInt (0)), // solarSystemID
+            new PyInt (row.GetInt (1)), // sceneType
+        });
     }
 
     return list;
 }
 
-PyResult MapService::GetSystemsInIncursionsGM(PyCallArgs &call) {
+EVEResult MapService::GetSystemsInIncursionsGM(EVECallArgs&call) {
     /**
      *        participatingSystems = ms.GetSystemsInIncursionsGM()
      *        for solarSystemID, sceneType in participatingSystems:
@@ -269,17 +273,17 @@ PyResult MapService::GetSystemsInIncursionsGM(PyCallArgs &call) {
     DBResultRow row;
     while (res.GetRow(row)) {
         // SELECT systemID, sceneType
-        PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(row.GetInt(0)));    //solarSystemID
-        tuple->SetItem(1, new PyInt(row.GetInt(1)));    //sceneType
-        list->AddItem(tuple);
+        list->add(new PyTuple {
+            new PyInt (row.GetInt (0)), // solarSystemID,
+            new PyInt (row.GetInt (1)), // sceneType
+        });
     }
 
     return list;
 }
 
 //05:52:07 L MapService::Handle_GetIncursionGlobalReport(): size= 0
-PyResult MapService::GetIncursionGlobalReport(PyCallArgs &call) {
+EVEResult MapService::GetIncursionGlobalReport(EVECallArgs&call) {
   /**
             report = sm.RemoteSvc('map').GetIncursionGlobalReport()
             rewardGroupIDs = [ r.rewardGroupID for r in report ]
@@ -337,38 +341,31 @@ PyResult MapService::GetIncursionGlobalReport(PyCallArgs &call) {
               [PyInt -950263469]
               */
     sLog.Warning( "MapService::Handle_GetIncursionGlobalReport()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return PyStatic.NewNone();
 }
 
 //   factional warfare shit
 //https://wiki.eveonline.com/en/wiki/Victory_Points_and_Command_Bunker
-PyResult MapService::GetVictoryPoints(PyCallArgs &call)
+EVEResult MapService::GetVictoryPoints(
+    EVECallArgs&call)
 {/**           factionID, viewmode, solarsystemid, threshold, current in oldhistory.iteritems():
                  */
     sLog.Warning( "MapService::Handle_GetVictoryPoints()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return PyStatic.NewNone();
 }
 
-
-PyResult MapService::GetStuckSystems(PyCallArgs &call)
+EVEResult MapService::GetStuckSystems(EVECallArgs&call)
 {
     // cant find a call to this in client (possible old call)
     sLog.Warning( "MapService::Handle_GetStuckSystems()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
-    uint8 none = 0;
-
-    PyTuple* res = NULL;
-    PyTuple* tuple0 = new PyTuple( 1 );
-
-    tuple0->items[ 0 ] = new PyInt( none );
-
-    res = tuple0;
-
-    return res;
+    return new PyTuple {
+        new PyInt (0)
+    };
 }
 

@@ -7,7 +7,7 @@
   * @date:      24 June 2018
   *
   */
-#include "../EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 #include "Client.h"
 #include "EntityList.h"

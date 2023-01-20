@@ -36,7 +36,7 @@ DungeonExplorationMgrService::DungeonExplorationMgrService() :
     this->Add("GetMyEscalatingPathDetails", &DungeonExplorationMgrService::GetMyEscalatingPathDetails);
 }
 
-PyResult DungeonExplorationMgrService::GetMyEscalatingPathDetails(PyCallArgs &call) {
+EVEResult DungeonExplorationMgrService::GetMyEscalatingPathDetails(EVECallArgs&call) {
     // cached response
     /**00:51:32 L DungeonExplorationMgrService::Handle_GetMyEscalatingPathDetails(): size= 0
      * 00:51:32 [SvcCall]   Call Arguments:
@@ -93,7 +93,7 @@ PyResult DungeonExplorationMgrService::GetMyEscalatingPathDetails(PyCallArgs &ca
      *
      */
     sLog.White("DungeonExplorationMgrService::Handle_GetMyEscalatingPathDetails()",  "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return PyStatic.NewNone();
 }

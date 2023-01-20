@@ -113,7 +113,7 @@ void DungeonDB::GetGroups(DBQueryResult& res)
     _log(DATABASE__ERROR, "Error in GetFactions query: %s", res.error.c_str());
 }
 
-PyRep* DungeonDB::GetRoomGroups(uint32 roomID)
+PyDataType* DungeonDB::GetRoomGroups(uint32 roomID)
 {
     DBQueryResult res;
 

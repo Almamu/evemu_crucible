@@ -11,7 +11,7 @@
 #define EVEMU_EXPLORE_PROBES_H_
 
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "../../eve-common/EVE_Scanning.h"
 #include "inventory/InventoryItem.h"

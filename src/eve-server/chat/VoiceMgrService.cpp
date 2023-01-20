@@ -34,9 +34,9 @@ VoiceMgrService::VoiceMgrService() :
     this->Add("VoiceEnabled", &VoiceMgrService::VoiceEnabled);
 }
 
-PyResult VoiceMgrService::VoiceEnabled(PyCallArgs &call) {
+EVEResult VoiceMgrService::VoiceEnabled(EVECallArgs&call) {
     //maybe in future, but not now ...
-    return(new PyInt(0));
+    return call.arena.Int (0);
 }
 
 /*

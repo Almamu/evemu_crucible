@@ -34,7 +34,7 @@ class PyString;
 class MailDB : public ServiceDB
 {
 public:
-    PyRep* GetLabels(int characterID) const;
+    PyDataType* GetLabels(int characterID) const;
 
     PyString* GetMailBody(int id) const;
 
@@ -108,8 +108,8 @@ public:
     void RemoveLabelMasks(std::vector<int32> messageIDs, int mask);
 
     int SendMail(int sender, std::vector<int>& toCharacterIDs, int toListID, int toCorpOrAllianceID, const std::string& title, const std::string& body, int isReplyTo, int isForwardedFrom);
-    PyRep* GetNewMail(int charId);
-    PyRep* GetMailStatus(int charId);
+    PyDataType* GetNewMail(int charId);
+    PyDataType* GetMailStatus(int charId);
 
 protected:
     static int BitFromLabelID(int id);

@@ -52,14 +52,14 @@ PyList* LiveUpdateDB::GenerateUpdates()
 
     // setup the descriptor
     DBRowDescriptor* header = new DBRowDescriptor();
-    header->AddColumn("updateID", DBTYPE_I4);
-    header->AddColumn("updateName", DBTYPE_WSTR);
-    header->AddColumn("description", DBTYPE_WSTR);
-    header->AddColumn("machoVersionMin", DBTYPE_I4);
-    header->AddColumn("machoVersionMax", DBTYPE_I4);
-    header->AddColumn("buildNumberMin", DBTYPE_I4);
-    header->AddColumn("buildNumberMax", DBTYPE_I4);
-    header->AddColumn("code", DBTYPE_STR);
+    header->add("updateID", DBTYPE_I4);
+    header->add("updateName", DBTYPE_WSTR);
+    header->add("description", DBTYPE_WSTR);
+    header->add("machoVersionMin", DBTYPE_I4);
+    header->add("machoVersionMax", DBTYPE_I4);
+    header->add("buildNumberMin", DBTYPE_I4);
+    header->add("buildNumberMax", DBTYPE_I4);
+    header->add("code", DBTYPE_STR);
 
     // we need to manually create PyPackedRows since we don't want everything from the query in them
     PyList* list = new PyList(res.GetRowCount());
@@ -69,7 +69,7 @@ PyList* LiveUpdateDB::GenerateUpdates()
     {
         PyPackedRow* packedRow = new PyPackedRow(header);
         for (int i = 0; i < 7; i++)
-            packedRow->SetField(i, DBColumnToPyRep(row, i));
+            packedRow->set(i, DBColumnToPyDataType(row, i));
 
         LiveUpdateInner inner;
         // binary data so we can't expect strlen to get it right
@@ -77,11 +77,11 @@ PyList* LiveUpdateDB::GenerateUpdates()
         inner.codeType = row.GetText(9);
         inner.objectID = row.GetText(8);
         inner.methodName = row.GetText(7);
-        packedRow->SetField(static_cast<uint32>(7) /* code */, inner.Encode());
+        packedRow->set(static_cast<uint32>(7) /* code */, inner.Encode());
 
-        list->SetItem(listIndex++, packedRow);
+        list->set(listIndex++, packedRow);
     }
-    list->Dump(NET__PRES_DEBUG, "    ");
+    list->dump(NET__PRES_DEBUG, "    ");
 
     return list;
 }

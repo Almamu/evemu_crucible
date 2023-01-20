@@ -34,34 +34,24 @@ SlashService::SlashService(CommandDispatcher *cd) :
     Service("slash"),
     m_commandDispatch(cd)
 {
-    this->Add("SlashCmd", static_cast <PyResult (SlashService::*) (PyCallArgs &, PyWString*)> (&SlashService::SlashCmd));
-    this->Add("SlashCmd", static_cast <PyResult (SlashService::*) (PyCallArgs &, PyString*)> (&SlashService::SlashCmd));
+    this->Add("SlashCmd", static_cast <EVEResult (SlashService::*) (EVECallArgs&, PyString*)> (&SlashService::SlashCmd));
+    this->Add("SlashCmd", static_cast <EVEResult (SlashService::*) (EVECallArgs&, PyString*)> (&SlashService::SlashCmd));
 }
 
-PyResult SlashService::SlashCmd (PyCallArgs& call, PyWString* command)
+EVEResult SlashService::SlashCmd (EVECallArgs& call, PyString* command)
 {
     if (is_log_enabled(COMMAND__DUMP)) {
         sLog.White("SlashService::Handle_SlashCmd()", "size=%lu", call.tuple->size());
-        call.Dump(COMMAND__DUMP);
+        call.dump(COMMAND__DUMP);
     }
 
     return SlashCommand (call.client, command->content());
 }
 
-PyResult SlashService::SlashCmd (PyCallArgs& call, PyString* command)
-{
-    if (is_log_enabled(COMMAND__DUMP)) {
-        sLog.White("SlashService::Handle_SlashCmd()", "size=%lu", call.tuple->size());
-        call.Dump(COMMAND__DUMP);
-    }
-
-    return SlashCommand (call.client, command->content());
-}
-
-PyResult SlashService::SlashCommand(Client * client, std::string command)
+EVEResult SlashService::SlashCommand(Client * client, std::string command)
 {
     if ((client->GetAccountRole() & Acct::Role::SLASH) != Acct::Role::SLASH) {
-        _log( COMMAND__ERROR, "%s: Client '%s' used a slash command but does not have Acct::Role::SLASH.", GetName(), client->GetName() );
+        _log( COMMAND__ERROR, "%s: Client '%s' used a slash command but does not have Acct::Role::SLASH.", GetName().c_str(), client->GetName() );
         throw CustomError ("You need to have Acct::Role::SLASH to execute commands.");
     }
 

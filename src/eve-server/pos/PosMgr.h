@@ -26,14 +26,14 @@ public:
 protected:
     PosMgrDB m_db;
 
-    PyResult GetJumpArrays(PyCallArgs& call);
-    PyResult GetControlTowers(PyCallArgs& call);
-    PyResult GetControlTowerFuelRequirements(PyCallArgs& call);
+    EVEResult GetJumpArrays(EVECallArgs& call);
+    EVEResult GetControlTowers(EVECallArgs& call);
+    EVEResult GetControlTowerFuelRequirements(EVECallArgs& call);
 
     //PyCallable_DECL_CALL()
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters);
 
 private:
     std::map<uint32, PosMgrBound*> m_instances;
@@ -47,32 +47,32 @@ public:
     uint32 GetSystemID() { return this->m_systemID; }
 
 protected:
-    PyResult SetTowerPassword(PyCallArgs& call, PyInt* itemID, PyRep* password);
-    PyResult SetTowerPassword(PyCallArgs& call, PyInt* itemID, PyRep* password, PyBool* allowCorp, PyBool* allowAlliance);
-    PyResult SetShipPassword(PyCallArgs& call, PyWString* password);
-    PyResult GetMoonForTower(PyCallArgs& call, PyInt* itemID);
-    PyResult GetSiloCapacityByItemID(PyCallArgs& call, PyInt* itemID);
-    PyResult AnchorOrbital(PyCallArgs& call, PyInt* itemID);
-    PyResult UnanchorOrbital(PyCallArgs& call, PyInt* itemID);
-    PyResult OnlineOrbital(PyCallArgs& call, PyInt* itemID);
-    PyResult GMUpgradeOrbital(PyCallArgs& call, PyInt* itemID);
-    PyResult AnchorStructure(PyCallArgs& call, PyInt* structureID, PyTuple* position);
-    PyResult UnanchorStructure(PyCallArgs& call, PyInt* itemID);
-    PyResult AssumeStructureControl(PyCallArgs& call, PyInt* itemID);
-    PyResult RelinquishStructureControl(PyCallArgs& call, PyInt* itemID);
-    PyResult ChangeStructureProvisionType(PyCallArgs& call, PyInt* towerID, PyInt* itemID, PyInt* typeID);
-    PyResult CompleteOrbitalStateChange(PyCallArgs& call, PyInt* itemID);
-    PyResult GetMoonProcessInfoForTower(PyCallArgs& call, PyInt* itemID);
-    PyResult LinkResourceForTower(PyCallArgs& call, PyInt* itemID, PyList* connections);
-    PyResult RunMoonProcessCycleforTower(PyCallArgs& call, PyInt* itemID);
-    PyResult GetStarbasePermissions(PyCallArgs& call, PyInt* itemID);
-    PyResult SetStarbasePermissions(PyCallArgs& call, PyInt* itemID, PyObject* deployFlags, PyObject* usageFlagsList);
-    PyResult GetTowerNotificationSettings(PyCallArgs& call, PyInt* itemID);
-    PyResult SetTowerNotifications(PyCallArgs& call, PyInt* itemID, PyBool* showInCalendar, PyBool* sendFuelNotifications);
-    PyResult GetTowerSentrySettings(PyCallArgs& call, PyInt* itemID);
-    PyResult SetTowerSentrySettings(PyCallArgs& call, PyInt* itemID, PyFloat* standing, PyFloat* status, PyBool* statusDrop, PyBool* corpWar, PyBool* useAllianceStandings);
-    PyResult InstallJumpBridgeLink(PyCallArgs& call, PyInt* localItemID, PyInt* remoteSolarSystemID, PyInt* remoteItemID);
-    PyResult UninstallJumpBridgeLink(PyCallArgs& call, PyInt* itemID);
+  EVEResult SetTowerPassword(EVECallArgs& call, PyInt* itemID, PyDataType* password);
+  EVEResult SetTowerPassword(EVECallArgs& call, PyInt* itemID, PyDataType* password, PyBool* allowCorp, PyBool* allowAlliance);
+  EVEResult SetShipPassword(EVECallArgs& call, PyString* password);
+  EVEResult GetMoonForTower(EVECallArgs& call, PyInt* itemID);
+  EVEResult GetSiloCapacityByItemID(EVECallArgs& call, PyInt* itemID);
+  EVEResult AnchorOrbital(EVECallArgs& call, PyInt* itemID);
+  EVEResult UnanchorOrbital(EVECallArgs& call, PyInt* itemID);
+  EVEResult OnlineOrbital(EVECallArgs& call, PyInt* itemID);
+  EVEResult GMUpgradeOrbital(EVECallArgs& call, PyInt* itemID);
+  EVEResult AnchorStructure(EVECallArgs& call, PyInt* structureID, PyTuple* position);
+  EVEResult UnanchorStructure(EVECallArgs& call, PyInt* itemID);
+  EVEResult AssumeStructureControl(EVECallArgs& call, PyInt* itemID);
+  EVEResult RelinquishStructureControl(EVECallArgs& call, PyInt* itemID);
+  EVEResult ChangeStructureProvisionType(EVECallArgs& call, PyInt* towerID, PyInt* itemID, PyInt* typeID);
+  EVEResult CompleteOrbitalStateChange(EVECallArgs& call, PyInt* itemID);
+  EVEResult GetMoonProcessInfoForTower(EVECallArgs& call, PyInt* itemID);
+  EVEResult LinkResourceForTower(EVECallArgs& call, PyInt* itemID, PyList* connections);
+  EVEResult RunMoonProcessCycleforTower(EVECallArgs& call, PyInt* itemID);
+  EVEResult GetStarbasePermissions(EVECallArgs& call, PyInt* itemID);
+  EVEResult SetStarbasePermissions(EVECallArgs& call, PyInt* itemID, PyObject* deployFlags, PyObject* usageFlagsList);
+  EVEResult GetTowerNotificationSettings(EVECallArgs& call, PyInt* itemID);
+  EVEResult SetTowerNotifications(EVECallArgs& call, PyInt* itemID, PyBool* showInCalendar, PyBool* sendFuelNotifications);
+  EVEResult GetTowerSentrySettings(EVECallArgs& call, PyInt* itemID);
+  EVEResult SetTowerSentrySettings(EVECallArgs& call, PyInt* itemID, PyFloat* standing, PyFloat* status, PyBool* statusDrop, PyBool* corpWar, PyBool* useAllianceStandings);
+  EVEResult InstallJumpBridgeLink(EVECallArgs& call, PyInt* localItemID, PyInt* remoteSolarSystemID, PyInt* remoteItemID);
+  EVEResult UninstallJumpBridgeLink(EVECallArgs& call, PyInt* itemID);
 
 private:
     PosMgrDB m_db;

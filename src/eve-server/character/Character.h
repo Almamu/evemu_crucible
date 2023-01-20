@@ -239,7 +239,7 @@ public:
     bool            HasSkillTrainedToLevel(uint16 skillTypeID, uint8 skillLevel) const;
     SkillRef        GetCharSkillRef(uint16 skillTypeID) const;
     int8            GetSkillLevel(uint16 skillTypeID, bool zeroForNotInjected = true) const;
-    PyRep*          GetRAMSkills();
+    PyDataType*          GetRAMSkills();
     Skill*          GetSkillInTraining() const          { return m_inTraining; }
     void            GetSkillsList(std::vector<InventoryItemRef>& skills) const;
     void            VerifySP();
@@ -259,7 +259,7 @@ public:
     void            RemoveFromQueue(SkillRef sRef);
     void            ClearSkillFlags();
 
-    PyRep*          GetSkillHistory();
+    PyDataType*          GetSkillHistory();
     uint32          GetTotalSP();
 
     /* Certificates */
@@ -269,7 +269,7 @@ public:
     void            GetCertificates( CertMap& crt );
 
     /* Primary public packet builders */
-    PyDict*         GetCharInfo();
+    PyDict*         GetCharInfo(PythonArena* arena);
     PyObject*       GetDescription() const;
     PyTuple*        SendSkillQueue();
 

@@ -47,7 +47,7 @@ EVETCPConnection::EVETCPConnection( Socket* sock, uint32 rIP, uint16 rPort )
 {
 }
 
-void EVETCPConnection::QueueRep( const PyRep* rep, bool compress/*true*/ )
+void EVETCPConnection::QueueRep( PyDataType* rep, bool compress/*true*/ )
 {
     Buffer* pBuffer = new Buffer();
 
@@ -82,9 +82,9 @@ void EVETCPConnection::QueueRep( const PyRep* rep, bool compress/*true*/ )
     SafeDelete( pBuffer );
 }
 
-PyRep* EVETCPConnection::PopRep()
+PyDataType* EVETCPConnection::PopRep(PythonArena* arena)
 {
-    PyRep* res(nullptr);
+    PyDataType* res(nullptr);
 
     MutexLock lock( mMInQueue );
     Buffer* packet = mInQueue.PopPacket();
@@ -95,7 +95,7 @@ PyRep* EVETCPConnection::PopRep()
         } else {
            // if (is_log_enabled(DEBUG__DEBUG))
            //     DumpBuffer( packet, PACKET_INBOUND );
-            res = InflateUnmarshal( *packet );
+            res = InflateUnmarshal(*packet, arena);
         }
     }
 

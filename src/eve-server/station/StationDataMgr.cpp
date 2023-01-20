@@ -237,25 +237,23 @@ PyObject* StationDataMgr::GetStationPyData(uint32 stationID)
     return nullptr;
 }
 
-PyRep* StationDataMgr::GetStationItemBits(uint32 stationID)
+PyDataType* StationDataMgr::GetStationItemBits(uint32 stationID, PythonArena* arena)
 {
     //['hangarGraphicID','ownerID','itemID','serviceMask','stationTypeID']
     std::map<uint32, StationData>::iterator itr = m_stationData.find(stationID);
-    if (itr != m_stationData.end()) {
-        std::map<int8, int32>::iterator itr2;
-        PyTuple * result = new PyTuple(5);
-            result->SetItem(0, new PyInt(itr->second.hangarGraphicID));
-            result->SetItem(1, new PyInt(itr->second.corporationID));
-            result->SetItem(2, new PyInt(stationID));
-            if ((itr2 = m_serviceMask.find(itr->second.operationID)) != m_serviceMask.end()) {
-                result->SetItem(3, new PyInt(itr2->second));
-            } else {
-                result->SetItem(3, new PyInt(0));
-            }
-            result->SetItem(4, new PyInt(itr->second.typeID));
-        return result;
+
+    if (itr == m_stationData.end()) {
+        return nullptr;
     }
-    return nullptr;
+    std::map<int8, int32>::iterator itr2 = m_serviceMask.find (itr->second.operationID);
+
+    return arena->Tuple ({
+        arena->Int (itr->second.hangarGraphicID),
+        arena->Int (itr->second.corporationID),
+        arena->Int (stationID),
+        itr2 != m_serviceMask.end() ? arena->Int (itr2->second) : arena->Int (0),
+        arena->Int (itr->second.typeID)
+    });
 }
 
 void StationDataMgr::GetStationOfficeIDs(uint32 locationID, std::vector<OfficeData> &data)
@@ -292,45 +290,45 @@ void StationDataMgr::LoadStationPyData()
 {
     for (auto cur : m_stationData) {
         PyDict* dict = new PyDict();
-            dict->SetItemString("stationID", new PyInt(cur.first));
-            dict->SetItemString("ownerID", new PyInt(cur.second.corporationID));
-            dict->SetItemString("stationTypeID", new PyInt(cur.second.typeID));
-            dict->SetItemString("stationName", new PyString(cur.second.name));
-            dict->SetItemString("operationID", new PyInt(cur.second.operationID));
-            dict->SetItemString("x", new PyFloat(cur.second.position.x));
-            dict->SetItemString("y", new PyFloat(cur.second.position.y));
-            dict->SetItemString("z", new PyFloat(cur.second.position.z));
-            dict->SetItemString("dockEntryX", new PyFloat(cur.second.dockEntry.x));
-            dict->SetItemString("dockEntryY", new PyFloat(cur.second.dockEntry.y));
-            dict->SetItemString("dockEntryZ", new PyFloat(cur.second.dockEntry.z));
-            dict->SetItemString("dockOrientationX", new PyFloat(cur.second.dockOrientation.x));
-            dict->SetItemString("dockOrientationY", new PyFloat(cur.second.dockOrientation.y));
-            dict->SetItemString("dockOrientationZ", new PyFloat(cur.second.dockOrientation.z));
+            dict->set ("stationID", new PyInt(cur.first));
+            dict->set ("ownerID", new PyInt(cur.second.corporationID));
+            dict->set ("stationTypeID", new PyInt(cur.second.typeID));
+            dict->set ("stationName", new PyString(cur.second.name));
+            dict->set ("operationID", new PyInt(cur.second.operationID));
+            dict->set ("x", new PyFloat(cur.second.position.x));
+            dict->set ("y", new PyFloat(cur.second.position.y));
+            dict->set ("z", new PyFloat(cur.second.position.z));
+            dict->set ("dockEntryX", new PyFloat(cur.second.dockEntry.x));
+            dict->set ("dockEntryY", new PyFloat(cur.second.dockEntry.y));
+            dict->set ("dockEntryZ", new PyFloat(cur.second.dockEntry.z));
+            dict->set ("dockOrientationX", new PyFloat(cur.second.dockOrientation.x));
+            dict->set ("dockOrientationY", new PyFloat(cur.second.dockOrientation.y));
+            dict->set ("dockOrientationZ", new PyFloat(cur.second.dockOrientation.z));
 
-            dict->SetItemString("serviceMask", new PyInt(cur.second.serviceMask));
-            dict->SetItemString("conquerable", new PyBool(cur.second.conquerable));
-            dict->SetItemString("upgradeLevel", new PyInt(0));  // outposts only. others are 0
-            dict->SetItemString("standingOwnerID", new PyInt(cur.second.corporationID));
-            dict->SetItemString("hangarGraphicID", new PyInt(cur.second.hangarGraphicID));
-            dict->SetItemString("officeRentalCost", new PyInt(cur.second.officeRentalFee));
-            dict->SetItemString("dockingBayGraphicID", PyStatic.NewNone());   // cannot find any data on this; all packets show PyNone
-            dict->SetItemString("dockingCostPerVolume", new PyFloat(cur.second.dockingCostPerVolume));
-            dict->SetItemString("maxShipVolumeDockable", new PyFloat(cur.second.maxShipVolumeDockable));
-            dict->SetItemString("reprocessingEfficiency", new PyFloat(cur.second.reprocessingEfficiency));
-            dict->SetItemString("reprocessingHangarFlag", new PyInt(cur.second.reprocessingHangarFlag));
-            dict->SetItemString("reprocessingStationsTake", new PyFloat(cur.second.reprocessingStationsTake));
+            dict->set ("serviceMask", new PyInt(cur.second.serviceMask));
+            dict->set ("conquerable", new PyBool(cur.second.conquerable));
+            dict->set ("upgradeLevel", new PyInt(0));  // outposts only. others are 0
+            dict->set ("standingOwnerID", new PyInt(cur.second.corporationID));
+            dict->set ("hangarGraphicID", new PyInt(cur.second.hangarGraphicID));
+            dict->set ("officeRentalCost", new PyInt(cur.second.officeRentalFee));
+            dict->set ("dockingBayGraphicID", PyStatic.NewNone());   // cannot find any data on this; all packets show PyNone
+            dict->set ("dockingCostPerVolume", new PyFloat(cur.second.dockingCostPerVolume));
+            dict->set ("maxShipVolumeDockable", new PyFloat(cur.second.maxShipVolumeDockable));
+            dict->set ("reprocessingEfficiency", new PyFloat(cur.second.reprocessingEfficiency));
+            dict->set ("reprocessingHangarFlag", new PyInt(cur.second.reprocessingHangarFlag));
+            dict->set ("reprocessingStationsTake", new PyFloat(cur.second.reprocessingStationsTake));
 
-            dict->SetItemString("solarSystemID", new PyInt(cur.second.systemID));
-            dict->SetItemString("constellationID", new PyInt(cur.second.constellationID));
-            dict->SetItemString("regionID", new PyInt(cur.second.regionID));
-            dict->SetItemString("security", new PyFloat(cur.second.security));
+            dict->set ("solarSystemID", new PyInt(cur.second.systemID));
+            dict->set ("constellationID", new PyInt(cur.second.constellationID));
+            dict->set ("regionID", new PyInt(cur.second.regionID));
+            dict->set ("security", new PyFloat(cur.second.security));
 
-            dict->SetItemString("graphicID", new PyInt(cur.second.graphicID));  //invTypes.graphicID
-            dict->SetItemString("description", new PyString(cur.second.description));    //staOperations.description
-            dict->SetItemString("descriptionID", new PyInt(cur.second.descriptionID));    //staOperations.descriptionID
+            dict->set ("graphicID", new PyInt(cur.second.graphicID));  //invTypes.graphicID
+            dict->set ("description", new PyString(cur.second.description));    //staOperations.description
+            dict->set ("descriptionID", new PyInt(cur.second.descriptionID));    //staOperations.descriptionID
 
-            dict->SetItemString("radius", new PyFloat(cur.second.radius));   //mapDenormalize.radius or invTypes.radius
-            dict->SetItemString("orbitID", new PyInt(cur.second.orbitID));    //mapDenormalize.orbitID
+            dict->set ("radius", new PyFloat(cur.second.radius));   //mapDenormalize.radius or invTypes.radius
+            dict->set ("orbitID", new PyInt(cur.second.orbitID));    //mapDenormalize.orbitID
 
         m_stationPyData.emplace(cur.first, new PyObject("util.KeyVal", dict));
     }

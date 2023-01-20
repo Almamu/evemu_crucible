@@ -36,7 +36,7 @@ public:
     SovereigntyMgrService();
 
 protected:
-    PyResult GetSystemSovereigntyInfo(PyCallArgs& call, PyInt* systemID);
+  EVEResult GetSystemSovereigntyInfo(EVECallArgs& call, PyInt* systemID);
 };
 
 #endif

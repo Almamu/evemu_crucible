@@ -42,8 +42,8 @@ class CommandDispatcher;
  * AllCommandsList.h file.
  */
 
-#define COMMAND(name, role, description) \
-    PyResult Command_##name(Client *who, CommandDB *db, EVEServiceManager &services, const Seperator &args);
+#define COMMAND(name, role, description)                                                                               \
+    EVEResult Command_##name(Client *who, CommandDB *db, EVEServiceManager &services, const Seperator &args);
 #include "admin/AllCommandsList.h"
 
 extern void RegisterAllCommands(CommandDispatcher &into);

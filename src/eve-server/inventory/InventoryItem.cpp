@@ -606,7 +606,7 @@ void InventoryItem::ToVirtual(uint32 locationID)
         pAttributeMap->Delete();
 
     //notify about the changes.
-    std::map<int32, PyRep *> changes;
+    std::map<int32, PyDataType *> changes;
     changes[Inv::Update::Location] = new PyInt(m_data.locationID);
     SendItemChange(m_data.ownerID, changes);   //changes is consumed
     m_data.locationID = locationID;
@@ -622,15 +622,16 @@ void InventoryItem::Rename(std::string name)
     m_data.name = name;
     SaveItem();
 
-    PyList* list = new PyList();
-        list->AddItem(new PyInt(m_itemID));
-        list->AddItem(new PyString(name));
-        list->AddItem(new PyFloat(0));
-        list->AddItem(new PyFloat(0));
-        list->AddItem(new PyFloat(0));
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyString("evelocations"));
-        tuple->SetItem(1, list);
+    PyTuple* tuple = new PyTuple {
+        new PyString("evelocations"),
+        new PyList {
+            new PyInt (m_itemID),
+            new PyString (name),
+            new PyFloat (0),
+            new PyFloat (0),
+            new PyFloat (0)
+        }
+    };
 
     // get owner
     if (IsCharacterID(m_data.ownerID)) {
@@ -710,7 +711,7 @@ void InventoryItem::Donate(uint32 new_owner/*ownerSystem*/, uint32 new_location/
 
     // changes are cleared after sending, so make 2 sets to send to old owner and new owner
     if (notify) {
-        std::map<int32, PyRep *> changes;
+        std::map<int32, PyDataType *> changes;
         if (new_flag != old_flag)
             changes[Inv::Update::Flag] = new PyInt(old_flag);
         if (new_owner != old_owner)
@@ -786,7 +787,7 @@ void InventoryItem::Move(uint32 new_location/*locTemp*/, EVEItemFlags new_flag/*
 
     //notify about the changes.
     if (notify) {
-        std::map<int32, PyRep *> changes;
+        std::map<int32, PyDataType *> changes;
         if (m_data.locationID != old_location)
             changes[Inv::Update::Location] = new PyInt(old_location);
         if (m_data.flag != old_flag)
@@ -848,7 +849,7 @@ void InventoryItem::Relocate(uint32 locID, EVEItemFlags flag) {
         ItemDB::UpdateLocation(m_itemID, m_data.locationID, m_data.flag);
 
     //notify about the changes.
-    std::map<int32, PyRep *> changes;
+    std::map<int32, PyDataType *> changes;
     if (m_data.locationID != old_location)
         changes[Inv::Update::Location] = new PyInt(old_location);
     if (m_data.flag != old_flag)
@@ -961,7 +962,7 @@ bool InventoryItem::SetQuantity(int32 qty, bool notify/*false*/, bool deleteOnZe
     } */
 
     if (notify or (IsCargoHoldFlag(m_data.flag) and (m_type.categoryID() == EVEDB::invCategories::Charge))) {
-        std::map<int32, PyRep *> changes;
+        std::map<int32, PyDataType *> changes;
         changes[Inv::Update::StackSize] = new PyInt(old_qty);
         SendItemChange(m_data.ownerID, changes); //changes is consumed
     }
@@ -995,7 +996,7 @@ bool InventoryItem::SetFlag(EVEItemFlags flag, bool notify/*false*/) {
     ItemDB::UpdateLocation(m_itemID, m_data.locationID, m_data.flag);
 
     if (notify) {
-        std::map<int32, PyRep *> changes;
+        std::map<int32, PyDataType *> changes;
         changes[Inv::Update::Flag] = new PyInt(old_flag);
         SendItemChange(m_data.ownerID, changes); //changes is consumed
     }
@@ -1022,7 +1023,7 @@ bool InventoryItem::ChangeSingleton(bool singleton, bool notify/*false*/) {
         SaveItem();
 
     if (notify) {
-        std::map<int32, PyRep *> changes;
+        std::map<int32, PyDataType *> changes;
         changes[Inv::Update::Singleton] = new PyInt(old_singleton);
         SendItemChange(m_data.ownerID, changes); //changes is consumed
     }
@@ -1044,7 +1045,7 @@ void InventoryItem::ChangeOwner(uint32 new_owner, bool notify/*false*/) {
 
     //notify about the changes.
     if (notify) {
-        std::map<int32, PyRep *> changes;
+        std::map<int32, PyDataType *> changes;
         //send the notify to the new owner.
         changes[Inv::Update::Owner] = new PyInt(old_owner);
         SendItemChange(new_owner, changes); //changes is consumed
@@ -1055,7 +1056,7 @@ void InventoryItem::ChangeOwner(uint32 new_owner, bool notify/*false*/) {
 }
 
 //contents of changes are consumed and cleared
-void InventoryItem::SendItemChange(uint32 toID, std::map<int32, PyRep *> &changes) {
+void InventoryItem::SendItemChange(uint32 toID, std::map<int32, PyDataType *> &changes) {
     if (IsNPCCorp(toID) or (toID == 1) or IsFaction(toID))   //IsValidOwner()
         return;
     if (sConsole.IsShutdown())
@@ -1070,7 +1071,7 @@ void InventoryItem::SendItemChange(uint32 toID, std::map<int32, PyRep *> &change
 
     if (is_log_enabled(ITEM__CHANGE)) {
         _log(ITEM__CHANGE, "Sending Item changes for %s(%u)", m_data.name.c_str(), m_itemID);
-        tmp->Dump(ITEM__CHANGE, "    ");
+        tmp->dump(ITEM__CHANGE, "    ");
     }
 
     //TODO: figure out the appropriate list of interested people...
@@ -1117,72 +1118,72 @@ void InventoryItem::UpdateLocation() {
     ItemDB::UpdateLocation(m_itemID, m_data.locationID, m_data.flag);
 }
 
-PyPackedRow* InventoryItem::GetItemStatusRow() const {
-    DBRowDescriptor* header = new DBRowDescriptor();
-        header->AddColumn("instanceID",    DBTYPE_I8);
-        header->AddColumn("online",        DBTYPE_BOOL);
-        header->AddColumn("damage",        DBTYPE_R8);
-        header->AddColumn("charge",        DBTYPE_R8);
-        header->AddColumn("skillPoints",   DBTYPE_I4);
-        header->AddColumn("armorDamage",   DBTYPE_R8);
-        header->AddColumn("shieldCharge",  DBTYPE_R8);
-        header->AddColumn("incapacitated", DBTYPE_BOOL);
-    PyPackedRow* row = new PyPackedRow(header);
-    GetItemStatusRow(row);
+PyPackedRow* InventoryItem::GetItemStatusRow(PythonArena* arena) const {
+    DBRowDescriptor* header = new(arena) DBRowDescriptor();
+        header->add("instanceID",    DBTYPE_I8);
+        header->add("online",        DBTYPE_BOOL);
+        header->add("damage",        DBTYPE_R8);
+        header->add("charge",        DBTYPE_R8);
+        header->add("skillPoints",   DBTYPE_I4);
+        header->add("armorDamage",   DBTYPE_R8);
+        header->add("shieldCharge",  DBTYPE_R8);
+        header->add("incapacitated", DBTYPE_BOOL);
+    PyPackedRow* row = arena->PackedRow(header);
+    GetItemStatusRow(row, arena);
     return row;
 }
 
-void InventoryItem::GetItemStatusRow(PyPackedRow* into ) const {
-    into->SetField("instanceID",    new PyLong(m_itemID ));
-    into->SetField("online",        new PyBool((HasAttribute(AttrOnline) ? GetAttribute(AttrOnline).get_bool() : false) ));
-    into->SetField("damage",        new PyFloat((HasAttribute(AttrDamage) ? GetAttribute(AttrDamage).get_float() : 0) ));
-    into->SetField("charge",        new PyFloat((HasAttribute(AttrCapacitorCharge) ? GetAttribute(AttrCapacitorCharge).get_float() : 0) ));
-    into->SetField("skillPoints",   new PyInt((HasAttribute(AttrSkillPoints) ? GetAttribute(AttrSkillPoints).get_uint32() : 0) ));
-    into->SetField("armorDamage",   new PyFloat((HasAttribute(AttrArmorDamageAmount) ? GetAttribute(AttrArmorDamageAmount).get_float() : 0.0) ));
-    into->SetField("shieldCharge",  new PyFloat((HasAttribute(AttrShieldCharge) ? GetAttribute(AttrShieldCharge).get_float() : 0.0) ));
-    into->SetField("incapacitated", new PyBool((HasAttribute(AttrIsIncapacitated) ? GetAttribute(AttrIsIncapacitated).get_bool() : false) ));
+void InventoryItem::GetItemStatusRow(PyPackedRow* into, PythonArena* arena) const {
+    into->set("instanceID",    arena->Int(m_itemID ));
+    into->set("online",        arena->Bool((HasAttribute(AttrOnline) ? GetAttribute(AttrOnline).get_bool() : false) ));
+    into->set("damage",        arena->Float((HasAttribute(AttrDamage) ? GetAttribute(AttrDamage).get_float() : 0) ));
+    into->set("charge",        arena->Float((HasAttribute(AttrCapacitorCharge) ? GetAttribute(AttrCapacitorCharge).get_float() : 0) ));
+    into->set("skillPoints",   arena->Int((HasAttribute(AttrSkillPoints) ? GetAttribute(AttrSkillPoints).get_uint32() : 0) ));
+    into->set("armorDamage",   arena->Float((HasAttribute(AttrArmorDamageAmount) ? GetAttribute(AttrArmorDamageAmount).get_float() : 0.0) ));
+    into->set("shieldCharge",  arena->Float((HasAttribute(AttrShieldCharge) ? GetAttribute(AttrShieldCharge).get_float() : 0.0) ));
+    into->set("incapacitated", arena->Bool((HasAttribute(AttrIsIncapacitated) ? GetAttribute(AttrIsIncapacitated).get_bool() : false) ));
 }
 
 /*  charge info for specific module  */
-PyPackedRow* InventoryItem::GetChargeStatusRow(uint32 shipID) const {
-    DBRowDescriptor* header = new DBRowDescriptor();
-        header->AddColumn("instanceID", DBTYPE_I8);
-        header->AddColumn("flagID",     DBTYPE_I2);
-        header->AddColumn("typeID",     DBTYPE_I4);
-        //header->AddColumn("quantity",   DBTYPE_I4);
-    PyPackedRow* row = new PyPackedRow(header);
-    GetChargeStatusRow(shipID, row);
+PyPackedRow* InventoryItem::GetChargeStatusRow(uint32 shipID, PythonArena* arena) const {
+    DBRowDescriptor* header = new(arena) DBRowDescriptor();
+        header->add("instanceID", DBTYPE_I8);
+        header->add("flagID",     DBTYPE_I2);
+        header->add("typeID",     DBTYPE_I4);
+        //header->add("quantity",   DBTYPE_I4);
+    PyPackedRow* row = arena->PackedRow(header);
+    GetChargeStatusRow(shipID, row, arena);
     return row;
 }
 
-void InventoryItem::GetChargeStatusRow(uint32 shipID, PyPackedRow* into) const {
-    into->SetField("instanceID",     new PyLong(shipID));  // locationID
-    into->SetField("flagID",         new PyInt(m_data.flag));
-    into->SetField("typeID",         new PyInt(m_type.id()));
+void InventoryItem::GetChargeStatusRow(uint32 shipID, PyPackedRow* into, PythonArena* arena) const {
+    into->set("instanceID",     arena->Int(shipID));  // locationID
+    into->set("flagID",         arena->Int(m_data.flag));
+    into->set("typeID",         arena->Int(m_type.id()));
 }
 
-PyPackedRow* InventoryItem::GetItemRow() const
+PyPackedRow* InventoryItem::GetItemRow(PythonArena* arena) const
 {
-    PyPackedRow* row = new PyPackedRow( sDataMgr.CreateHeader() );
-    GetItemRow(row);
+    PyPackedRow* row = arena->PackedRow (sDataMgr.CreateHeader(arena));
+    GetItemRow(row, arena);
     return row;
 }
 
-void InventoryItem::GetItemRow(PyPackedRow* into) const
+void InventoryItem::GetItemRow(PyPackedRow* into, PythonArena* arena) const
 {
     int32 qty = (m_data.singleton ? -1 : m_data.quantity);
     if (m_type.categoryID() == EVEDB::invCategories::Blueprint)
         if (sItemFactory.GetBlueprintRef(m_itemID)->copy())
             qty = -2;
 
-    into->SetField("itemID",       new PyLong(m_itemID));
-    into->SetField("typeID",       new PyInt(m_type.id()));
-    into->SetField("ownerID",      new PyInt(m_data.ownerID));
-    into->SetField("locationID",   new PyInt(m_data.locationID));
-    into->SetField("flagID",       new PyInt(m_data.flag));
-    into->SetField("groupID",      new PyInt(type().groupID()));
-    into->SetField("categoryID",   new PyInt(type().categoryID()));
-    into->SetField("quantity",     new PyInt(qty));
+    into->set("itemID",       arena->Int(m_itemID));
+    into->set("typeID",       arena->Int(m_type.id()));
+    into->set("ownerID",      arena->Int(m_data.ownerID));
+    into->set("locationID",   arena->Int(m_data.locationID));
+    into->set("flagID",       arena->Int(m_data.flag));
+    into->set("groupID",      arena->Int(type().groupID()));
+    into->set("categoryID",   arena->Int(type().categoryID()));
+    into->set("quantity",     arena->Int(qty));
     /*
     if (m_type.categoryID() == EVEDB::invCategories::Blueprint) {
         if (sItemFactory.GetBlueprintRef(m_itemID)->copy()) {
@@ -1199,11 +1200,12 @@ void InventoryItem::GetItemRow(PyPackedRow* into) const
     */
     // customInfo is actually used in client (but i dont think it's a string)
     //if const.ixLocationID in change and item.customInfo == logConst.eventUndock:
-    into->SetField("customInfo",   new PyString(m_data.customInfo));
+    into->set("customInfo",   arena->String(m_data.customInfo));
 }
 
-bool InventoryItem::Populate(Rsp_CommonGetInfo_Entry& result )
+bool InventoryItem::Populate(Rsp_CommonGetInfo_Entry& result, PythonArena* arena)
 {
+    // TODO: USE THE ARENA ONCE THE COMMONGETINFO IS PORTED TO THE NEW WAY OF DOING THINGS
     /** @todo  this may need to be reworked once POS and Outposts are implemented. */
 
     //make sure trash data is removed from &result
@@ -1217,12 +1219,12 @@ bool InventoryItem::Populate(Rsp_CommonGetInfo_Entry& result )
     // updated charge info...again  -allan 8Jan20
     if ((m_type.categoryID() == EVEDB::invCategories::Charge)
     and IsFittingSlot(m_data.flag)) {
-        PyTuple* tuple = new PyTuple(3);
-            tuple->SetItem(0, new PyInt(m_data.locationID));
-            tuple->SetItem(1, new PyInt(m_data.flag));
-            tuple->SetItem(2, new PyInt(m_type.id()));
-        result.itemID = tuple;
-        result.invItem = PyStatic.NewNone();
+        result.itemID = new PyTuple ({
+            new PyInt (m_data.locationID),
+            new PyInt (m_data.flag),
+            new PyInt (m_type.id())
+        });
+        result.invItem = arena->None();
         for (AttrMapItr itr = pAttributeMap->begin(), end = pAttributeMap->end(); itr != end; ++itr)
             result.attributes[(*itr).first] = (*itr).second.GetPyObject();
         return true;
@@ -1259,6 +1261,7 @@ bool InventoryItem::Populate(Rsp_CommonGetInfo_Entry& result )
             es.duration = -1;
             es.repeat = 0;
             es.randomSeed = PyStatic.NewNone();
+        // TODO: STOP USING THIS CLONE ONCE THE OBJECT IS PORTED TO THE NEW WAY OF DOING THINGS
         result.activeEffects[es.env_effectID] = es.Encode();
     }
 
@@ -1276,9 +1279,9 @@ bool InventoryItem::Populate(Rsp_CommonGetInfo_Entry& result )
 
 PyList* InventoryItem::GetItemInfo() const
 {
-    PyList* itemInfo = new PyList();
-        itemInfo->AddItem(GetItemRow());
-    return itemInfo;
+    return new PyList {
+        GetItemRow()
+    };
 }
 
 PyObject* InventoryItem::ItemGetInfo()

@@ -44,7 +44,7 @@ searchMaxResults = 500
 searchMinWildcardLength = 3
 */
 
-PyRep *SearchDB::Query(std::string string, std::vector<int> *searchID, uint32 charID) {
+PyDataType *SearchDB::Query(std::string string, std::vector<int> *searchID, uint32 charID) {
     std::string id = "";
 
     PyDict *dict = new PyDict();
@@ -141,13 +141,13 @@ PyRep *SearchDB::Query(std::string string, std::vector<int> *searchID, uint32 ch
                 break;
         }
         if (res.GetRowCount())
-            dict->SetItem(new PyInt(searchID->at(i)),DBResultToIntIntDict(res));
+            dict->set(new PyInt(searchID->at(i)),DBResultToIntIntDict(res));
     }
 
     return dict;
 }
 
-PyRep *SearchDB::QuickQuery(std::string string, std::vector<int> *searchID, uint32 charID, bool hideNPC, bool onlyAltName) {
+PyDataType *SearchDB::QuickQuery(std::string string, std::vector<int> *searchID, uint32 charID, bool hideNPC, bool onlyAltName) {
     uint8 size(searchID->size());
 
     if (((size == 1) and (searchID->at(0) == 2))
@@ -231,7 +231,7 @@ PyRep *SearchDB::QuickQuery(std::string string, std::vector<int> *searchID, uint
                 break;
         }
         while (res.GetRow(row)) {
-            result->AddItem( new PyInt(row.GetUInt(0) ));
+            result->add( new PyInt(row.GetUInt(0) ));
         }
     }
 

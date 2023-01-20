@@ -66,7 +66,7 @@ int LPService::GetLPReward(uint16 missionID, uint32 solarsystemID, uint8 agentLe
   return (1.6288 - m_data.securityRating ) * baseLP;   // LP reward = (1.6288 - System security) × Base LP
 }
 
-PyResult LPService::TakeOffer(PyCallArgs& call, PyInt* corpID, PyInt* storeID) {
+EVEResult LPService::TakeOffer(EVECallArgs& call, PyInt* corpID, PyInt* storeID) {
   if (!corpID->value() >= 1000000 && !corpID->value() <= 1000200) { // Bounds check valid corpID in call
     return new PyNone;
   }
@@ -130,18 +130,20 @@ PyResult LPService::TakeOffer(PyCallArgs& call, PyInt* corpID, PyInt* storeID) {
   return new PyNone;
 }
 
-PyResult LPService::ExchangeConcordLP(PyCallArgs& call, PyInt* corporationID, PyFloat* amount)
+EVEResult LPService::ExchangeConcordLP(
+    EVECallArgs& call, PyInt* corporationID, PyFloat* amount)
 {/**
             ret = sm.RemoteSvc('LPSvc').TakeOffer(self.cache.corpID, data.offerID)
             */
   sLog.White( "LPService::Handle_ExchangeConcordLP()", "size=%lu", call.tuple->size());
 
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
     return new PyList;
 }
 
 //17:09:54 L LPService::Handle_GetLPExchangeRates(): size= 0
-PyResult LPService::GetLPExchangeRates(PyCallArgs& call)
+EVEResult LPService::GetLPExchangeRates(
+    EVECallArgs& call)
 {/**
             self.cache.exchangeRates = sm.RemoteSvc('LPSvc').GetLPExchangeRates()
 
@@ -156,7 +158,8 @@ PyResult LPService::GetLPExchangeRates(PyCallArgs& call)
 }
 
 //18:46:38 L CharMgrService::Handle_GetLPForCharacterCorp(): size= 1, 0=Integer(1000049)
-PyResult LPService::GetLPForCharacterCorp(PyCallArgs& call, PyInt* corporationID)
+EVEResult LPService::GetLPForCharacterCorp(
+    EVECallArgs& call, PyInt* corporationID)
 {/**
                 self.cache.lps = sm.RemoteSvc('LPSvc').GetLPForCharacterCorp(corpID)
          self.cache.concordLps = sm.RemoteSvc('LPSvc').GetLPForCharacterCorp(const.corpCONCORD)
@@ -177,7 +180,7 @@ PyResult LPService::GetLPForCharacterCorp(PyCallArgs& call, PyInt* corporationID
 }
 
 // //06:01:19 LPService::Handle_GetLPsForCharacter(): size= 0
-PyResult LPService::GetLPsForCharacter(PyCallArgs& call)
+EVEResult LPService::GetLPsForCharacter(EVECallArgs& call)
 {
   //no args
   sLog.White( "LPService::Handle_GetLPsForCharacter()", "size=%lu", call.tuple->size());
@@ -186,18 +189,21 @@ PyResult LPService::GetLPsForCharacter(PyCallArgs& call)
   PyList *res = new PyList(dbRes.GetRowCount());
   int i = 0;
   while (dbRes.GetRow(row)) {
-    PyTuple *tuple = new PyTuple(2);
-    tuple->SetItemInt(0, row.GetInt(1));
-    tuple->SetItemInt(1, row.GetInt(2));
-    res->SetItem(i, tuple);
+      res->set(
+          i,
+          new PyTuple {
+              new PyInt (row.GetInt (1)),
+              new PyInt (row.GetInt (2))
+          }
+      );
     i++;
   }
-  //call.Dump(SERVICE__CALL_DUMP);
+  //call.dump(SERVICE__CALL_DUMP);
     return res;
 }
 
 //18:55:57 L CharMgrService::Handle_GetAvailableOffersFromCorp(): size=2, 0=Integer(), 1=Boolean()
-PyResult LPService::GetAvailableOffersFromCorp(PyCallArgs& call, PyInt* corporationID, PyBool* trueValue)
+EVEResult LPService::GetAvailableOffersFromCorp(EVECallArgs& call, PyInt* corporationID, PyBool* trueValue)
 {
   if (!corporationID->value() >= 1000000 && !corporationID->value() <= 1000200) { // Bounds check valid corpID in call, else return empty list.
     return new PyList;
@@ -213,20 +219,29 @@ PyResult LPService::GetAvailableOffersFromCorp(PyCallArgs& call, PyInt* corporat
     int j = 0;
     DBResultRow reqItemsRow;
     while (dbResReqItems.GetRow(reqItemsRow)) {
-      PyTuple *tuple2 = new PyTuple(2);
-      tuple2->SetItemInt(0, reqItemsRow.GetInt(0));
-      tuple2->SetItemInt(1, reqItemsRow.GetInt(1));
-      list->SetItem(j, tuple2);
-      j++;
+      list->set(
+          j++,
+          new PyTuple {
+              new PyInt (reqItemsRow.GetInt (1)),
+              new PyInt (reqItemsRow.GetInt (2))
+          }
+      );
     }
-    dict->SetItem("typeID", new PyInt(row.GetInt(0)));
-    dict->SetItem("iskCost", new PyInt(row.GetInt(1)));
-    dict->SetItem("reqItems", list);
-    dict->SetItem("offerID", new PyInt(row.GetInt(2)));
-    dict->SetItem("qty", new PyInt(row.GetInt(3)));
-    dict->SetItem("lpCost", new PyInt(row.GetInt(4)));
-    res->SetItem(i, new PyObject("util.KeyVal", dict));
-    i++;
+
+    res->set(
+        i++,
+        new PyObject(
+            "util.KeyVal",
+            new PyDict {
+                {"typeID", new PyInt (row.GetInt (0))},
+                {"iskCost", new PyInt (row.GetInt (1))},
+                {"reqItems", list},
+                {"offerID", new PyInt (row.GetInt (2))},
+                {"qty", new PyInt (row.GetInt (3))},
+                {"lpCost", new PyInt (row.GetInt (4))}
+            }
+        )
+    );
   }
   
   return res;

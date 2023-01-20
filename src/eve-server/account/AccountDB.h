@@ -32,9 +32,9 @@
 class AccountDB
 {
 public:
-    PyRep* GetWalletDivisionsInfo(uint32 corpID);
+    PyDataType* GetWalletDivisionsInfo(uint32 corpID);
 
-    PyRep* GetJournal(uint32 ownerID, int8 entryTypeID, uint16 accountKey, int64 fromDate, bool reverse = false);
+    PyDataType* GetJournal(uint32 ownerID, int8 entryTypeID, uint16 accountKey, int64 fromDate, bool reverse = false);
 
     static double OfflineFundXfer(uint32 charID, double amount, uint8 type=Account::CreditType::ISK);
     static double GetCorpBalance(uint32 corpID, uint16 accountKey);

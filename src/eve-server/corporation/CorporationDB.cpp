@@ -200,7 +200,7 @@ PyObject *CorporationDB::ListStationOwners(uint32 stationID) {
     return DBResultToRowset(res);
 }
 
-PyRep *CorporationDB::GetCorpInfo(uint32 corpID) {
+PyDataType *CorporationDB::GetCorpInfo(uint32 corpID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT corporationID, corporationName, description, creatorID, tickerName,"
@@ -256,7 +256,7 @@ PyObject *CorporationDB::GetCorporation(uint32 corpID) {
     //return DBResultToRowset(res);
 }
 
-PyRep *CorporationDB::GetCorporations(uint32 corpID) {
+PyDataType *CorporationDB::GetCorporations(uint32 corpID) {
     // called by non-member. different from GetCorporation() above
     //  not sure what the differece between them is/should be
     std::string table = "crpWalletDivisons";
@@ -370,7 +370,7 @@ void CorporationDB::SaveMedalData(int64 medalID, std::vector< Corp::MedalData >&
     //SELECT id, part, graphic, color FROM crpMedalData
 }
 
-PyRep* CorporationDB::GetRecipientsOfMedal(int32 medalID)
+PyDataType* CorporationDB::GetRecipientsOfMedal(int32 medalID)
 {
     //  SELECT recepientID, medalID, corpID, date, status FROM chrMedals WHERE recepientID = %u
     DBQueryResult res;
@@ -386,7 +386,7 @@ PyRep* CorporationDB::GetRecipientsOfMedal(int32 medalID)
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetAllCorpMedals(uint32 corpID)
+PyDataType* CorporationDB::GetAllCorpMedals(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -399,7 +399,7 @@ PyRep* CorporationDB::GetAllCorpMedals(uint32 corpID)
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetCorpMedalData(uint32 corpID)
+PyDataType* CorporationDB::GetCorpMedalData(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -413,7 +413,7 @@ PyRep* CorporationDB::GetCorpMedalData(uint32 corpID)
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetMedalsReceived(int32 charID)
+PyDataType* CorporationDB::GetMedalsReceived(int32 charID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -429,7 +429,7 @@ PyRep* CorporationDB::GetMedalsReceived(int32 charID)
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetMedalsReceivedDetails(int32 charID)
+PyDataType* CorporationDB::GetMedalsReceivedDetails(int32 charID)
 {
     // SELECT recepientID, medalID, corpID, dateTime FROM chrMedals WHERE recepientID = %u
     DBQueryResult res;
@@ -460,7 +460,7 @@ PyObjectEx* CorporationDB::GetMedalDetails(int32 medalID)
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetMedalStatuses()
+PyDataType* CorporationDB::GetMedalStatuses()
 {
     // this is for viewing permissions on paperdoll
     DBQueryResult res;
@@ -507,11 +507,11 @@ bool CorporationDB::IsTickerTaken(std::string ticker) {
     return (res.GetRowCount() != 0);
 }
 
-static std::string _IoN( PyRep* r )
+static std::string _IoN( PyDataType* r )
 {
-    if ( !r->IsInt() )
+    if ( !r->is<PyInt>() )
         return "NULL";
-    return std::to_string(PyRep::IntegerValueU32(r));
+    return std::to_string(r->u32());
 }
 
 bool CorporationDB::AddCorporation(Call_AddCorporation & corpInfo, Client* pClient, uint32 & corpID) {
@@ -693,7 +693,7 @@ bool CorporationDB::CreateCorporationChangePacket(OnCorporationChanged & cc, uin
     cc.ceoIDOld = new PyInt(row.GetInt(13));
     cc.stationIDOld = new PyInt(row.GetInt(14));
     _NI(raceIDOld, 15);
-    cc.sharesOld = new PyLong(row.GetInt64(16));
+    cc.sharesOld = new PyInt(row.GetInt64(16));
     cc.memberCountOld = new PyInt(row.GetInt(17));
     cc.memberLimitOld = new PyInt(row.GetInt(18));
     cc.allowedMemberRaceIDsOld = new PyInt(row.GetInt(19));
@@ -840,7 +840,7 @@ bool CorporationDB::CreateCorporationCreatePacket(OnCorporationChanged & cc, uin
     return true;
 }
 
-PyRep* CorporationDB::GetMember(uint32 charID)
+PyDataType* CorporationDB::GetMember(uint32 charID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -988,7 +988,7 @@ void CorporationDB::GetMemberIDs(uint32 corpID, std::vector< uint32 >& ids, bool
         ids.push_back(row.GetInt(0));
 }
 
-PyRep* CorporationDB::GetCorpRoles()
+PyDataType* CorporationDB::GetCorpRoles()
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery( res, "SELECT roleID, roleName, shortDescriptionID, descriptionID, roleIID FROM crpRoles")) {
@@ -999,7 +999,7 @@ PyRep* CorporationDB::GetCorpRoles()
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetCorpRoleGroups()
+PyDataType* CorporationDB::GetCorpRoleGroups()
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery( res,
@@ -1081,7 +1081,7 @@ bool CorporationDB::UpdateTitle(uint32 corpID, Call_UpdateTitleData& args, PyDic
     return true;
 }
 
-PyRep* CorporationDB::GetTitles(uint32 corpID)
+PyDataType* CorporationDB::GetTitles(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery( res,
@@ -1093,19 +1093,25 @@ PyRep* CorporationDB::GetTitles(uint32 corpID)
     PyDict* dict = new PyDict();
     DBResultRow row;
     while (res.GetRow(row)) {
-        PyDict* dict1 = new PyDict();
-            dict1->SetItemString("corporationID", new PyInt(row.GetInt(0)));
-            dict1->SetItemString("titleID", new PyInt(row.GetInt(1)));
-            dict1->SetItemString("titleName", new PyString(row.GetText(2)));
-            dict1->SetItemString("roles", new PyLong(row.GetInt64(3)));
-            dict1->SetItemString("grantableRoles", new PyLong(row.GetInt64(4)));
-            dict1->SetItemString("rolesAtHQ", new PyLong(row.GetInt64(5)));
-            dict1->SetItemString("grantableRolesAtHQ", new PyLong(row.GetInt64(6)));
-            dict1->SetItemString("rolesAtBase", new PyLong(row.GetInt64(7)));
-            dict1->SetItemString("grantableRolesAtBase", new PyLong(row.GetInt64(8)));
-            dict1->SetItemString("rolesAtOther", new PyLong(row.GetInt64(9)));
-            dict1->SetItemString("grantableRolesAtOther", new PyLong(row.GetInt64(10)));
-        dict->SetItem(new PyInt(row.GetInt(1)), new PyObject("util.KeyVal", dict1));
+        dict->set(
+            new PyInt(row.GetInt(1)),
+            new PyObject(
+                "util.KeyVal",
+                new PyDict {
+                    { "corporationID", new PyInt (row.GetInt (0)) },
+                    { "titleID", new PyInt (row.GetInt (1)) },
+                    { "titleName", new PyString (row.GetText (2)) },
+                    { "roles", new PyInt (row.GetInt64 (3)) },
+                    { "grantableRoles", new PyInt (row.GetInt64 (4)) },
+                    { "rolesAtHQ", new PyInt (row.GetInt64 (5)) },
+                    { "grantableRolesAtHQ", new PyInt (row.GetInt64 (6)) },
+                    { "rolesAtBase", new PyInt (row.GetInt64 (7)) },
+                    { "grantableRolesAtBase", new PyInt (row.GetInt64 (8)) },
+                    { "rolesAtOther", new PyInt (row.GetInt64 (9)) },
+                    { "grantableRolesAtOther", new PyInt (row.GetInt64 (10)) },
+                }
+            )
+        );
     }
 
     return dict;
@@ -1125,7 +1131,7 @@ void CorporationDB::CreateTitleData(uint32 corpID)
 /* * UPDATE crpRoleTitles SET corporationID=[value-1],titleID=[value-2],titleName=[value-3],roles=[value-4],grantableRoles=[value-5],rolesAtHQ=[value-6],grantableRolesAtHQ=[value-7],rolesAtBase=[value-8],grantableRolesAtBase=[value-9],rolesAtOther=[value-10],grantableRolesAtOther=[value-11] WHERE corporationID
  */
 
-PyRep* CorporationDB::GetContacts(uint32 corpID)
+PyDataType* CorporationDB::GetContacts(uint32 corpID)
 {
     _log(SOV__DEBUG, "CorporationDB::GetContacts() called...");
 
@@ -1140,7 +1146,7 @@ PyRep* CorporationDB::GetContacts(uint32 corpID)
 
     PyObjectEx* obj = DBResultToCIndexedRowset(res, "contactID");
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 }
@@ -1174,7 +1180,7 @@ void CorporationDB::RemoveContact(uint32 contactID, uint32 ownerID)
 }
 
 // should this be cached?     ...yes
-PyObject *CorporationDB::GetEveOwners(uint32 corpID) {
+PyObject *CorporationDB::GetEveOwners(uint32 corpID, PythonArena* arena) {
     DBQueryResult res;
 /*
             [PyPackedRow 9 bytes]
@@ -1192,13 +1198,12 @@ PyObject *CorporationDB::GetEveOwners(uint32 corpID) {
         " gender"
         " FROM chrCharacters"
         " WHERE corporationID = %u", corpID
-        ))
-    {
+        )) {
         codelog(CORP__DB_ERROR, "Error in query: %s", res.error.c_str());
         return nullptr;
     }
 
-    return DBResultToRowset(res);
+    return DBResultToRowset(res, arena);
 }
 
 PyObject *CorporationDB::GetStations(uint32 corpID) {
@@ -1274,7 +1279,7 @@ void CorporationDB::EditBulletin(uint32 bulletinID, uint32 eCharID, int64 eDataT
         " WHERE bulletinID = %u", eCharID, eDataTime, title.c_str(), body.c_str(), bulletinID);
 }
 
-PyRep* CorporationDB::GetBulletins(uint32 corpID)
+PyDataType* CorporationDB::GetBulletins(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -1312,7 +1317,7 @@ void CorporationDB::AddRecruiters(uint16 adID, int32 corpID, std::vector< int32 
     }
 }
 
-PyRep* CorporationDB::GetRecruiters(int32 corpID, uint16 adID)
+PyDataType* CorporationDB::GetRecruiters(int32 corpID, uint16 adID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT charID FROM crpRecruiters WHERE corpID = %u AND adID = %u", corpID, adID)) {
@@ -1324,12 +1329,12 @@ PyRep* CorporationDB::GetRecruiters(int32 corpID, uint16 adID)
     int8 i = 0;
     DBResultRow row;
     while (res.GetRow(row))
-        tuple->SetItem(i++, new PyInt(row.GetInt(0)));
+        tuple->mItems[i++] =new PyInt(row.GetInt(0));
 
     return tuple;
 }
 
-PyRep* CorporationDB::GetAdTypeData()
+PyDataType* CorporationDB::GetAdTypeData()
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT typeMask, typeName, typeNameID, groupID, description, descriptionID FROM crpAdTypeData")) {
@@ -1339,7 +1344,7 @@ PyRep* CorporationDB::GetAdTypeData()
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetAdGroupData()
+PyDataType* CorporationDB::GetAdGroupData()
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT groupID, groupName, groupNameID, description, descriptionID FROM crpAdGroupData")) {
@@ -1349,7 +1354,7 @@ PyRep* CorporationDB::GetAdGroupData()
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetAdRegistryData(int64 typeMask/*0*/, bool inAlliance/*false*/, int16 minMembers/*0*/, uint16 maxMembers/*12602*/)
+PyDataType* CorporationDB::GetAdRegistryData(int64 typeMask/*0*/, bool inAlliance/*false*/, int16 minMembers/*0*/, uint16 maxMembers/*12602*/)
 {
     // make sure this isnt 0
     if (maxMembers < 1)
@@ -1372,7 +1377,7 @@ PyRep* CorporationDB::GetAdRegistryData(int64 typeMask/*0*/, bool inAlliance/*fa
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetAdvert(uint16 adID)
+PyDataType* CorporationDB::GetAdvert(uint16 adID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -1430,7 +1435,7 @@ int64 CorporationDB::GetAdvertTime(uint16 adID, uint32 corpID)
     return 0;
 }
 
-PyRep *CorporationDB::GetMyApplications(uint32 charID) {
+PyDataType *CorporationDB::GetMyApplications(uint32 charID) {
     //    header = [applicationID, corporationID, characterID, applicationText, roles, grantableRoles, status, applicationDateTime, deleted, lastCorpUpdaterID]
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -1445,12 +1450,12 @@ PyRep *CorporationDB::GetMyApplications(uint32 charID) {
 
     PyObjectEx* obj = DBResultToCRowset(res);
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 }
 
-PyRep *CorporationDB::GetApplications(uint32 corpID) {
+PyDataType *CorporationDB::GetApplications(uint32 corpID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         " SELECT"
@@ -1465,7 +1470,7 @@ PyRep *CorporationDB::GetApplications(uint32 corpID) {
     }
     PyObjectEx* obj = DBResultToCIndexedRowset(res, "characterID");
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 }
@@ -1679,7 +1684,7 @@ bool CorporationDB::CreateMemberAttributeUpdate(uint32 newCorpID, uint32 charID,
     // this could be stored in the db
 #define PRN PyStatic.NewNone()
 #define PRI(i) new PyInt(i)
-#define PRL(i) new PyLong(i)
+#define PRL(i) new PyInt(i)
 #define PRS(s) new PyString(s)
 #define PRNI(i) (row.IsNull(i) ? PRU(0) : PRU(row.GetInt64(i)))
 #define F(name, o, n) \
@@ -1909,7 +1914,7 @@ bool CorporationDB::UpdateLogo(uint32 corpID, const Call_UpdateLogo & upd, PyDic
 }
 #undef NI
 
-PyRep* CorporationDB::GetMemberTrackingInfo(uint32 corpID)
+PyDataType* CorporationDB::GetMemberTrackingInfo(uint32 corpID)
 {
     //  lastOnline(hours) needs update based on char logoffDateTime using GetElapsedHours();
     // no idea how to do that short of pulling/updating column every (x time) interval....and uh, no.
@@ -1927,7 +1932,7 @@ PyRep* CorporationDB::GetMemberTrackingInfo(uint32 corpID)
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetMemberTrackingInfoSimple(uint32 corpID)
+PyDataType* CorporationDB::GetMemberTrackingInfoSimple(uint32 corpID)
 {
     // lastOnline may need something else more accurate, without lastOnline, the member list does not work for someone is a corp member
     DBQueryResult res;
@@ -1962,7 +1967,7 @@ void CorporationDB::AddItemEvent(uint32 corpID, uint32 charID, uint16 eTypeID)
         " VALUES (%u, %u, %u, %f)", corpID, charID, eTypeID, GetFileTimeNow());
 }
 
-PyRep* CorporationDB::GetItemEvents(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage)
+PyDataType* CorporationDB::GetItemEvents(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -1982,20 +1987,20 @@ PyRep* CorporationDB::GetItemEvents(uint32 corpID, uint32 charID, int64 fromDate
         DBResultRow row;
         while (res.GetRow(row)) {
             PyDict* dict = new PyDict();
-                dict->SetItemString("eventID", new PyInt(row.GetInt(0)));
-                dict->SetItemString("corporationID", new PyInt(row.GetInt(1)));
-                dict->SetItemString("characterID", new PyInt(row.GetInt(2)));
-                dict->SetItemString("eventTypeID", new PyInt(row.GetInt(3)));
-                dict->SetItemString("eventDateTime", new PyLong(row.GetInt64(4)));
+                dict->set ("eventID", new PyInt(row.GetInt(0)));
+                dict->set ("corporationID", new PyInt(row.GetInt(1)));
+                dict->set ("characterID", new PyInt(row.GetInt(2)));
+                dict->set ("eventTypeID", new PyInt(row.GetInt(3)));
+                dict->set ("eventDateTime", new PyInt(row.GetInt64(4)));
             list->AddItem(dict);
         }
     } else {
         PyDict* dict = new PyDict();
-        dict->SetItemString("eventID", new PyInt(0));
-        dict->SetItemString("corporationID", new PyInt(0));
-        dict->SetItemString("characterID", new PyInt(0));
-        dict->SetItemString("eventTypeID", new PyInt(0));
-        dict->SetItemString("eventDateTime", new PyInt(0));
+        dict->set ("eventID", new PyInt(0));
+        dict->set ("corporationID", new PyInt(0));
+        dict->set ("characterID", new PyInt(0));
+        dict->set ("eventTypeID", new PyInt(0));
+        dict->set ("eventDateTime", new PyInt(0));
         list->AddItem(dict);
     }
 
@@ -2011,7 +2016,7 @@ void CorporationDB::AddRoleHistory(uint32 corpID, uint32 charID, uint32 issuerID
         " VALUES (%u, %u, %u, %f, %lli, %lli, %i)", corpID, charID, issuerID, GetFileTimeNow(), oldRoles, newRoles, (grantable ? 1 : 0));
 }
 
-PyRep* CorporationDB::GetRoleHistroy(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage)
+PyDataType* CorporationDB::GetRoleHistroy(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -2031,24 +2036,24 @@ PyRep* CorporationDB::GetRoleHistroy(uint32 corpID, uint32 charID, int64 fromDat
         DBResultRow row;
         while (res.GetRow(row)) {
         PyDict* dict = new PyDict();
-            dict->SetItemString("corporationID", new PyInt(row.GetInt(0)));
-            dict->SetItemString("charID", new PyInt(row.GetInt(1)));
-            dict->SetItemString("issuerID", new PyInt(row.GetInt(2)));
-            dict->SetItemString("changeTime", new PyLong(row.GetInt64(3)));
-            dict->SetItemString("oldRoles", new PyLong(row.GetInt64(4)));
-            dict->SetItemString("newRoles", new PyLong(row.GetInt64(5)));
-            dict->SetItemString("grantable", new PyBool(row.GetBool(6)));
+            dict->set ("corporationID", new PyInt(row.GetInt(0)));
+            dict->set ("charID", new PyInt(row.GetInt(1)));
+            dict->set ("issuerID", new PyInt(row.GetInt(2)));
+            dict->set ("changeTime", new PyInt(row.GetInt64(3)));
+            dict->set ("oldRoles", new PyInt(row.GetInt64(4)));
+            dict->set ("newRoles", new PyInt(row.GetInt64(5)));
+            dict->set ("grantable", new PyBool(row.GetBool(6)));
         list->AddItem(dict);
         }
     } else {
         PyDict* dict = new PyDict();
-            dict->SetItemString("corporationID", new PyInt(0));
-            dict->SetItemString("charID", new PyInt(0));
-            dict->SetItemString("issuerID", new PyInt(0));
-            dict->SetItemString("changeTime", new PyInt(0));
-            dict->SetItemString("oldRoles", new PyInt(0));
-            dict->SetItemString("newRoles", new PyInt(0));
-            dict->SetItemString("grantable", new PyBool(false));
+            dict->set ("corporationID", new PyInt(0));
+            dict->set ("charID", new PyInt(0));
+            dict->set ("issuerID", new PyInt(0));
+            dict->set ("changeTime", new PyInt(0));
+            dict->set ("oldRoles", new PyInt(0));
+            dict->set ("newRoles", new PyInt(0));
+            dict->set ("grantable", new PyBool(false));
         list->AddItem(dict);
     }
 
@@ -2058,29 +2063,29 @@ PyRep* CorporationDB::GetRoleHistroy(uint32 corpID, uint32 charID, int64 fromDat
 
 void CorporationDB::AddVoteCase(uint32 corpID, uint32 charID, Call_InsertVoteCase& args)
 {   // working
-    PyDict* dict = args.voteCaseOptions->arguments()->AsDict();
-    dict->Dump(CORP__TRACE, "    ");
+    PyDict* dict = args.voteCaseOptions->arguments()->as<PyDict>();
+    dict->dump(CORP__TRACE, "    ");
 
-    PyRep* rep = dict->GetItemString("lines");
-    if (!rep->IsList()) {
+    PyDataType* rep = dict->get("lines");
+    if (!rep->is<PyList>()) {
         codelog(CORP__ERROR, "'lines' item is not PyList: %s", rep->TypeString());
         return;
     }
 
     std::vector<Corp::VoteCaseOptions> data;
-    PyList* list = rep->AsList();
+    PyList* list = rep->as<PyList>();
     for (PyList::const_iterator itr = list->begin(); itr != list->end(); ++itr) {
-        if (!(*itr)->IsList()) {
+        if (!(*itr)->is<PyList>()) {
             _log(CORP__ERROR, "itr item is not PyList: %s", rep->TypeString());
             continue;
         }
-        PyList* list2 = (*itr)->AsList();
+        PyList* list2 = (*itr)->as<PyList>();
         Corp::VoteCaseOptions args2 = Corp::VoteCaseOptions();
         //vote decision option
-        args2.optionText = PyRep::StringContent(list2->GetItem(0));
-        args2.optionID = PyRep::IntegerValue(list2->GetItem(1));
+        args2.optionText = list2->at (0)->string();
+        args2.optionID = list2->at (1)->i64();
         //for kick, ceo this is charID.  for war, this is corpID.  for lock/unlock, this is itemID  for shares/general, this is boolean
-        args2.parameter = PyRep::IntegerValue(list2->GetItem(1));
+        args2.parameter = list2->at (1)->i64();
         switch (args.voteType) {
             case Corp::VoteType::Shares:
             case Corp::VoteType::General: {
@@ -2094,9 +2099,9 @@ void CorporationDB::AddVoteCase(uint32 corpID, uint32 charID, Call_InsertVoteCas
             case Corp::VoteType::ItemLock:
             case Corp::VoteType::ItemUnlock: {
                 //for lock/unlock, this is items typeID.  for shares/general, this is 0
-                args2.parameter1 = PyRep::IntegerValue(list2->GetItem(2));
+                args2.parameter1 = list2->at (2)->i64();
                 //for lock/unlock, this is items locationID.  for others, this is none
-                args2.parameter2 = PyRep::IntegerValue(list2->GetItem(3));
+                args2.parameter2 = list2->at (3)->i64();
             } break;
         }
         data.push_back(args2);
@@ -2128,7 +2133,7 @@ void CorporationDB::AddVoteCase(uint32 corpID, uint32 charID, Call_InsertVoteCas
         sDatabase.RunQuery(err, str.str().c_str());
 }
 
-PyRep* CorporationDB::GetVoteItems(uint32 corpID, uint8 status/*0*/, uint8 maxLen/*20*/)
+PyDataType* CorporationDB::GetVoteItems(uint32 corpID, uint8 status/*0*/, uint8 maxLen/*20*/)
 {   // working
     if (maxLen == 0)
         maxLen = 20;
@@ -2154,7 +2159,7 @@ PyRep* CorporationDB::GetVoteItems(uint32 corpID, uint8 status/*0*/, uint8 maxLe
 }
 
 // this shit changes based on type of vote....optionID for xxx, parameter for xxx
-PyRep* CorporationDB::GetVoteOptions(uint32 voteCaseID)
+PyDataType* CorporationDB::GetVoteOptions(uint32 voteCaseID)
 {   // working
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -2168,7 +2173,7 @@ PyRep* CorporationDB::GetVoteOptions(uint32 voteCaseID)
     return DBResultToIndexRowset(res, "optionID");
 }
 
-PyRep* CorporationDB::GetSanctionedItems(uint32 corpID, uint8 status/*0*/)
+PyDataType* CorporationDB::GetSanctionedItems(uint32 corpID, uint8 status/*0*/)
 {   // working
     // status - 0:default, 1: open, 2: closed
     DBQueryResult res;
@@ -2187,7 +2192,7 @@ PyRep* CorporationDB::GetSanctionedItems(uint32 corpID, uint8 status/*0*/)
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetVotes(uint32 voteCaseID)
+PyDataType* CorporationDB::GetVotes(uint32 voteCaseID)
 {   // working
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -2295,7 +2300,7 @@ void CorporationDB::MoveShares(uint32 ownerID, uint32 corpID, int32 corporationI
         " ON DUPLICATE KEY UPDATE shares = shares + %i", corporationID, toShareholderID, numberOfShares, corpID, numberOfShares);
 }
 
-PyRep* CorporationDB::GetShares(uint32 corpID)
+PyDataType* CorporationDB::GetShares(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -2309,7 +2314,7 @@ PyRep* CorporationDB::GetShares(uint32 corpID)
     return DBResultToIndexRowset(res, "shareholderID");
 }
 
-PyRep *CorporationDB::GetMyShares(uint32 ownerID)
+PyDataType *CorporationDB::GetMyShares(uint32 ownerID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -2323,7 +2328,7 @@ PyRep *CorporationDB::GetMyShares(uint32 ownerID)
     return DBResultToRowset(res);
 }
 
-PyRep* CorporationDB::GetSharesForCorp(uint32 corpID)
+PyDataType* CorporationDB::GetSharesForCorp(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT shareholderID FROM crpShares WHERE corporationID = %u AND shareholderID < 98000000", corpID)) {
@@ -2334,7 +2339,7 @@ PyRep* CorporationDB::GetSharesForCorp(uint32 corpID)
     DBResultRow row;
     PyList* list = new PyList();
     while (res.GetRow(row))
-        list->AddItem(new PyInt(row.GetInt(1)));
+        list->add(new PyInt(row.GetInt(1)));
 
     return list;
 }
@@ -2353,7 +2358,7 @@ bool CorporationDB::HasShares(uint32 charID, uint32 corpID)
     return false;
 }
 
-PyRep* CorporationDB::PyHasShares(uint32 charID, uint32 corpID)
+PyDataType* CorporationDB::PyHasShares(uint32 charID, uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT shares FROM crpShares WHERE shareholderID = %u AND corporationID = %u", charID, corpID))  {
@@ -2367,7 +2372,7 @@ PyRep* CorporationDB::PyHasShares(uint32 charID, uint32 corpID)
     return PyStatic.NewFalse();
 }
 
-PyRep* CorporationDB::GetAssetInventory(uint32 corpID, EVEItemFlags locFlag, const char* flags)
+PyDataType* CorporationDB::GetAssetInventory(uint32 corpID, EVEItemFlags locFlag, const char* flags)
 {
     /* this may need more code/thought to change implementation
      * currently, "property" will show all corp items located in dynamic containers that are or have corp hangars
@@ -2389,7 +2394,7 @@ PyRep* CorporationDB::GetAssetInventory(uint32 corpID, EVEItemFlags locFlag, con
                 " AND e.locationID >= %u AND e.locationID <= %u", corpID, flags, minOffice, maxOffice))
             {
                 codelog(CORP__DB_ERROR, "Error in query: %s", res.error.c_str());
-                return (PyRep*)PyStatic.NewNone();    // cannot return nullptr cause we may deref it on the return.
+                return (PyDataType*)PyStatic.NewNone();    // cannot return nullptr cause we may deref it on the return.
             }
         } break;
         case flagProperty: {  // in space...this will show items in containers, ships, POS, CO, etc.
@@ -2398,7 +2403,7 @@ PyRep* CorporationDB::GetAssetInventory(uint32 corpID, EVEItemFlags locFlag, con
                 " AND locationID >= %u AND locationID <= %u", corpID, flags, minPlayerItem, maxPlayerItem))
             {
                 codelog(CORP__DB_ERROR, "Error in query: %s", res.error.c_str());
-                return (PyRep*)PyStatic.NewNone();    // cannot return nullptr cause we may deref it on the return.
+                return (PyDataType*)PyStatic.NewNone();    // cannot return nullptr cause we may deref it on the return.
             }
 
             // current thought is this option will need more work, to avoid showing corp hangars in ships in stations
@@ -2406,14 +2411,14 @@ PyRep* CorporationDB::GetAssetInventory(uint32 corpID, EVEItemFlags locFlag, con
         } break;
         default: {
             _log(CORP__DB_WARNING, "CorporationDB::GetAssetInventory(): unhandled locFlag sent: %u", locFlag);
-            return (PyRep*)PyStatic.NewNone();    // cannot return nullptr cause we may deref it on the return.
+            return (PyDataType*)PyStatic.NewNone();    // cannot return nullptr cause we may deref it on the return.
         } break;
     }
 
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetAssetInventoryForLocation(uint32 corpID, uint32 locationID, const char* flags)
+PyDataType* CorporationDB::GetAssetInventoryForLocation(uint32 corpID, uint32 locationID, const char* flags)
 {
     // this will need to get full item data...locationID sent from GetAssetInventory()
     DBQueryResult res;
@@ -2460,7 +2465,7 @@ PyRep* CorporationDB::GetAssetInventoryForLocation(uint32 corpID, uint32 locatio
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetKillsAndLosses(uint32 corpID, uint32 number, uint32 offset)
+PyDataType* CorporationDB::GetKillsAndLosses(uint32 corpID, uint32 number, uint32 offset)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -2496,7 +2501,7 @@ PyRep* CorporationDB::GetKillsAndLosses(uint32 corpID, uint32 number, uint32 off
     return DBResultToCRowset(res);
 }
 
-PyRep* CorporationDB::GetMktInfo(uint32 corpID)
+PyDataType* CorporationDB::GetMktInfo(uint32 corpID)
 {
     // bid = buy order
     DBQueryResult res;
@@ -2563,7 +2568,7 @@ void CorporationDB::EditLabel(uint32 corpID, uint32 labelID, uint32 color, std::
     sDatabase.RunQuery(res, "UPDATE crpLabels SET color = %u, name = '%s' WHERE ownerID = %u AND labelID = %u", color, escaped.c_str(), corpID, labelID);
 }
 
-PyRep* CorporationDB::GetLabels(uint32 corpID)
+PyDataType* CorporationDB::GetLabels(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT labelID, color, name FROM crpLabels WHERE ownerID = %u", corpID)) {

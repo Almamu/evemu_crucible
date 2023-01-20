@@ -61,8 +61,10 @@ MarketProxyService::MarketProxyService(EVEServiceManager& mgr) :
     this->Add("GetOrders", &MarketProxyService::GetOrders);
     this->Add("GetOldPriceHistory", &MarketProxyService::GetOldPriceHistory);
     this->Add("GetNewPriceHistory", &MarketProxyService::GetNewPriceHistory);
-    this->Add("PlaceCharOrder", static_cast <PyResult (MarketProxyService::*)(PyCallArgs &call, PyInt*, PyInt*, PyFloat*, PyInt*, PyInt*, PyInt*, std::optional <PyInt*>, PyInt*, PyInt*, PyBool*, std::optional<PyRep*>)> (&MarketProxyService::PlaceCharOrder));
-    this->Add("PlaceCharOrder", static_cast <PyResult (MarketProxyService::*)(PyCallArgs &call, PyInt*, PyInt*, PyFloat*, PyInt*, PyInt*, PyInt*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyRep*>)> (&MarketProxyService::PlaceCharOrder));
+    this->Add("PlaceCharOrder", static_cast <EVEResult (MarketProxyService::*)(
+                   EVECallArgs&call, PyInt*, PyInt*, PyFloat*, PyInt*, PyInt*, PyInt*, std::optional <PyInt*>, PyInt*, PyInt*, PyBool*, std::optional<PyDataType*>)> (&MarketProxyService::PlaceCharOrder));
+    this->Add("PlaceCharOrder", static_cast <EVEResult (MarketProxyService::*)(
+                   EVECallArgs&call, PyInt*, PyInt*, PyFloat*, PyInt*, PyInt*, PyInt*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyDataType*>)> (&MarketProxyService::PlaceCharOrder));
     this->Add("GetCharOrders", &MarketProxyService::GetCharOrders);
     this->Add("ModifyCharOrder", &MarketProxyService::ModifyCharOrder);
     this->Add("CancelCharOrder", &MarketProxyService::CancelCharOrder);
@@ -71,77 +73,77 @@ MarketProxyService::MarketProxyService(EVEServiceManager& mgr) :
     this->Add("GetCorporationOrders", &MarketProxyService::GetCorporationOrders);
 }
 
-PyResult MarketProxyService::GetMarketGroups(PyCallArgs &call) {
+EVEResult MarketProxyService::GetMarketGroups(EVECallArgs&call) {
     return sMktMgr.GetMarketGroups();
 }
 
-PyResult MarketProxyService::StartupCheck(PyCallArgs &call) {
+EVEResult MarketProxyService::StartupCheck(EVECallArgs&call) {
     //if (sMktMgr.NeedsUpdate())
     //    sMktMgr.UpdatePriceHistory();
     return nullptr;
 }
 
-PyResult MarketProxyService::GetCharOrders(PyCallArgs &call) {
+EVEResult MarketProxyService::GetCharOrders(EVECallArgs&call) {
     return MarketDB::GetOrdersForOwner(call.client->GetCharacterID());
 }
 
-PyResult MarketProxyService::GetCorporationOrders(PyCallArgs &call) {
+EVEResult MarketProxyService::GetCorporationOrders(EVECallArgs&call) {
     return MarketDB::GetOrdersForOwner(call.client->GetCorporationID());
 }
 
 /** @todo update these to use market manager and cache instead of hitting db? */
 // station, system, region based on selection in market window
-PyResult MarketProxyService::GetStationAsks(PyCallArgs &call) {
+EVEResult MarketProxyService::GetStationAsks(EVECallArgs&call) {
     return MarketDB::GetStationAsks(call.client->GetStationID());
 }
 
-PyResult MarketProxyService::GetSystemAsks(PyCallArgs &call) {
+EVEResult MarketProxyService::GetSystemAsks(EVECallArgs&call) {
     return MarketDB::GetSystemAsks(call.client->GetSystemID());
 }
 
-PyResult MarketProxyService::GetRegionBest(PyCallArgs &call) {
+EVEResult MarketProxyService::GetRegionBest(EVECallArgs&call) {
     return MarketDB::GetRegionBest(call.client->GetRegionID());
 }
 
 // this is called 3x on every market transaction
-PyResult MarketProxyService::GetOldPriceHistory(PyCallArgs &call, PyInt* typeID) {
+EVEResult MarketProxyService::GetOldPriceHistory(EVECallArgs&call, PyInt* typeID) {
     return sMktMgr.GetOldPriceHistory(call.client->GetRegionID(), typeID->value());
 }
 
-PyResult MarketProxyService::GetNewPriceHistory(PyCallArgs& call, PyInt* typeID) {
+EVEResult MarketProxyService::GetNewPriceHistory(EVECallArgs& call, PyInt* typeID) {
     return sMktMgr.GetNewPriceHistory(call.client->GetRegionID(), typeID->value());
 }
 
-PyResult MarketProxyService::CharGetNewTransactions(PyCallArgs &call, PyRep* sellBuy, PyRep* typeID, PyRep* clientID, PyRep* quantity, PyRep* fromDate, PyRep* maxPrice, PyRep* minPrice) {
+EVEResult MarketProxyService::CharGetNewTransactions(EVECallArgs&call, PyDataType* sellBuy, PyDataType* typeID, PyDataType* clientID, PyDataType* quantity, PyDataType* fromDate, PyDataType* maxPrice, PyDataType* minPrice) {
     Market::TxData data = Market::TxData();
 
-    data.clientID = clientID->IsNone() ? 0 : PyRep::IntegerValueU32(clientID);
-    data.isBuy = sellBuy->IsNone() ? -1 : PyRep::IntegerValueU32(sellBuy);
-    data.price = minPrice->IsNone() ? 0 : PyRep::IntegerValueU32(minPrice);
-    data.quantity = quantity->IsNone() ? 0 : PyRep::IntegerValueU32(quantity);
-    data.typeID = typeID->IsNone() ? 0 : PyRep::IntegerValueU32(typeID);
-    data.time = fromDate->IsNone() ? 0 : PyRep::IntegerValue(fromDate);
+    data.clientID = clientID->is<PyNone>() ? 0 : clientID->u32();
+    data.isBuy = sellBuy->is<PyNone>() ? -1 : sellBuy->u32();
+    data.price = minPrice->is<PyNone>() ? 0 : minPrice->u32();
+    data.quantity = quantity->is<PyNone>() ? 0 : quantity->u32();
+    data.typeID = typeID->is<PyNone>() ? 0 : typeID->u32();
+    data.time = fromDate->is<PyNone>() ? 0 : fromDate->i64();
     data.accountKey = Account::KeyType::Cash;
 
     return MarketDB::GetTransactions(call.client->GetCharacterID(), data);
 }
 
-PyResult MarketProxyService::CorpGetNewTransactions(PyCallArgs& call, PyRep* sellBuy, PyRep* typeID, PyRep* clientID, PyRep* quantity, PyRep* fromDate, PyRep* maxPrice, PyRep* minPrice, PyRep* accountKey, PyRep* memberID)
+EVEResult MarketProxyService::CorpGetNewTransactions(EVECallArgs& call, PyDataType* sellBuy, PyDataType* typeID, PyDataType* clientID, PyDataType* quantity, PyDataType* fromDate, PyDataType* maxPrice, PyDataType* minPrice, PyDataType* accountKey, PyDataType* memberID)
 {
     Market::TxData data = Market::TxData();
-        data.clientID = clientID->IsNone() ? 0 : PyRep::IntegerValueU32(clientID);
-        data.isBuy = sellBuy->IsNone() ? 0 : PyRep::IntegerValueU32(sellBuy);
-        data.price = minPrice->IsNone() ? 0 : PyRep::IntegerValueU32(minPrice);
-        data.quantity = quantity->IsNone() ? 0 : PyRep::IntegerValueU32(quantity);
-        data.typeID = typeID->IsNone() ? 0 : PyRep::IntegerValueU32(typeID);
-        data.time = fromDate->IsNone() ? 0 : PyRep::IntegerValue(fromDate);
-        data.accountKey = accountKey->IsNone() ? 0 : PyRep::IntegerValueU32(accountKey);
-        data.memberID = memberID->IsNone() ? 0 : PyRep::IntegerValueU32(memberID);
+        data.clientID = clientID->is<PyNone>() ? 0 : clientID->u32();
+        data.isBuy = sellBuy->is<PyNone>() ? 0 : sellBuy->u32();
+        data.price = minPrice->is<PyNone>() ? 0 : minPrice->u32();
+        data.quantity = quantity->is<PyNone>() ? 0 : quantity->u32();
+        data.typeID = typeID->is<PyNone>() ? 0 : typeID->u32();
+        data.time = fromDate->is<PyNone>() ? 0 : fromDate->i64();
+        data.accountKey = accountKey->is<PyNone>() ? 0 : accountKey->u32();
+        data.memberID = memberID->is<PyNone>() ? 0 : memberID->u32();
     return MarketDB::GetTransactions(call.client->GetCorporationID(), data);
 }
 
-PyResult MarketProxyService::GetOrders(PyCallArgs &call, PyInt* typeID) {
-    PyRep* result(nullptr);
+EVEResult MarketProxyService::GetOrders(EVECallArgs&call, PyInt* typeID) {
+    PyDataType* result(nullptr);
     std::string method_name ("GetOrders_");
     method_name += std::to_string(call.client->GetRegionID());
     method_name += "_";
@@ -172,7 +174,7 @@ PyResult MarketProxyService::GetOrders(PyCallArgs &call, PyInt* typeID) {
     return result;
 }
 
-PyResult MarketProxyService::PlaceCharOrder(PyCallArgs &call, PyInt* stationID, PyInt* typeID, PyFloat* price, PyInt* quantity, PyInt* bid, PyInt* orderRange, std::optional <PyInt*> itemID, PyInt* minVolume, PyInt* duration, PyBool* useCorp, std::optional<PyRep*> located) {
+EVEResult MarketProxyService::PlaceCharOrder(EVECallArgs&call, PyInt* stationID, PyInt* typeID, PyFloat* price, PyInt* quantity, PyInt* bid, PyInt* orderRange, std::optional <PyInt*> itemID, PyInt* minVolume, PyInt* duration, PyBool* useCorp, std::optional<PyDataType*> located) {
     //self.GetMarketProxy().PlaceCharOrder(int(stationID), int(typeID), round(float(price), 2), int(quantity), int(bid), int(orderRange),
     //   itemID = None, int(minVolume = 1), int(duration = 14), useCorp = False, located = None)
     // located = [officeFolderID, officeID] or None
@@ -350,10 +352,10 @@ PyResult MarketProxyService::PlaceCharOrder(PyCallArgs &call, PyInt* stationID, 
     } else {
         _log(MARKET__DUMP, "Mkt::PlaceCharOrder(): appears to be a sell order");
         // sell order
-        /*if (!args.located->IsNone()) {
+        /*if (!args.located->is<PyNone>()) {
             //  corp item in corp hangar
             // located = [officeFolderID, officeID] or None
-            PyTuple* located = args.located->AsTuple();
+            PyTuple* located = args.located->as<PyTuple>();
         }*/
 
         //verify that they actually have the item in the quantity specified...
@@ -632,12 +634,12 @@ PyResult MarketProxyService::PlaceCharOrder(PyCallArgs &call, PyInt* stationID, 
     return nullptr;
 }
 
-PyResult MarketProxyService::PlaceCharOrder(PyCallArgs &call, PyInt* stationID, PyInt* typeID, PyFloat* price, PyInt* quantity, PyInt* bid, PyInt* orderRange, std::optional <PyInt*> itemID, PyInt* minVolume, PyInt* duration, PyInt* useCorp, std::optional<PyRep*> located) {
+EVEResult MarketProxyService::PlaceCharOrder(EVECallArgs&call, PyInt* stationID, PyInt* typeID, PyFloat* price, PyInt* quantity, PyInt* bid, PyInt* orderRange, std::optional <PyInt*> itemID, PyInt* minVolume, PyInt* duration, PyInt* useCorp, std::optional<PyDataType*> located) {
     // Used when character has a corp wallet, client sends a PyInt instead of a PyBool
     return PlaceCharOrder(call, stationID, typeID, price, quantity, bid, orderRange, itemID, minVolume, duration, new PyBool(useCorp->value()), located);
 }
 
-PyResult MarketProxyService::ModifyCharOrder(PyCallArgs &call, PyInt* orderID, PyFloat* newPrice, PyInt* bid, PyInt* stationID, PyInt* solarSystemID, PyFloat* price, PyInt* range, PyInt* volRemaining, PyLong* issueDate) {
+EVEResult MarketProxyService::ModifyCharOrder(EVECallArgs&call, PyInt* orderID, PyFloat* newPrice, PyInt* bid, PyInt* stationID, PyInt* solarSystemID, PyFloat* price, PyInt* range, PyInt* volRemaining, PyInt* issueDate) {
     // client coded to throw error if price > 9223372036854.0
     // we need to pull data from db for typeID and isCorp...
     Market::OrderInfo oInfo = Market::OrderInfo();
@@ -675,7 +677,7 @@ PyResult MarketProxyService::ModifyCharOrder(PyCallArgs &call, PyInt* orderID, P
     return nullptr;
 }
 
-PyResult MarketProxyService::CancelCharOrder(PyCallArgs &call, PyInt* orderID, PyInt* regionID) {
+EVEResult MarketProxyService::CancelCharOrder(EVECallArgs&call, PyInt* orderID, PyInt* regionID) {
     Market::OrderInfo oInfo = Market::OrderInfo();
     if (!MarketDB::GetOrderInfo(orderID->value(), oInfo)) {
         _log(MARKET__ERROR, "CancelCharOrder - Failed to get info about order #%i.", orderID->value());
@@ -706,7 +708,7 @@ PyResult MarketProxyService::CancelCharOrder(PyCallArgs &call, PyInt* orderID, P
             iRef->Donate(call.client->GetCharacterID(), oInfo.stationID, flagHangar, true);
     }
 
-    PyRep* order(MarketDB::GetOrderRow(orderID->value()));
+    PyDataType* order(MarketDB::GetOrderRow(orderID->value()));
     if (!MarketDB::DeleteOrder(orderID->value())) {
         _log(MARKET__ERROR, "CancelCharOrder - Failed to delete order #%i.", orderID->value());
         return nullptr;

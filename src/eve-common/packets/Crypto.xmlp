@@ -3,57 +3,6 @@
 
 <elements>
 
-  <include file="python/classes/PyUtils.h" />
-
-  <elementDef name="VersionExchangeServer">
-    <tupleInline>
-        <int name="birthday" />
-        <int name="macho_version" />
-        <int name="user_count" />
-        <real name="version_number" />
-        <int name="build_version" />
-        <string name="project_version" />
-        <!-- update_info -->
-        <none />
-    </tupleInline>
-  </elementDef>
-
-  <!-- doesn't have the update_info -->
-   <elementDef name="VersionExchangeClient">
-    <tupleInline>
-        <int name="birthday" />
-        <int name="macho_version" />
-        <int name="user_count" />
-        <real name="version_number" />
-        <int name="build_version" />
-        <string name="project_version" />
-    </tupleInline>
-  </elementDef>
-
-  <elementDef name="NetCommand_QC">
-      <tupleInline>
-          <none />
-          <stringInline value="QC" />
-      </tupleInline>
-  </elementDef>
-
-  <elementDef name="NetCommand_VK">
-      <tupleInline>
-          <none />
-          <stringInline value="VK" />
-          <string name="vipKey" />
-      </tupleInline>
-  </elementDef>
-
-  <elementDef name="CryptoRequestPacket">
-    <tupleInline>
-        <!-- 0 -->
-        <string name="keyVersion" />
-        <!-- 1 -->
-        <dict name="keyParams" />
-    </tupleInline>
-  </elementDef>
-
   <elementDef name="CryptoAPIRequestParams">
     <dictInline>
       <dictInlineEntry key="crypting_sessionkey">
@@ -72,47 +21,6 @@
         <string name="sessionkeymethod" />
       </dictInlineEntry>
     </dictInline>
-  </elementDef>
-
-  <elementDef name="CryptoChallengePacket">
-    <tupleInline>
-        <!-- 0 -->
-        <string name="clientChallenge" safe="true" none_marker="" />
-        <!-- 1 -->
-        <dictInline>
-          <dictInlineEntry key="macho_version">
-              <int name="macho_version" />
-          </dictInlineEntry>
-          <dictInlineEntry key="boot_version">
-              <real name="boot_version" />
-          </dictInlineEntry>
-          <dictInlineEntry key="boot_build">
-              <int name="boot_build" />
-          </dictInlineEntry>
-          <dictInlineEntry key="boot_codename">
-              <string name="boot_codename" />
-          </dictInlineEntry>
-          <dictInlineEntry key="boot_region">
-              <string name="boot_region" />
-          </dictInlineEntry>
-          <dictInlineEntry key="user_name">
-              <wstring name="user_name" />
-          </dictInlineEntry>
-          <dictInlineEntry key="user_password">
-              <!-- <objectEx name="user_password" type="PasswordString" optional="true" />  old shit.  -->
-              <wstring name="user_password" safe="true" none_marker="" />
-          </dictInlineEntry>
-          <dictInlineEntry key="user_password_hash">
-              <string name="user_password_hash" safe="true" none_marker="" />
-          </dictInlineEntry>
-          <dictInlineEntry key="user_languageid">
-              <wstring name="user_languageid" />
-          </dictInlineEntry>
-          <dictInlineEntry key="user_affiliateid">
-              <int name="user_affiliateid" />
-          </dictInlineEntry>
-        </dictInline>
-    </tupleInline>
   </elementDef>
 
   <elementDef name="CryptoServerHandshake">
@@ -165,17 +73,6 @@
               </dictInline>
           </dictInlineEntry>
         </dictInline>
-    </tupleInline>
-  </elementDef>
-
-  <elementDef name="CryptoHandshakeResult">
-    <tupleInline>
-        <!-- 0 -->
-        <string name="challenge_responsehash" />
-        <!-- 1 -->
-        <string name="func_output" />
-        <!-- 2 -->
-        <raw name="func_result" />
     </tupleInline>
   </elementDef>
 

@@ -147,7 +147,7 @@ uint32 FleetService::CreateFleet(Client *pClient)
     return fleet.fleetID;
 }
 
-PyRep* FleetService::CreateWing(uint32 fleetID)
+PyDataType* FleetService::CreateWing(uint32 fleetID)
 {
     int8 count = m_fleetWings.count(fleetID);
     // do we need an error here?
@@ -164,9 +164,9 @@ PyRep* FleetService::CreateWing(uint32 fleetID)
 
     _log(FLEET__INFO, "FleetService::CreateWing() - fleetID: %u, wingID: %u", fleetID, m_wingID);
 
-    PyTuple* tuple1 = new PyTuple(1);
-        tuple1->SetItem(0, new PyInt(m_wingID));
-    SendFleetUpdate(fleetID, "OnFleetWingAdded", tuple1);
+    SendFleetUpdate(fleetID, "OnFleetWingAdded", new PyTuple {
+        new PyInt (m_wingID)
+    });
 
     if (sConfig.chat.EnableWingChat)
         m_lsc->CreateSystemChannel(m_wingID);
@@ -205,10 +205,10 @@ void FleetService::CreateSquad(uint32 fleetID, uint32 wingID)
 
     _log(FLEET__INFO, "FleetService::CreateSquad() - fleetID: %u, wingID: %u, squadID: %u", fleetID, wingID, m_squadID);
 
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(wingID));
-        tuple->SetItem(1, new PyInt(m_squadID));
-    SendFleetUpdate(fleetID, "OnFleetSquadAdded", tuple);
+    SendFleetUpdate(fleetID, "OnFleetSquadAdded", new PyTuple {
+        new PyInt (wingID),
+        new PyInt (m_squadID)
+    });
 
     if (sConfig.chat.EnableSquadChat)
         m_lsc->CreateSystemChannel(m_squadID);
@@ -265,11 +265,11 @@ bool FleetService::AddMember(Client* pClient, uint32 fleetID, int32 wingID, int3
         fData.joinTime = GetFileTimeNow();
     pChar->SetFleetData(fData);
 
-    PyDict* dict = new PyDict();
-        dict->SetItemString("targetTags", new PyDict());
-    PyTuple* obj = new PyTuple(1);
-        obj->SetItem(0, new PyObject("util.KeyVal", dict));
-    pClient->SendNotification("OnFleetStateChange", "charid", obj, true);
+    pClient->SendNotification("OnFleetStateChange", "charid", new PyTuple {
+        new PyObject ("util.KeyVal", new PyDict {
+            {"targetTags", new PyDict}
+        })
+    }, true);
 
     bool fleet(false);
     if (role == Fleet::Role::FleetLeader) {
@@ -291,9 +291,7 @@ bool FleetService::AddMember(Client* pClient, uint32 fleetID, int32 wingID, int3
         }
     }
 
-    PyTuple* count = new PyTuple(1);
-        count->SetItem(0, new PyInt((255 - m_fleetMembers.count(fleetID))));  // this is slots left from 255 (256 - leader)
-    pClient->SendNotification("OnFleetActive", "clientID", count, true);
+    pClient->SendNotification("OnFleetActive", "clientID", new PyTuple {new PyInt (255 - m_fleetMembers.count (fleetID))}, true);// this is slots left from 255 (256 - leader)
 
     std::list<int32> wing, squad;
     wing.clear();
@@ -317,10 +315,10 @@ bool FleetService::AddMember(Client* pClient, uint32 fleetID, int32 wingID, int3
                 return false;
             }
         }
-        PyTuple* count = new PyTuple(2);
-            count->SetItem(0, new PyInt(wingID));
-            count->SetItem(1, new PyInt(IsWingActive(wingID) ? 0 : 1));
-        pClient->SendNotification("OnWingActive", "clientID", count, true);
+        pClient->SendNotification("OnWingActive", "clientID", new PyTuple {
+            new PyInt (wingID),
+            new PyInt (IsWingActive(wingID) ? 0 : 1)
+        }, true);
 
         if (!IsSquadID(squadID))
             wing.emplace(wing.end(), wingID);
@@ -345,10 +343,10 @@ bool FleetService::AddMember(Client* pClient, uint32 fleetID, int32 wingID, int3
             }
         }
         itr->second.members.emplace(pChar->itemID(), pClient);
-        PyTuple* count = new PyTuple(2);
-            count->SetItem(0, new PyInt(squadID));
-            count->SetItem(1, PyStatic.NewOne());
-        pClient->SendNotification("OnSquadActive", "clientID", count, true);
+        pClient->SendNotification("OnSquadActive", "clientID", new PyTuple {
+            new PyInt (squadID),
+            PyStatic.NewOne()
+        }, true);
 
         squad.emplace(squad.end(), squadID);
     }
@@ -368,9 +366,9 @@ bool FleetService::AddMember(Client* pClient, uint32 fleetID, int32 wingID, int3
         join.solarSystemID = pClient->GetSystemID();
         join.wingID = pChar->wingID();
         join.timestamp = pChar->fleetJoinTime();
-    PyTuple* res = new PyTuple(1);
-        res->SetItem(0, join.Encode());
-    SendFleetUpdate(fleetID, "OnFleetJoin", res);
+    SendFleetUpdate(fleetID, "OnFleetJoin", new PyTuple {
+        join.Encode()
+    });
 
     UpdateBoost(fleetID, fleet, wing, squad);
     return true;
@@ -799,17 +797,17 @@ void FleetService::UpdateOptions(uint32 fleetID, bool isFreeMove, bool isRegiste
         return;
 
     PyDict* was = new PyDict();
-        was->SetItemString("isFreeMove",        new PyBool(itr->second.isFreeMove));
-        was->SetItemString("isRegistered",      new PyBool(itr->second.isRegistered));
-        was->SetItemString("isVoiceEnabled",    new PyBool(itr->second.isVoiceEnabled));
+        was->set ("isFreeMove",        new PyBool(itr->second.isFreeMove));
+        was->set ("isRegistered",      new PyBool(itr->second.isRegistered));
+        was->set ("isVoiceEnabled",    new PyBool(itr->second.isVoiceEnabled));
     PyDict* is = new PyDict();
-        is->SetItemString("isFreeMove",         new PyBool(isFreeMove));
-        is->SetItemString("isRegistered",       new PyBool(isRegistered));
-        is->SetItemString("isVoiceEnabled",     new PyBool(isVoiceEnabled));
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyObject("util.KeyVal", was));
-        tuple->SetItem(1, new PyObject("util.KeyVal", is));
-    SendFleetUpdate(fleetID, "OnFleetOptionsChanged", tuple);
+        is->set ("isFreeMove",         new PyBool(isFreeMove));
+        is->set ("isRegistered",       new PyBool(isRegistered));
+        is->set ("isVoiceEnabled",     new PyBool(isVoiceEnabled));
+    SendFleetUpdate(fleetID, "OnFleetOptionsChanged", new PyTuple {
+        new PyObject ("util.KeyVal", was),
+        new PyObject ("util.KeyVal", is)
+    });
 
     _log(FLEET__TRACE, "FleetService::UpdateOptions() - fleetID: %u FreeMove: %s, Registered: %s, Voice: %s", \
             fleetID, isFreeMove ? "true" : "false", isRegistered ? "true" : "false", isVoiceEnabled ? "true" : "false");
@@ -818,16 +816,13 @@ void FleetService::UpdateOptions(uint32 fleetID, bool isFreeMove, bool isRegiste
     itr->second.isVoiceEnabled = isVoiceEnabled;
 }
 
-PyRep* FleetService::GetMOTD(uint32 fleetID)
+PyDataType* FleetService::GetMOTD(uint32 fleetID)
 {
-    PyTuple* tuple = new PyTuple(1);
     std::map<uint32, FleetData>::iterator itr = m_fleetDataMap.find(fleetID);
-    if (itr != m_fleetDataMap.end()) {
-        tuple->SetItem(0, new PyString(itr->second.motd));
-    } else {
-        tuple->SetItem(0, PyStatic.NewNone());
-    }
-    return tuple;
+
+    return new PyTuple {
+        itr != m_fleetDataMap.end() ? new PyString (itr->second.motd) : PyStatic.NewNone()
+    };
 }
 
 void FleetService::SetMOTD(uint32 fleetID, std::string motd)
@@ -836,9 +831,9 @@ void FleetService::SetMOTD(uint32 fleetID, std::string motd)
     if (itr != m_fleetDataMap.end())
         itr->second.motd = motd;
 
-    PyTuple* tuple = new PyTuple(1);
-        tuple->SetItem(0, new PyString(motd));
-    SendFleetUpdate(fleetID, "OnFleetMotdChanged", tuple);
+    SendFleetUpdate(fleetID, "OnFleetMotdChanged", new PyTuple {
+        new PyString (motd)
+    });
 
     /** @todo  update motd in fleet chat window (which is not coded yet in LSC system) */
 }
@@ -851,10 +846,10 @@ void FleetService::RenameWing(uint32 wingID, std::string name)
 
     itr->second.name = name;
 
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(wingID));
-        tuple->SetItem(1, new PyString(name));
-    SendFleetUpdate(itr->second.fleetID, "OnFleetWingNameChanged", tuple);
+    SendFleetUpdate(itr->second.fleetID, "OnFleetWingNameChanged", new PyTuple {
+        new PyInt (wingID),
+        new PyString (name)
+    });
 
     _log(FLEET__TRACE, "FleetService::RenameWing() %u to %s", wingID, name.c_str());
 }
@@ -867,10 +862,10 @@ void FleetService::RenameSquad(uint32 squadID, std::string name)
 
     itr->second.name = name;
 
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(squadID));
-        tuple->SetItem(1, new PyString(name));
-    SendFleetUpdate(itr->second.fleetID, "OnFleetSquadNameChanged", tuple);
+    SendFleetUpdate(itr->second.fleetID, "OnFleetSquadNameChanged", new PyTuple {
+        new PyInt (squadID),
+        new PyString (name)
+    });
 
     _log(FLEET__TRACE, "FleetService::RenameSquad() %u to %s", squadID, name.c_str());
 }
@@ -929,7 +924,7 @@ void FleetService::GetMemeberVec(uint32 fleetID, std::vector< Client* >& data)
         data.push_back(itr->second);
 }
 
-PyRep* FleetService::GetFleetAdvert(uint32 fleetID)
+PyDataType* FleetService::GetFleetAdvert(uint32 fleetID)
 {
     Client* pClient(nullptr);
     std::map<uint32, FleetAdvert>::iterator itr = m_fleetAdvertMap.find(fleetID);
@@ -952,36 +947,37 @@ PyRep* FleetService::GetFleetAdvert(uint32 fleetID)
     PyTuple* localTuple = new PyTuple(1);
     PyList* localList = new PyList();
     for (auto cur1 : itr->second.local_allowedEntities) // corpID, allianceID, militiaID - if applicable
-        localList->AddItemInt(cur1);
-    localTuple->SetItem(0, localList);
-    PyToken* token = new PyToken("__builtin__.set");
-    PyTuple* localTuple2 = new PyTuple(2);
-        localTuple2->SetItem(0, token);
-        localTuple2->SetItem(1, localTuple);
-        fleetRSP.local_allowedEntities = new PyObjectEx(false, localTuple2);
+        localList->add(new PyInt (cur1));
+    fleetRSP.local_allowedEntities = new PyObjectEx(false, new PyTuple {
+        new PyToken ("__builtin__.set"),
+        new PyTuple {
+            localList
+        }
+    });
 
     PyTuple* publicTuple = new PyTuple(1);
     PyList* publicList = new PyList();
     for (auto cur2 : itr->second.public_allowedEntities)    // searches creator's addy book and addes charIDs based on standings
-        publicList->AddItemInt(cur2);
-        publicTuple->SetItem(0, publicList);
-    PyTuple* publicTuple2 = new PyTuple(2);
-        PyIncRef(token);
-        publicTuple2->SetItem(0, token);
-        publicTuple2->SetItem(1, publicTuple);
-        fleetRSP.public_allowedEntities = new PyObjectEx(false, publicTuple2);
+        publicList->add(new PyInt (cur2));
 
-        fleetRSP.local_minStanding = itr->second.local_minStanding;
-        fleetRSP.numMembers = m_fleetMembers.count(itr->first);
-        fleetRSP.hideInfo = itr->second.hideInfo;
-        fleetRSP.public_minSecurity = itr->second.public_minSecurity;
-        fleetRSP.inviteScope = itr->second.inviteScope;
-        fleetRSP.solarSystemID = itr->second.solarSystemID;
-        fleetRSP.charID = pClient->GetCharacterID();
-        fleetRSP.corpID = pClient->GetCorporationID();
-        fleetRSP.warFactionID = pClient->GetWarFactionID();
-        fleetRSP.securityStatus = pClient->GetSecurityRating();
-        fleetRSP.allianceID = pClient->GetAllianceID();
+    fleetRSP.public_allowedEntities = new PyObjectEx(false, new PyTuple {
+        new PyToken ("__builtin__.set"),
+        new PyTuple {
+            publicList
+        }
+    });
+
+    fleetRSP.local_minStanding = itr->second.local_minStanding;
+    fleetRSP.numMembers = m_fleetMembers.count(itr->first);
+    fleetRSP.hideInfo = itr->second.hideInfo;
+    fleetRSP.public_minSecurity = itr->second.public_minSecurity;
+    fleetRSP.inviteScope = itr->second.inviteScope;
+    fleetRSP.solarSystemID = itr->second.solarSystemID;
+    fleetRSP.charID = pClient->GetCharacterID();
+    fleetRSP.corpID = pClient->GetCorporationID();
+    fleetRSP.warFactionID = pClient->GetWarFactionID();
+    fleetRSP.securityStatus = pClient->GetSecurityRating();
+    fleetRSP.allianceID = pClient->GetAllianceID();
 
     fleetRSP.Dump(FLEET__DEBUG);
     return fleetRSP.Encode();
@@ -1030,9 +1026,9 @@ void FleetService::DeleteWing(uint32 wingID)
         m_squadDataMap.erase(sItr);
     }
 
-    PyTuple* tuple = new PyTuple(1);
-        tuple->SetItem(0, new PyInt(wingID));
-    SendFleetUpdate(wItr->second.fleetID, "OnFleetWingDeleted", tuple);
+    SendFleetUpdate(wItr->second.fleetID, "OnFleetWingDeleted", new PyTuple {
+        new PyInt (wingID)
+    });
 
     m_wingDataMap.erase(wItr);
 }
@@ -1045,9 +1041,9 @@ void FleetService::DeleteSquad(uint32 squadID)
 
     DecFleetSquads(itr->second.fleetID, itr->second.wingID);
 
-    PyTuple* tuple = new PyTuple(1);
-        tuple->SetItem(0, new PyInt(squadID));
-    SendFleetUpdate(itr->second.fleetID, "OnFleetSquadDeleted", tuple);
+    SendFleetUpdate(itr->second.fleetID, "OnFleetSquadDeleted", new PyTuple {
+        new PyInt (squadID)
+    });
 
     m_squadDataMap.erase(itr);
 }
@@ -1171,9 +1167,9 @@ void FleetService::LeaveFleet(Client* pClient)
     if (pChar == nullptr)
         return;
 
-    PyTuple* tuple = new PyTuple(1);
-    tuple->SetItem(0, new PyInt(pChar->itemID()));
-    SendFleetUpdate(pChar->fleetID(), "OnFleetLeave", tuple);
+    SendFleetUpdate(pChar->fleetID(), "OnFleetLeave", new PyTuple {
+        new PyInt (pChar->itemID())
+    });
 
     RemoveMember(pClient);
 
@@ -1232,7 +1228,7 @@ void FleetService::RemoveMember(Client* pClient)
         }
 }
 
-PyRep* FleetService::GetWings(uint32 fleetID)
+PyDataType* FleetService::GetWings(uint32 fleetID)
 {
     std::vector< uint32 > wingIDs, squadIDs;
     wingIDs.clear();
@@ -1253,17 +1249,17 @@ PyRep* FleetService::GetWings(uint32 fleetID)
             SquadRSP squad;
                 squad.name = sData.name;
                 squad.squadID = squadID;
-            dict2->SetItem(new PyInt(squadID), squad.Encode());
+            dict2->set(new PyInt(squadID), squad.Encode());
         }
         wing.squads = dict2;
-        dict->SetItem(new PyInt(wingID), wing.Encode());
+        dict->set(new PyInt(wingID), wing.Encode());
     }
 
-    dict->Dump(FLEET__DEBUG, "    ");
+    dict->dump(FLEET__DEBUG, "    ");
     return dict;
 }
 
-PyRep* FleetService::GetAvailableFleets() {
+PyDataType* FleetService::GetAvailableFleets() {
     Client* pClient(nullptr);
 
     PyDict* fleetDict = new PyDict();
@@ -1284,40 +1280,41 @@ PyRep* FleetService::GetAvailableFleets() {
         PyTuple* localTuple = new PyTuple(1);
         PyList* localList = new PyList();
         for (auto cur1 : cur.second.local_allowedEntities)
-            localList->AddItemInt(cur1);
-        localTuple->SetItem(0, localList);
-        PyToken* token = new PyToken("__builtin__.set");
-        PyTuple* localTuple2 = new PyTuple(2);
-        localTuple2->SetItem(0, token);
-        localTuple2->SetItem(1, localTuple);
-            fleetRSP.local_allowedEntities = new PyObjectEx(false, localTuple2);
+            localList->add(new PyInt (cur1));
+        fleetRSP.local_allowedEntities = new PyObjectEx(false, new PyTuple {
+            new PyToken ("__builtin__.set"),
+            new PyTuple {
+                localList
+            }
+        });
 
         PyTuple* publicTuple = new PyTuple(1);
         PyList* publicList = new PyList();
         for (auto cur2 : cur.second.public_allowedEntities)
-            publicList->AddItemInt(cur2);
-        publicTuple->SetItem(0, publicList);
-        PyTuple* publicTuple2 = new PyTuple(2);
-        PyIncRef(token);
-        publicTuple2->SetItem(0, token);
-        publicTuple2->SetItem(1, publicTuple);
-            fleetRSP.public_allowedEntities = new PyObjectEx(false, publicTuple2);
+            publicList->add(new PyInt (cur2));
 
-            fleetRSP.local_minStanding = cur.second.local_minStanding;
-            fleetRSP.numMembers = m_fleetMembers.count(cur.first);
-            fleetRSP.hideInfo = cur.second.hideInfo;
-            fleetRSP.public_minSecurity = cur.second.public_minSecurity;
-            fleetRSP.inviteScope = cur.second.inviteScope;
-            fleetRSP.solarSystemID = cur.second.solarSystemID;
-            fleetRSP.charID = pClient->GetCharacterID();
-            fleetRSP.corpID = pClient->GetCorporationID();
-            fleetRSP.warFactionID = pClient->GetWarFactionID();
-            fleetRSP.securityStatus = pClient->GetSecurityRating();
-            fleetRSP.allianceID = pClient->GetAllianceID();
-        fleetDict->SetItem(new PyLong(cur.first), fleetRSP.Encode() );
+        fleetRSP.public_allowedEntities = new PyObjectEx(false, new PyTuple {
+            new PyToken ("__builtin__.set"),
+            new PyTuple {
+                publicList
+            }
+        });
+
+        fleetRSP.local_minStanding = cur.second.local_minStanding;
+        fleetRSP.numMembers = m_fleetMembers.count(cur.first);
+        fleetRSP.hideInfo = cur.second.hideInfo;
+        fleetRSP.public_minSecurity = cur.second.public_minSecurity;
+        fleetRSP.inviteScope = cur.second.inviteScope;
+        fleetRSP.solarSystemID = cur.second.solarSystemID;
+        fleetRSP.charID = pClient->GetCharacterID();
+        fleetRSP.corpID = pClient->GetCorporationID();
+        fleetRSP.warFactionID = pClient->GetWarFactionID();
+        fleetRSP.securityStatus = pClient->GetSecurityRating();
+        fleetRSP.allianceID = pClient->GetAllianceID();
+        fleetDict->set(new PyInt(cur.first), fleetRSP.Encode() );
     }
 
-    fleetDict->Dump(FLEET__DEBUG, "    ");
+    fleetDict->dump(FLEET__DEBUG, "    ");
     return fleetDict;
 }
 
@@ -1443,14 +1440,15 @@ void FleetService::FleetBroadcast(Client* pFrom, uint32 itemID, int8 scope, int8
     //OnFleetBroadcast(name, group, charID, solarSystemID, itemID):
     //   ('HealCapacitor', 3, 95895066, 30003500, 1019274373727L, None)))
 
-    PyTuple* payload = new PyTuple(5);
-        payload->SetItem(0, new PyString(msg));
-        payload->SetItem(1, new PyInt(group));
-        payload->SetItem(2, new PyInt(pFrom->GetCharacterID()));
-        payload->SetItem(3, new PyInt(pFrom->GetSystemID()));
-        payload->SetItem(4, new PyInt(itemID));
+    PyTuple* payload = new PyTuple {
+        new PyString (msg),
+        new PyInt (group),
+        new PyInt (pFrom->GetCharacterID()),
+        new PyInt (pFrom->GetSystemID()),
+        new PyInt (itemID),
         // if BCastName(label) then add next item properly
-        payload->SetItem(5, PyStatic.NewNone());
+        PyStatic.NewNone()
+    };
 
     uint8 count(0);
     for (auto cur : members) {
@@ -1475,7 +1473,7 @@ void FleetService::FleetBroadcast(Client* pFrom, uint32 itemID, int8 scope, int8
         }
 
         _log(FLEET__BCAST_DUMP, "%s FleetBroadcast '%s' to %s members of fleet %u.", GetBCastScopeName(scope).c_str(), msg.c_str(), grp.str().c_str() , fleetID);
-        payload->Dump(FLEET__BCAST_DUMP, "   ");
+        payload->dump(FLEET__BCAST_DUMP, "   ");
     }
 
     PySafeDecRef(payload);
@@ -1485,7 +1483,7 @@ void FleetService::SendFleetUpdate(uint32 fleetID, const char* notifyType, PyTup
 {
     if (is_log_enabled(FLEET__UPDATE_DUMP)) {
         _log(FLEET__UPDATE_DUMP, "SendFleetUpdate '%s' to members of fleet %u.", notifyType, fleetID);
-        payload->Dump(FLEET__UPDATE_DUMP, "   ");
+        payload->dump(FLEET__UPDATE_DUMP, "   ");
     }
 
     std::vector<Client*> members;
@@ -1561,26 +1559,26 @@ std::vector<Client *> FleetService::GetFleetClients(uint32 fleetID) {
 
 void FleetService::SendActiveStatus(uint32 fleetID, int32 wingID, int32 squadID)
 {
-    PyTuple* count = new PyTuple(1);
-    count->SetItem(0, new PyInt((255 - m_fleetMembers.count(fleetID))));  // this is slots left from 255 (256 - leader)
-    SendFleetUpdate(fleetID, "OnFleetActive", count);
+    SendFleetUpdate(fleetID, "OnFleetActive", new PyTuple {
+        new PyInt (255 - m_fleetMembers.count (fleetID))// this is slots left from 255 (256 - leader)
+    });
 
     if (wingID > 0) {
         WingData wData = WingData();
         GetWingData(wingID, wData);
-        PyTuple* count = new PyTuple(2);
-            count->SetItem(0, new PyInt(wingID));
-            count->SetItem(1, new PyInt(IsWingActive(wingID) ? 1 : 0));
-        SendFleetUpdate(fleetID, "OnWingActive", count);
+        SendFleetUpdate(fleetID, "OnWingActive", new PyTuple {
+            new PyInt (wingID),
+            new PyInt (IsWingActive (wingID) ? 1 : 0)
+        });
     }
 
     if (squadID > 0) {
         SquadData sData = SquadData();
         GetSquadData(squadID, sData);
-        PyTuple* count = new PyTuple(2);
-            count->SetItem(0, new PyInt(squadID));
-            count->SetItem(1, new PyInt(sData.members.size()? 1 : 0));
-        SendFleetUpdate(fleetID, "OnSquadActive", count);
+        SendFleetUpdate(fleetID, "OnSquadActive", new PyTuple {
+            new PyInt (squadID),
+            new PyInt (sData.members.size() ? 1 : 0)
+        });
     }
 }
 

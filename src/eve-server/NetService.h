@@ -36,9 +36,9 @@ public:
     NetService(EVEServiceManager& mgr);
 
 protected:
-    PyResult GetTime(PyCallArgs& call);
-    PyResult GetClusterSessionStatistics(PyCallArgs& call);
-    PyResult GetInitVals(PyCallArgs& call);
+  EVEResult GetTime(EVECallArgs& call);
+  EVEResult GetClusterSessionStatistics(EVECallArgs& call);
+  EVEResult GetInitVals(EVECallArgs& call);
 
 private:
     EVEServiceManager& m_manager;

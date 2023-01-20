@@ -45,9 +45,9 @@ public:
 protected:
     SystemDB m_db;
 
-    PyResult GetLevelEditor(PyCallArgs& call);
-    PyResult CanWarpToPathPlex(PyCallArgs& call, PyInt* instanceID);
-    PyResult ActivateAccelerationGate(PyCallArgs& call, PyInt* itemID);
+    EVEResult GetLevelEditor(EVECallArgs& call);
+    EVEResult CanWarpToPathPlex(EVECallArgs& call, PyInt* instanceID);
+    EVEResult ActivateAccelerationGate(EVECallArgs& call, PyInt* itemID);
 
 private:
     EVEServiceManager& m_manager;
@@ -65,16 +65,16 @@ public:
     virtual uint32 GetCurrentRoomID() { return m_currentRoom; }
 
 protected:
-    PyResult EditDungeon(PyCallArgs& call, PyInt* dungeonID);
-    PyResult PlayDungeon(PyCallArgs& call, PyInt* dungeonID);
-    PyResult Reset(PyCallArgs& call);
-    PyResult GotoRoom(PyCallArgs& call, PyInt* roomID);
-    PyResult GetCurrentlyEditedRoomID(PyCallArgs& call);
-    PyResult GetRoomObjects(PyCallArgs& call);
-    PyResult GetRoomGroups(PyCallArgs& call, PyInt* roomID);
-    PyResult ObjectSelection(PyCallArgs& call, PyList* objects);
-    PyResult BatchStart(PyCallArgs& call);
-    PyResult BatchEnd(PyCallArgs& call);
+  EVEResult EditDungeon(EVECallArgs& call, PyInt* dungeonID);
+  EVEResult PlayDungeon(EVECallArgs& call, PyInt* dungeonID);
+  EVEResult Reset(EVECallArgs& call);
+  EVEResult GotoRoom(EVECallArgs& call, PyInt* roomID);
+  EVEResult GetCurrentlyEditedRoomID(EVECallArgs& call);
+  EVEResult GetRoomObjects(EVECallArgs& call);
+  EVEResult GetRoomGroups(EVECallArgs& call, PyInt* roomID);
+  EVEResult ObjectSelection(EVECallArgs& call, PyList* objects);
+  EVEResult BatchStart(EVECallArgs& call);
+  EVEResult BatchEnd(EVECallArgs& call);
 
 protected:
     SystemDB *const m_db;

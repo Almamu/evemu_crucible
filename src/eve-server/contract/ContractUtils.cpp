@@ -52,7 +52,7 @@ const std::string getContractBidsQueryBase = "SELECT amount, bidderID "
  * @param contractId - contract ID to get
  * @return - util.KeyVal PyObject (or nullptr, if contract doesn't exist or there were errors during execution)
  */
-PyResult ContractUtils::GetContractEntry(int contractId)
+EVEResult ContractUtils::GetContractEntry(int contractId)
 {
     std::string contractID = std::to_string(contractId);
 
@@ -81,9 +81,9 @@ PyResult ContractUtils::GetContractEntry(int contractId)
         }
 
         PyDict* response = new PyDict;
-        response->SetItemString("contract", DBRowToPackedRow(contractRow));
-        response->SetItemString("items", DBResultToCRowset(itemsRes));
-        response->SetItemString("bids", DBResultToCRowset(bidsRes));
+        response->set ("contract", DBRowToPackedRow(contractRow));
+        response->set ("items", DBResultToCRowset(itemsRes));
+        response->set ("bids", DBResultToCRowset(bidsRes));
 
         return new PyObject( "util.KeyVal", response );
     } else {
@@ -143,41 +143,41 @@ PyList* ContractUtils::GetContractEntries(std::vector<int> contractIDList) {
          * I think there might be a better way to do it, but that's a matter for further optimizations.
          */
         DBRowDescriptor* itemsHeader = new DBRowDescriptor(itemsRes);
-        std::map<int, CRowSet*> itemsMap;
+        std::map<int, CRowset*> itemsMap;
         DBResultRow itemRow;
         while (itemsRes.GetRow(itemRow)) {
             int contractID = itemRow.GetInt(0);
 
             auto pos = itemsMap.find(contractID);
             if (pos == itemsMap.end()) {
-                CRowSet* rowset = new CRowSet(&itemsHeader);
-                PyPackedRow* into = rowset->NewRow();
+                CRowset* rowset = new CRowset(itemsHeader);
+                PyPackedRow* into = rowset->insert();
                 FillItemData(&itemRow, into);
 
                 itemsMap[contractID] = rowset;
             } else {
-                CRowSet* rowset = pos->second;
-                PyPackedRow* into = rowset->NewRow();
+                CRowset* rowset = pos->second;
+                PyPackedRow* into = rowset->insert();
                 FillItemData(&itemRow, into);
             }
         }
 
         DBRowDescriptor* bidsHeader = new DBRowDescriptor(bidsRes);
-        std::map<int, CRowSet*> bidsMap;
+        std::map<int, CRowset*> bidsMap;
         DBResultRow bidRow;
         while (bidsRes.GetRow(bidRow)) {
             int contractID = bidRow.GetInt(0);
 
             auto pos = bidsMap.find(contractID);
             if (pos == bidsMap.end()) {
-                CRowSet* rowset = new CRowSet(&itemsHeader);
-                PyPackedRow* into = rowset->NewRow();
+                CRowset* rowset = new CRowset(itemsHeader);
+                PyPackedRow* into = rowset->insert();
                 FillBidData(&bidRow, into);
 
                 bidsMap[contractID] = rowset;
             } else {
-                CRowSet* rowset = pos->second;
-                PyPackedRow* into = rowset->NewRow();
+                CRowset* rowset = pos->second;
+                PyPackedRow* into = rowset->insert();
                 FillBidData(&bidRow, into);
             }
         }
@@ -186,12 +186,13 @@ PyList* ContractUtils::GetContractEntries(std::vector<int> contractIDList) {
         while (contractRes.GetRow(contractRow)) {
             int contractID = contractRow.GetInt(0);
 
-            PyDict* contract = new PyDict;
-            contract->SetItemString("contract", DBRowToPackedRow(contractRow));
-            contract->SetItemString("items", itemsMap.find(contractID) == itemsMap.end() ? new CRowSet(&itemsHeader) : itemsMap.find(contractID)->second);
-            contract->SetItemString("bids", bidsMap.find(contractID) == bidsMap.end() ? new CRowSet(&bidsHeader) : bidsMap.find(contractID)->second);
+            PyDict* contract = new PyDict {
+                {"contract", DBRowToPackedRow(contractRow)},
+                {"items", itemsMap.find(contractID) == itemsMap.end() ? new CRowset(itemsHeader) : itemsMap.find(contractID)->second},
+                {"bids", bidsMap.find(contractID) == bidsMap.end() ? new CRowset(bidsHeader) : bidsMap.find(contractID)->second}
+            };
 
-            contractsList->AddItem(new PyObject("util.KeyVal", contract));
+            contractsList->add(new PyObject("util.KeyVal", contract));
         }
 
         return contractsList;
@@ -206,7 +207,7 @@ PyList* ContractUtils::GetContractEntries(std::vector<int> contractIDList) {
  * @param call - Call instance
  * @return - Response obj
  */
-PyResult ContractUtils::GetContractListForOwner(PyInt* ownerID, PyInt* contractStatus, std::optional <PyInt*> contractType, std::optional <PyBool*> issuedToBy) {
+EVEResult ContractUtils::GetContractListForOwner(PyInt* ownerID, PyInt* contractStatus, std::optional <PyInt*> contractType, std::optional <PyBool*> issuedToBy) {
     std::string contracts_query = getContractQueryBase;
     std::string items_query = "SELECT contractId, itemTypeID, quantity, inCrate "
                               "FROM ctrItems "
@@ -217,7 +218,7 @@ PyResult ContractUtils::GetContractListForOwner(PyInt* ownerID, PyInt* contractS
     if (issuedToBy.has_value() == false) {
         contracts_query.append("WHERE (issuerID = {OWNER_ID} OR assigneeID = {OWNER_ID} OR acceptorID = {OWNER_ID}) ");
     } else {
-        bool issued = issuedToBy.value()->AsBool()->value();
+        bool issued = issuedToBy.value()->as<PyBool>()->value();
         if (issued) {
             contracts_query.append("WHERE (assigneeID = {OWNER_ID} OR acceptorID = {OWNER_ID}) ");
         } else {
@@ -229,8 +230,8 @@ PyResult ContractUtils::GetContractListForOwner(PyInt* ownerID, PyInt* contractS
     } else {
         contracts_query.append("AND contractType = " + std::to_string(contractType.value()->value()) + " ");
     }
-    contracts_query.append("AND status = " + std::to_string(contractStatus->AsInt()->value()));
-    boost::replace_all(contracts_query, "{OWNER_ID}", std::to_string(ownerID->AsInt()->value()));
+    contracts_query.append("AND status = " + std::to_string(contractStatus->as<PyInt>()->value()));
+    boost::replace_all(contracts_query, "{OWNER_ID}", std::to_string(ownerID->as<PyInt>()->value()));
 
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, contracts_query.c_str()))
@@ -240,9 +241,9 @@ PyResult ContractUtils::GetContractListForOwner(PyInt* ownerID, PyInt* contractS
     }
 
     PyObjectEx* contracts = DBResultToCRowset(res);
-    for (auto contract : contracts->list()) {
+    for (auto contract : *contracts->list()) {
         // To get items, we store contractID's in separate list
-        contractIDs.push_back(contract->AsPackedRow()->GetField(0)->AsInt()->value());
+        contractIDs.push_back(contract->as<PyPackedRow>()->get<PyInt>(0)->value());
     }
 
     PyDict* items = new PyDict;
@@ -259,43 +260,47 @@ PyResult ContractUtils::GetContractListForOwner(PyInt* ownerID, PyInt* contractS
         }
 
         // Given that we have items queried for every contract in the list, we sort them by contractID's first, then we put those in the dict.
-        std::map<int, CRowSet*> itemsByContractID;
+        std::map<int, CRowset*> itemsByContractID;
         DBResultRow row;
         while (res.GetRow(row)) {
             auto pos = itemsByContractID.find(row.GetInt(0));
             if(pos == itemsByContractID.end()) {
                 DBRowDescriptor *header = new DBRowDescriptor(res);
-                CRowSet *rowset = new CRowSet(&header);
+                CRowset *rowset = new CRowset(header);
 
-                PyPackedRow* packedRow = rowset->NewRow();
-                packedRow->SetField("contractId", new PyInt(row.GetInt(0)));
-                packedRow->SetField("itemTypeID", new PyInt(row.GetInt(1)));
-                packedRow->SetField("quantity", new PyInt(row.GetInt(2)));
-                packedRow->SetField("inCrate", new PyBool(row.GetBool(3)));
+                PyPackedRow* packedRow = rowset->insert({
+                    new PyInt (row.GetInt(0)),
+                    new PyInt (row.GetInt (1)),
+                    new PyInt (row.GetInt (2)),
+                    new PyBool (row.GetBool (3))
+                });
 
                 itemsByContractID[row.GetInt(0)] = rowset;
             } else {
-                CRowSet* rowset = pos->second;
+                CRowset* rowset = pos->second;
 
-                PyPackedRow* packedRow = rowset->NewRow();
-                packedRow->SetField("contractId", new PyInt(row.GetInt(0)));
-                packedRow->SetField("itemTypeID", new PyInt(row.GetInt(1)));
-                packedRow->SetField("quantity", new PyInt(row.GetInt(2)));
-                packedRow->SetField("inCrate", new PyBool(row.GetBool(3)));
+                PyPackedRow* packedRow = rowset->insert({
+                    new PyInt (row.GetInt(0)),
+                    new PyInt (row.GetInt (1)),
+                    new PyInt (row.GetInt (2)),
+                    new PyBool (row.GetBool (3))
+                });
             }
         }
         if (!itemsByContractID.empty()) {
             for (auto entry : itemsByContractID) {
-                items->SetItem(new PyInt(entry.first), entry.second);
+                items->set(new PyInt(entry.first), entry.second);
             }
         }
     }
 
-    PyDict* ret = new PyDict;
-    ret->SetItemString("contracts", contracts);
-    ret->SetItemString("items", items);
-
-    return new PyObject("util.KeyVal", ret);
+    return new PyObject(
+        "util.KeyVal",
+        new PyDict {
+            {"contracts", contracts},
+            {"items", items}
+        }
+    );
 }
 
 /**
@@ -304,18 +309,18 @@ PyResult ContractUtils::GetContractListForOwner(PyInt* ownerID, PyInt* contractS
  * @param targetRow - target PyPackedRow
  */
 void ContractUtils::FillItemData(DBResultRow *itemRow, PyPackedRow *targetRow) {
-    targetRow->SetField("contractID", new PyInt(itemRow->GetInt(0)));
-    targetRow->SetField("itemID", new PyInt(itemRow->GetInt(1)));
-    targetRow->SetField("quantity", new PyInt(itemRow->GetInt(2)));
-    targetRow->SetField("itemTypeID", new PyInt(itemRow->GetInt(3)));
-    targetRow->SetField("inCrate", new PyBool(itemRow->GetBool(4)));
-    targetRow->SetField("parentID", new PyInt(itemRow->GetInt(5)));
-    targetRow->SetField("productivityLevel", new PyInt(itemRow->GetInt(6)));
-    targetRow->SetField("materialLevel", new PyInt(itemRow->GetInt(7)));
-    targetRow->SetField("copy", new PyBool(itemRow->GetBool(8)));
-    targetRow->SetField("licensedProductionRunsRemaining", new PyInt(itemRow->GetInt(9)));
-    targetRow->SetField("damage", new PyInt(itemRow->GetInt(10)));
-    targetRow->SetField("flagID", new PyInt(itemRow->GetInt(11)));
+    targetRow->set("contractID", new PyInt(itemRow->GetInt(0)));
+    targetRow->set("itemID", new PyInt(itemRow->GetInt(1)));
+    targetRow->set("quantity", new PyInt(itemRow->GetInt(2)));
+    targetRow->set("itemTypeID", new PyInt(itemRow->GetInt(3)));
+    targetRow->set("inCrate", new PyBool(itemRow->GetBool(4)));
+    targetRow->set("parentID", new PyInt(itemRow->GetInt(5)));
+    targetRow->set("productivityLevel", new PyInt(itemRow->GetInt(6)));
+    targetRow->set("materialLevel", new PyInt(itemRow->GetInt(7)));
+    targetRow->set("copy", new PyBool(itemRow->GetBool(8)));
+    targetRow->set("licensedProductionRunsRemaining", new PyInt(itemRow->GetInt(9)));
+    targetRow->set("damage", new PyInt(itemRow->GetInt(10)));
+    targetRow->set("flagID", new PyInt(itemRow->GetInt(11)));
 }
 
 /**
@@ -324,10 +329,10 @@ void ContractUtils::FillItemData(DBResultRow *itemRow, PyPackedRow *targetRow) {
  * @param targetRow - target PyPackedRow
  */
 void ContractUtils::FillBidData(DBResultRow *bidRow, PyPackedRow *targetRow) {
-    targetRow->SetField("contractId", new PyInt(bidRow->GetInt(0)));
-    targetRow->SetField("amount", new PyInt(bidRow->GetInt(1)));
-    targetRow->SetField("bidderID", new PyInt(bidRow->GetInt(2)));
-    targetRow->SetField("bidDateTime", new PyLong(bidRow->GetInt64(3)));
+    targetRow->set("contractId", new PyInt(bidRow->GetInt(0)));
+    targetRow->set("amount", new PyInt(bidRow->GetInt(1)));
+    targetRow->set("bidderID", new PyInt(bidRow->GetInt(2)));
+    targetRow->set("bidDateTime", new PyInt(bidRow->GetInt64(3)));
 }
 
 /**

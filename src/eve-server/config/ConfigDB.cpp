@@ -28,7 +28,7 @@
 
 #include "config/ConfigDB.h"
 
-PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
+PyDataType *ConfigDB::GetMultiOwnersEx(VectorWrapper<PyInt> entityIDs, PythonArena* arena) {
     // separate list of ids into respective groups
     std::vector<int32> player, corp, ally, owner, npc, station;
     player.clear();
@@ -38,7 +38,9 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
     npc.clear();
     station.clear();
 
-    for (auto cur : entityIDs) {
+    for (auto element : entityIDs) {
+        auto cur = element->value();
+
         if (IsCorp(cur)) {
             corp.push_back(cur);
         } else if (IsAlliance(cur)) {
@@ -62,7 +64,7 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
      * With this in mind, i had to move the logic from DBResultToTupleSet here, so that we could compose result tuple
      * from bits of different queries.
      */
-    PyList *results = new PyList();
+    PyList *results = arena->List();
     DBQueryResult res;
     std::string ids = "";
 
@@ -80,7 +82,7 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
         {
             codelog(DATABASE__ERROR, "Error in query: %s", res.error.c_str());
         } else {
-            populateResListWithValues(res, results);
+            populateResListWithValues(res, results, arena);
         }
         ids = "";
     }
@@ -99,7 +101,7 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
         {
             codelog(DATABASE__ERROR, "Error in query: %s", res.error.c_str());
         } else {
-            populateResListWithValues(res, results);
+            populateResListWithValues(res, results, arena);
         }
         ids = "";
     }
@@ -118,7 +120,7 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
         {
             codelog(DATABASE__ERROR, "Error in query: %s", res.error.c_str());
         } else {
-            populateResListWithValues(res, results);
+            populateResListWithValues(res, results, arena);
         }
         ids = "";
     }
@@ -137,7 +139,7 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
         {
             codelog(DATABASE__ERROR, "Error in query: %s", res.error.c_str());
         } else {
-            populateResListWithValues(res, results);
+            populateResListWithValues(res, results, arena);
         }
         ids = "";
     }
@@ -154,7 +156,7 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
         {
             codelog(DATABASE__ERROR, "Error in query: %s", res.error.c_str());
         } else {
-            populateResListWithValues(res, results);
+            populateResListWithValues(res, results, arena);
         }
         ids = "";
     }
@@ -173,26 +175,25 @@ PyRep *ConfigDB::GetMultiOwnersEx(const std::vector<int32> &entityIDs) {
         {
             codelog(DATABASE__ERROR, "Error in query: %s", res.error.c_str());
         } else {
-            populateResListWithValues(res, results);
+            populateResListWithValues(res, results, arena);
         }
     }
 
     if (!results->empty()) {
         uint32 cc = res.ColumnCount();
-        PyTuple *response = new PyTuple(2);
-        PyList *cols = new PyList(cc);
+        PyList *cols = arena->List(cc);
         for(uint32 r(0); r < cc; ++r)
-            cols->SetItemString(r, res.ColumnName(r));
-        response->items[0] = cols;
-        response->items[1] = results;
+            cols->set (r, arena->String (res.ColumnName(r)));
 
-        return response;
+        return arena->Tuple ({
+            cols, results
+        });
     } else {
-        return new PyTuple(0);
+        return arena->Tuple();
     }
 }
 
-PyRep *ConfigDB::GetMultiAllianceShortNamesEx(const std::vector<int32> &entityIDs) {
+PyDataType *ConfigDB::GetMultiAllianceShortNamesEx(const std::vector<int32> &entityIDs) {
     std::string ids;
     ListToINString(entityIDs, ids);
     DBQueryResult res;
@@ -204,7 +205,7 @@ PyRep *ConfigDB::GetMultiAllianceShortNamesEx(const std::vector<int32> &entityID
     return DBResultToTupleSet(res);
 }
 
-PyRep *ConfigDB::GetMultiLocationsEx(const std::vector<int32> &entityIDs) {
+PyDataType *ConfigDB::GetMultiLocationsEx(const std::vector<int32> &entityIDs) {
     // this is locations only....region, const, system, station, ship
     // wtf are asteroids seen in this call???
     std::vector<int32> staticItems, dynamicItems, asteroidItems;
@@ -276,7 +277,7 @@ PyRep *ConfigDB::GetMultiLocationsEx(const std::vector<int32> &entityIDs) {
     return DBResultToTupleSet(res);
 }
 
-PyRep* ConfigDB::GetMultiStationEx(const std::vector< int32 >& entityIDs)
+PyDataType* ConfigDB::GetMultiStationEx(const std::vector< int32 >& entityIDs)
 {
     std::string ids;
     ListToINString(entityIDs, ids);
@@ -289,10 +290,16 @@ PyRep* ConfigDB::GetMultiStationEx(const std::vector< int32 >& entityIDs)
 }
 
 
-PyRep *ConfigDB::GetMultiCorpTickerNamesEx(const std::vector<int32> &entityIDs)
+PyDataType *ConfigDB::GetMultiCorpTickerNamesEx(VectorWrapper<PyInt> entityIDs, PythonArena* arena)
 {
+    // TODO: PROVIDE SOME VERSION OF LISTTOINSTRING THAT TAKES A VECTORWRAPPER OR A LIST OF SOME SORT INSTEAD OF HAVING TO DO THIS CONVERSION
+    std::vector<int32> ints;
+
+    for (auto cur : entityIDs)
+        ints.push_back(cur->value());
+
     std::string ids;
-    ListToINString(entityIDs, ids);
+    ListToINString(ints, ids);
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT "
@@ -303,14 +310,14 @@ PyRep *ConfigDB::GetMultiCorpTickerNamesEx(const std::vector<int32> &entityIDs)
         " WHERE corporationID in (%s)", ids.c_str()))
     {
         codelog(DATABASE__ERROR, "Error in GetMultiCorpTickerNamesEx query: %s", res.error.c_str());
-        return new PyInt(0);
+        return arena->Int(0);
     }
 
-    return DBResultToRowList(res);
+    return DBResultToRowList(res, arena);
 }
 
 
-PyRep *ConfigDB::GetMultiGraphicsEx(const std::vector<int32> &entityIDs) {
+PyDataType *ConfigDB::GetMultiGraphicsEx(const std::vector<int32> &entityIDs) {
     std::string ids;
     ListToINString(entityIDs, ids);
 
@@ -408,7 +415,7 @@ PyObject *ConfigDB::ListLanguages() {
 }
 
 
-PyRep *ConfigDB::GetMultiInvTypesEx(const std::vector<int32> &entityIDs) {
+PyDataType *ConfigDB::GetMultiInvTypesEx(const std::vector<int32> &entityIDs) {
     std::string ids;
     ListToINString(entityIDs, ids);
     DBQueryResult res;
@@ -427,7 +434,7 @@ PyRep *ConfigDB::GetMultiInvTypesEx(const std::vector<int32> &entityIDs) {
     return DBResultToRowList(res);
 }
 
-PyRep *ConfigDB::GetStationSolarSystemsByOwner(uint32 ownerID) {
+PyDataType *ConfigDB::GetStationSolarSystemsByOwner(uint32 ownerID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         " SELECT "
@@ -442,7 +449,7 @@ PyRep *ConfigDB::GetStationSolarSystemsByOwner(uint32 ownerID) {
     return DBResultToRowset(res);
 }
 
-PyRep *ConfigDB::GetCelestialStatistic(uint32 celestialID) {
+PyDataType *ConfigDB::GetCelestialStatistic(uint32 celestialID) {
     //  corrected db query  -allan 8Dec14
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -477,7 +484,7 @@ PyRep *ConfigDB::GetCelestialStatistic(uint32 celestialID) {
     return DBResultToCRowset(res);
 }
 
-PyRep *ConfigDB::GetDynamicCelestials(uint32 solarSystemID) {
+PyDataType *ConfigDB::GetDynamicCelestials(uint32 solarSystemID, PythonArena* arena) {
     //  corrected query and return type per packet info
     //      this returns ONLY OUTPOSTS.  -allan 8Dec14
     /* this packet is from a crowded (73 items) system (including pos'), yet is only return from this call.
@@ -524,10 +531,10 @@ PyRep *ConfigDB::GetDynamicCelestials(uint32 solarSystemID) {
             return new PyInt(0);
     }
 
-    return DBResultToCRowset(result);
+    return DBResultToCRowset(result, arena);
 }
 
-PyRep *ConfigDB::GetTextsForGroup(const std::string & langID, uint32 textgroup) {
+PyDataType *ConfigDB::GetTextsForGroup(const std::string & langID, uint32 textgroup) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT textLabel, `text` FROM intro WHERE langID = '%s' AND textgroup = %u", langID.c_str(), textgroup)) {
         codelog(DATABASE__ERROR, "Error in GetTextsForGroup query: %s", res.error.c_str());

@@ -34,9 +34,9 @@ public:
     BrowserLockdownService();
 
 protected:
-    PyResult GetFlaggedSitesHash(PyCallArgs& call);
-    PyResult GetFlaggedSitesList(PyCallArgs& call);
-    PyResult GetDefaultHomePage(PyCallArgs& call);
-    PyResult IsBrowserInLockdown(PyCallArgs& call);
+  EVEResult GetFlaggedSitesHash(EVECallArgs& call);
+  EVEResult GetFlaggedSitesList(EVECallArgs& call);
+  EVEResult GetDefaultHomePage(EVECallArgs& call);
+  EVEResult IsBrowserInLockdown(EVECallArgs& call);
 };
 #endif /* !__ACCOUNT__BROWSER_LOCKDOWN_SVC_H__INCL__ */

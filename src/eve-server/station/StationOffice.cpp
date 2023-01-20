@@ -17,7 +17,7 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "station/StationOffice.h"
 
 /*

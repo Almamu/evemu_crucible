@@ -45,7 +45,7 @@ void StreamPacketizer::Process()
             break;
 
         const Buffer::const_iterator<uint32> len = cur.As<uint32>();
-        const Buffer::const_iterator<uint8> start = ( len + 1 ).As<uint8>();
+        const Buffer::const_iterator<uint8> start = (len + 1).As<uint8>();
 
         if (*len > (uint32)(end - start))
             break;

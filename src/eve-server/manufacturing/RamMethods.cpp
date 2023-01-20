@@ -528,20 +528,20 @@ void RamMethods::EncodeBillOfMaterials(const std::vector<EvERam::RequiredItem> &
         // "Raw material" is fully consumed and affected by skills/efficiency
         // "Waste Material" is amount of material wasted ...
         if (cur.extra) {
-            into.extras.lines->AddItem( line.Encode() );
+            into.extras.lines->add( line.Encode() );
         } else {
             // if there are losses, make line for waste material list
             if (charMaterialMultiplier > 1.0) {
                 MaterialList_Line wastage( line );  // simply copy original line ...
                 wastage.quantity = qtyNeeded - line.quantity;
-                into.wasteMaterials.lines->AddItem( wastage.Encode() );
+                into.wasteMaterials.lines->add( wastage.Encode() );
             }
-            into.rawMaterials.lines->AddItem( line.Encode() );
+            into.rawMaterials.lines->add( line.Encode() );
         }
     }
 }
 
-void RamMethods::EncodeMissingMaterials(const std::vector<EvERam::RequiredItem> &reqItems, const PathElement &bomLocation, Client *const pClient, float materialMultiplier, float charMaterialMultiplier, int32 runs, std::map<int32, PyRep *> &into) {
+void RamMethods::EncodeMissingMaterials(const std::vector<EvERam::RequiredItem> &reqItems, const PathElement &bomLocation, Client *const pClient, float materialMultiplier, float charMaterialMultiplier, int32 runs, std::map<int32, PyDataType *> &into) {
     //
     std::vector<InventoryItemRef> skills, items;
 

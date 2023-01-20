@@ -21,13 +21,13 @@ public:
     FleetManager();
 
 protected:
-    PyResult ForceLeaveFleet(PyCallArgs& call);
-    PyResult GetActiveStatus(PyCallArgs& call);
-    PyResult BroadcastToBubble(PyCallArgs& call, PyString* name, PyInt* groupID, PyInt* itemID);
-    PyResult BroadcastToSystem(PyCallArgs& call, PyString* name, PyInt* groupID, PyInt* itemID);
-    PyResult AddToWatchlist(PyCallArgs& call, PyInt* characterID, PyRep* fav);
-    PyResult RemoveFromWatchlist(PyCallArgs& call, PyInt* characterID, PyRep* fav);
-    PyResult RegisterForDamageUpdates(PyCallArgs& call, PyRep* fav);
+  EVEResult ForceLeaveFleet(EVECallArgs& call);
+  EVEResult GetActiveStatus(EVECallArgs& call);
+  EVEResult BroadcastToBubble(EVECallArgs& call, PyString* name, PyInt* groupID, PyInt* itemID);
+  EVEResult BroadcastToSystem(EVECallArgs& call, PyString* name, PyInt* groupID, PyInt* itemID);
+  EVEResult AddToWatchlist(EVECallArgs& call, PyInt* characterID, PyDataType* fav);
+  EVEResult RemoveFromWatchlist(EVECallArgs& call, PyInt* characterID, PyDataType* fav);
+  EVEResult RegisterForDamageUpdates(EVECallArgs& call, PyDataType* fav);
 };
 
 #endif  // EVEMU_SRC_FLEET_MGR_H_

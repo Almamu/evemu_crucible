@@ -23,8 +23,8 @@ class PosMgrDB
 : public ServiceDB
 {
 public:
-    PyRep *GetSiloCapacityForType(uint16 typeID);
-    PyRep* GetCorpControlTowers(uint32 corpID);
+    PyDataType *GetSiloCapacityForType(uint16 typeID);
+    PyDataType* GetCorpControlTowers(uint32 corpID);
 
     static void GetLinkableJumpArrays(uint32 corpID, DBQueryResult& res);
     static void GetCorpJumpArrays(uint32 corpID, DBQueryResult& res);

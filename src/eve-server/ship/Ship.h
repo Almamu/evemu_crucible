@@ -27,7 +27,7 @@
 #ifndef __SHIP__H__INCL__
 #define __SHIP__H__INCL__
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "effects/EffectsData.h"
 #include "fleet/FleetData.h"
@@ -93,10 +93,10 @@ public:
     /*
      * Primary public packet builders:
      */
-    PyDict* GetShipInfo();
-    PyDict* GetShipState();
+    PyDict* GetShipInfo(PythonArena* arena);
+    PyDict* GetShipState(PythonArena* arena);
     PyList* ShipGetModuleList();
-    PyDict* GetChargeState();
+    PyDict* GetChargeState(PythonArena* arena);
 
     bool ValidateBoardShip(CharacterRef who);
     void SaveShip();
@@ -152,7 +152,7 @@ public:
     InventoryItemRef GetTargetRef()                     { return m_targetRef; }
     void ClearTargetRef()                               { m_targetRef = InventoryItemRef(); }
     // this is for repairing modules with nanite paste
-    PyRep* ModuleRepair(uint32 modID)                   { return m_ModuleManager->ModuleRepair(modID); }
+    PyDataType* ModuleRepair(uint32 modID)                   { return m_ModuleManager->ModuleRepair(modID); }
     void StopModuleRepair(uint32 modID)                 { m_ModuleManager->StopModuleRepair(modID); }
 
     // OL and Heat damage shit
@@ -250,7 +250,7 @@ public:
     uint32 UnlinkWeapon(uint32 moduleID);
     void UnlinkGroup(uint32 memberID, bool update=false);
     void UnlinkAllWeapons();
-    PyRep* GetLinkedWeapons();
+    PyDataType* GetLinkedWeapons(PythonArena* arena);
     void OfflineGroup(GenericModule* pMod);
     void DamageGroup(GenericModule* pMod);
     // to load with ammo

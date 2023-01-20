@@ -37,22 +37,22 @@ public:
 protected:
     SystemDB m_db;
 
-    PyResult ResetD(PyCallArgs& call);
-    PyResult PlayDungeon(PyCallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom);
-    PyResult EditRoom(PyCallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom);
-    PyResult GotoRoom(PyCallArgs& call, PyInt* selectedRoom);
-    PyResult GetDunObjects(PyCallArgs& call);
-    PyResult GetSelObjects(PyCallArgs& call);
-    PyResult IsSelectedByObjID(PyCallArgs& call, PyInt* dunObjectID);
-    PyResult DuplicateSelection(PyCallArgs& call, PyInt* amount, PyFloat* x, PyFloat* y, PyFloat* z);
-    PyResult SetSelectionByID(PyCallArgs& call, PyList* ids);
-    PyResult SetSelectedRadius(PyCallArgs& call, PyFloat* minRadius, PyFloat* maxRadius);
-    PyResult SetRotate(PyCallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll);
-    PyResult RotateSelected(PyCallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll);
-    PyResult JitterSelection(PyCallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z);
-    PyResult ArrangeSelection(PyCallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z);
-    PyResult DeleteSelected(PyCallArgs& call);
-    PyResult RefreshSelection(PyCallArgs& call);
+    EVEResult ResetD(EVECallArgs& call);
+    EVEResult PlayDungeon(EVECallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom);
+    EVEResult EditRoom(EVECallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom);
+    EVEResult GotoRoom(EVECallArgs& call, PyInt* selectedRoom);
+    EVEResult GetDunObjects(EVECallArgs& call);
+    EVEResult GetSelObjects(EVECallArgs& call);
+    EVEResult IsSelectedByObjID(EVECallArgs& call, PyInt* dunObjectID);
+    EVEResult DuplicateSelection(EVECallArgs& call, PyInt* amount, PyFloat* x, PyFloat* y, PyFloat* z);
+    EVEResult SetSelectionByID(EVECallArgs& call, PyList* ids);
+    EVEResult SetSelectedRadius(EVECallArgs& call, PyFloat* minRadius, PyFloat* maxRadius);
+    EVEResult SetRotate(EVECallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll);
+    EVEResult RotateSelected(EVECallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll);
+    EVEResult JitterSelection(EVECallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z);
+    EVEResult ArrangeSelection(EVECallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z);
+    EVEResult DeleteSelected(EVECallArgs& call);
+    EVEResult RefreshSelection(EVECallArgs& call);
 };
 
 #endif

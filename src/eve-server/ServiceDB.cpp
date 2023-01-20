@@ -28,7 +28,7 @@
 #include "eve-server.h"
 
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "ServiceDB.h"
 
 uint32 ServiceDB::SetClientSeed()
@@ -40,7 +40,7 @@ uint32 ServiceDB::SetClientSeed()
     return row.GetInt(0);
 }
 
-bool ServiceDB::ValidateAccountName(CryptoChallengePacket& ccp, std::string& failMsg)
+bool ServiceDB::ValidateAccountName(EVESecureClientHandshake& ccp, std::string& failMsg)
 {
     if (ccp.user_name.empty()) {
         failMsg = "Account Name is empty.";
@@ -66,7 +66,7 @@ bool ServiceDB::ValidateAccountName(CryptoChallengePacket& ccp, std::string& fai
     return true;
 }
 
-bool ServiceDB::GetAccountInformation( CryptoChallengePacket& ccp, AccountData& aData, std::string& failMsg )
+bool ServiceDB::GetAccountInformation( EVESecureClientHandshake& ccp, AccountData& aData, std::string& failMsg )
 {
     //added auto account    -allan 18Jan14   -UD 16Jan18  -ud 15Dec18  -ud failMsgs 15Jun19  -ud type 4Nov20
     std::string eLogin;
@@ -242,10 +242,13 @@ void ServiceDB::ProcessStringChange(const char* key, const std::string& oldValue
     if (oldValue.compare(newValue) == 0)
         return;
     // add to notification
-    PyTuple* val = new PyTuple(2);
-    val->items[0] = new PyString(oldValue);
-    val->items[1] = new PyString(newValue);
-    notif->SetItemString(key, val);
+    notif->set (
+        key,
+        new PyTuple {
+            new PyString (oldValue),
+            new PyString (newValue)
+        }
+    );
 
     std::string newEscValue;
     sDatabase.DoEscapeString(newEscValue, newValue);
@@ -263,10 +266,13 @@ void ServiceDB::ProcessRealChange(const char * key, double oldValue, double newV
     if (oldValue == newValue)
         return;
     // add to notification
-    PyTuple* val = new PyTuple(2);
-    val->items[0] = new PyFloat(oldValue);
-    val->items[1] = new PyFloat(newValue);
-    notif->SetItemString(key, val);
+    notif->set (
+        key,
+        new PyTuple {
+            new PyFloat (oldValue),
+            new PyFloat (newValue)
+        }
+    );
 
     int* nullInt(nullptr);
     std::string qValue(key);
@@ -280,10 +286,13 @@ void ServiceDB::ProcessIntChange(const char * key, uint32 oldValue, uint32 newVa
     if (oldValue == newValue)
         return;
     // add to notification
-    PyTuple* val = new PyTuple(2);
-    val->items[0] = new PyInt(oldValue);
-    val->items[1] = new PyInt(newValue);
-    notif->SetItemString(key, val);
+    notif->set (
+        key,
+        new PyTuple {
+            new PyInt (oldValue),
+            new PyInt (newValue)
+        }
+    );
 
     std::string qValue(key);
     qValue += " = ";
@@ -296,10 +305,13 @@ void ServiceDB::ProcessLongChange(const char* key, int64 oldValue, int64 newValu
     if (oldValue == newValue)
         return;
     // add to notification
-    PyTuple* val = new PyTuple(2);
-    val->items[0] = new PyLong(oldValue);
-    val->items[1] = new PyLong(newValue);
-    notif->SetItemString(key, val);
+    notif->set (
+        key,
+        new PyTuple {
+            new PyInt (oldValue),
+            new PyInt (newValue)
+        }
+    );
 
     std::string qValue(key);
     qValue += " = ";
@@ -329,7 +341,7 @@ void ServiceDB::SaveServerStats(double threads, float rss, float vm, float user,
 }
 
 // lookupService db calls moved here...made no sense in LSCDB file.
-PyRep* ServiceDB::LookupChars(const char *match, bool exact) {
+PyDataType* ServiceDB::LookupChars(const char *match, bool exact) {
     DBQueryResult res;
 
     std::string matchEsc;
@@ -362,7 +374,7 @@ PyRep* ServiceDB::LookupChars(const char *match, bool exact) {
 }
 
 
-PyRep* ServiceDB::LookupOwners(const char *match, bool exact) {
+PyDataType* ServiceDB::LookupOwners(const char *match, bool exact) {
     DBQueryResult res;
 
     std::string matchEsc;
@@ -416,7 +428,7 @@ PyRep* ServiceDB::LookupOwners(const char *match, bool exact) {
     return DBResultToRowset(res);
 }
 
-PyRep* ServiceDB::LookupCorporations(const std::string & search) {
+PyDataType* ServiceDB::LookupCorporations(const std::string & search) {
     DBQueryResult res;
     std::string secure;
     sDatabase.DoEscapeString(secure, search);
@@ -435,7 +447,7 @@ PyRep* ServiceDB::LookupCorporations(const std::string & search) {
 }
 
 
-PyRep* ServiceDB::LookupFactions(const std::string & search) {
+PyDataType* ServiceDB::LookupFactions(const std::string & search) {
     DBQueryResult res;
     std::string secure;
     sDatabase.DoEscapeString(secure, search);
@@ -454,7 +466,7 @@ PyRep* ServiceDB::LookupFactions(const std::string & search) {
 }
 
 
-PyRep* ServiceDB::LookupCorporationTickers(const std::string & search) {
+PyDataType* ServiceDB::LookupCorporationTickers(const std::string & search) {
     DBQueryResult res;
     std::string secure;
     sDatabase.DoEscapeString(secure, search);
@@ -473,7 +485,7 @@ PyRep* ServiceDB::LookupCorporationTickers(const std::string & search) {
 }
 
 
-PyRep* ServiceDB::LookupStations(const std::string & search) {
+PyDataType* ServiceDB::LookupStations(const std::string & search) {
     DBQueryResult res;
     std::string secure;
     sDatabase.DoEscapeString(secure, search);
@@ -492,7 +504,7 @@ PyRep* ServiceDB::LookupStations(const std::string & search) {
 }
 
 //  wtf is this shit?
-PyRep* ServiceDB::LookupKnownLocationsByGroup(const std::string & search, uint32 typeID) {
+PyDataType* ServiceDB::LookupKnownLocationsByGroup(const std::string & search, uint32 typeID) {
     DBQueryResult res;
     std::string secure;
     sDatabase.DoEscapeString(secure, search);
@@ -511,7 +523,7 @@ PyRep* ServiceDB::LookupKnownLocationsByGroup(const std::string & search, uint32
 }
 
 /** @todo look into this...may be wrong */
-PyRep* ServiceDB::PrimeOwners(std::vector< int32 >& itemIDs)
+PyDataType* ServiceDB::PrimeOwners(std::vector< int32 >& itemIDs)
 {
     DBQueryResult res;
     DBResultRow row;
@@ -527,11 +539,14 @@ PyRep* ServiceDB::PrimeOwners(std::vector< int32 >& itemIDs)
             ; // make error
         }
         if (res.GetRow(row)) {
-            PyList* list = new PyList();
-                list->AddItem(new PyInt(row.GetInt(0)));
-                list->AddItem(new PyString(row.GetText(1)));
-                list->AddItem(new PyInt(row.GetInt(2)));
-            dict->SetItem(new PyInt(row.GetInt(0)), list);
+            dict->set (
+                new PyInt (row.GetInt(0)),
+                new PyList {
+                    new PyInt (row.GetInt (0)),
+                    new PyString (row.GetText (1)),
+                    new PyInt (row.GetInt (2))
+                }
+            );
         }
     }
 

@@ -23,9 +23,7 @@
 #include "system/cosmicMgrs/DungeonMgr.h"
 #include "system/cosmicMgrs/SpawnMgr.h"
 
-
-
-PyResult Command_savedungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args)
+EVEResult Command_savedungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args)
 {
     /**  the idea here is to save a dungeon room template while ingame.
      *  the client calling this is used as "warp-in point" which is the origin
@@ -63,7 +61,7 @@ PyResult Command_savedungeon(Client* pClient, CommandDB* db, EVEServiceManager& 
     throw CustomError ("SaveDungeon: - This command is currently incomplete.");
 }
 
-PyResult Command_printdungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args)
+EVEResult Command_printdungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args)
 {
     /*  this will print all items in current dungeon, along with it's templateID and roomID
      *
@@ -73,7 +71,7 @@ PyResult Command_printdungeon(Client* pClient, CommandDB* db, EVEServiceManager&
 }
 
 // this is outdated
-PyResult Command_spawndungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args) {
+EVEResult Command_spawndungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args) {
     /* this command is used to test dungeon spawn system - wip.   -allan 21Feb15
      */
 
@@ -90,7 +88,7 @@ PyResult Command_spawndungeon(Client* pClient, CommandDB* db, EVEServiceManager&
 }
 
 // this was never completed
-PyResult Command_removedungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args) {
+EVEResult Command_removedungeon(Client* pClient, CommandDB* db, EVEServiceManager& services, const Seperator& args) {
     /* this command is used to test dungeon spawn system - wip.   -allan 21Feb15
      *
      * upon execution, this command will spawn a random dungeon from db in callers solarSystem,

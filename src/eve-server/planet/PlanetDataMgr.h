@@ -55,7 +55,7 @@ public:
     // Initializes the Table:
     int Initialize();
 
-    PyRep* GetProgramResultInfo(Colony* pColony, uint32 pinID, uint16 typeID, PyList* heads, float headRadius);
+    PyDataType* GetProgramResultInfo(Colony* pColony, uint32 pinID, uint16 typeID, PyList* heads, float headRadius);
 
     void GetSchematicData(uint8 schematicID, PI_Schematic& data);
 

@@ -38,14 +38,14 @@ public:
 protected:
     TutorialDB m_db;
 
-    PyResult GetTutorials(PyCallArgs& call);
-    PyResult GetTutorialInfo(PyCallArgs& call, PyInt* tutorialID);
-    PyResult GetTutorialAgents(PyCallArgs& call, PyList* agentIDs);
-    PyResult GetCriterias(PyCallArgs& call);
-    PyResult GetCategories(PyCallArgs& call);
-    PyResult GetCharacterTutorialState(PyCallArgs& call);
-    PyResult GetTutorialsAndConnections(PyCallArgs& call);
-    PyResult GetCareerAgents(PyCallArgs& call);
+    EVEResult GetTutorials(EVECallArgs& call);
+    EVEResult GetTutorialInfo(EVECallArgs& call, PyInt* tutorialID);
+    EVEResult GetTutorialAgents(EVECallArgs& call, PyList* agentIDs);
+    EVEResult GetCriterias(EVECallArgs& call);
+    EVEResult GetCategories(EVECallArgs& call);
+    EVEResult GetCharacterTutorialState(EVECallArgs& call);
+    EVEResult GetTutorialsAndConnections(EVECallArgs& call);
+    EVEResult GetCareerAgents(EVECallArgs& call);
 };
 
 #endif

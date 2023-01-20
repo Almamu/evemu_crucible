@@ -33,13 +33,12 @@ class SlashService : public Service<SlashService> {
 public:
     SlashService(CommandDispatcher *cd);
 
-    PyResult SlashCommand(Client * client, std::string command);
+    EVEResult SlashCommand(Client * client, std::string command);
 
 protected:
     CommandDispatcher *const m_commandDispatch;
 
-    PyResult SlashCmd(PyCallArgs& call, PyWString* command);
-    PyResult SlashCmd(PyCallArgs& call, PyString* command);
+    EVEResult SlashCmd(EVECallArgs& call, PyString* command);
 };
 
 #endif

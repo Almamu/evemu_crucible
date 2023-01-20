@@ -36,23 +36,23 @@ public:
     InventoryBound(EVEServiceManager &mgr, BoundServiceParent<InventoryBound>& parent, InventoryItemRef item, EVEItemFlags flag, uint32 ownerID,  bool passive);
 
 protected:
-    PyResult GetItem(PyCallArgs& call);
-    PyResult StripFitting(PyCallArgs& call);
-    PyResult DestroyFitting(PyCallArgs& call, PyInt* itemID);
-    PyResult StackAll(PyCallArgs& call, std::optional <PyInt*> flag);
-    PyResult ImportExportWithPlanet(PyCallArgs& call, PyInt* spaceportPinID, PyDict* importData, PyDict* exportData, PyFloat* taxRate);
-    PyResult RemoveChargeToHangar(PyCallArgs& call, PyTuple* chargeInfo, std::optional<PyRep*> quantity);
-    PyResult RemoveChargeToCargo(PyCallArgs& call, PyTuple* chargeInfo, std::optional<PyRep*> quantity);
-    PyResult MultiMerge(PyCallArgs& call, PyList* items, std::optional<PyRep*> sourceContainerID);
-    PyResult Add(PyCallArgs& call, PyInt* itemID, PyInt* containerID);
-    PyResult MultiAdd(PyCallArgs& call, PyList* itemIDs, PyInt* containerID);
-    PyResult List(PyCallArgs& call, std::optional <PyInt*> listFlag);
-    PyResult CreateBookmarkVouchers(PyCallArgs& call, PyList* bookmarkIDs, PyInt* flag, PyBool* isMove);
-    PyResult TakeOutTrash(PyCallArgs& call, PyInt* itemIDs);
-    PyResult SetPassword(PyCallArgs& call, PyInt* which, PyString* newPassword, PyString* oldPassword);
-    PyResult ListDroneBay(PyCallArgs& call);
-    PyResult RunRefiningProcess(PyCallArgs& call);
-    PyResult Build(PyCallArgs& call);
+  EVEResult GetItem(EVECallArgs& call);
+  EVEResult StripFitting(EVECallArgs& call);
+  EVEResult DestroyFitting(EVECallArgs& call, PyInt* itemID);
+  EVEResult StackAll(EVECallArgs& call, std::optional <PyInt*> flag);
+  EVEResult ImportExportWithPlanet(EVECallArgs& call, PyInt* spaceportPinID, PyDict* importData, PyDict* exportData, PyFloat* taxRate);
+  EVEResult RemoveChargeToHangar(EVECallArgs& call, PyTuple* chargeInfo, std::optional<PyDataType*> quantity);
+  EVEResult RemoveChargeToCargo(EVECallArgs& call, PyTuple* chargeInfo, std::optional<PyDataType*> quantity);
+  EVEResult MultiMerge(EVECallArgs& call, PyList* items, std::optional<PyDataType*> sourceContainerID);
+  EVEResult Add(EVECallArgs& call, PyInt* itemID, PyInt* containerID);
+  EVEResult MultiAdd(EVECallArgs& call, PyList* itemIDs, PyInt* containerID);
+  EVEResult List(EVECallArgs& call, std::optional <PyInt*> listFlag);
+  EVEResult CreateBookmarkVouchers(EVECallArgs& call, PyList* bookmarkIDs, PyInt* flag, PyBool* isMove);
+  EVEResult TakeOutTrash(EVECallArgs& call, PyInt* itemIDs);
+  EVEResult SetPassword(EVECallArgs& call, PyInt* which, PyString* newPassword, PyString* oldPassword);
+  EVEResult ListDroneBay(EVECallArgs& call);
+  EVEResult RunRefiningProcess(EVECallArgs& call);
+  EVEResult Build(EVECallArgs& call);
 
     bool m_passive;     // still not sure what this is for
     EVEItemFlags m_flag;
@@ -66,7 +66,7 @@ protected:
 
     std::vector< int32 > CatSortItems(std::vector< InventoryItemRef >& itemVec);
 
-    PyRep* MoveItems(Client* pClient, std::vector< int32 >& items, EVEItemFlags toFlag, int32 quantity, bool manyFlags, float capacity);
+    PyDataType* MoveItems(Client* pClient, std::vector< int32 >& items, EVEItemFlags toFlag, int32 quantity, bool manyFlags, float capacity);
 };
 
 #endif//_INVENTORY_BOUND_H

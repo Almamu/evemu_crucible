@@ -26,7 +26,7 @@
 #ifndef __NETWORK__EVE_TCP_CONNECTION_H__INCL__
 #define __NETWORK__EVE_TCP_CONNECTION_H__INCL__
 
-class PyRep;
+class PyDataType;
 class EVETCPServer;
 
 /**
@@ -57,14 +57,16 @@ public:
      * @param[in] rep PyRep to be queued.
      */
     // consumes PyRep
-    void QueueRep( const PyRep* rep, bool compress=true );
+    void QueueRep( PyDataType* rep, bool compress=true );
 
     /**
-     * @brief Pops PyRep from receive queue.
+     * @brief Pops PyDataType from receive queue.
      *
-     * @return Popped PyRep; NULL if nothing was received.
+     * @param[in] arena The Python Arena to use when allocating memory for data
+     *
+     * @return Popped PyDataType; NULL if nothing was received.
      */
-    PyRep* PopRep();
+    PyDataType* PopRep(PythonArena* arena);
 
     /**
      * @brief Dumps buffer to file

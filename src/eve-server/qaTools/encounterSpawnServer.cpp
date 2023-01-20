@@ -33,7 +33,7 @@ encounterSpawnServer::encounterSpawnServer() :
     this->Add("RequestDeactivateEncounters", &encounterSpawnServer::RequestDeactivateEncounters);
 }
 
-PyResult encounterSpawnServer::GetMyEncounters (PyCallArgs& call)
+EVEResult encounterSpawnServer::GetMyEncounters (EVECallArgs& call)
 {
     /*
     encounters = self.encounterSpawnServer.GetMyEncounters()
@@ -47,25 +47,25 @@ PyResult encounterSpawnServer::GetMyEncounters (PyCallArgs& call)
             'hint': encounter['encounterName']}
             */
     _log(QATOOLS__CALL,  "encounterSpawnServer::Handle_GetMyEncounters size: %lli", call.tuple->size());
-    call.Dump(QATOOLS__DUMP);
+    call.dump(QATOOLS__DUMP);
 
     return nullptr;
 }
 
-PyResult encounterSpawnServer::RequestActivateEncounters(PyCallArgs& call, PyList* encounterList)
+EVEResult encounterSpawnServer::RequestActivateEncounters(EVECallArgs& call, PyList* encounterList)
 {
     //    logResults = self.encounterSpawnServer.RequestActivateEncounters(encounterList, logResults=True)
     _log(QATOOLS__CALL,  "encounterSpawnServer::Handle_RequestActivateEncounters size: %lli", call.tuple->size());
-    call.Dump(QATOOLS__DUMP);
+    call.dump(QATOOLS__DUMP);
 
     return nullptr;
 }
 
-PyResult encounterSpawnServer::RequestDeactivateEncounters(PyCallArgs& call, PyList* encounterList)
+EVEResult encounterSpawnServer::RequestDeactivateEncounters(EVECallArgs& call, PyList* encounterList)
 {
     //  logResults = self.encounterSpawnServer.RequestDeactivateEncounters(encounterList, logResults=True)
     _log(QATOOLS__CALL,  "encounterSpawnServer::Handle_RequestDeactivateEncounters size: %lli", call.tuple->size());
-    call.Dump(QATOOLS__DUMP);
+    call.dump(QATOOLS__DUMP);
 
     return nullptr;
 }

@@ -39,7 +39,7 @@ public:
 
     void BoundReleased (ScanBound* bound) override;
 protected:
-    PyResult GetSystemScanMgr(PyCallArgs& call);
+  EVEResult GetSystemScanMgr(EVECallArgs& call);
 
 private:
     EVEServiceManager& m_manager;
@@ -54,11 +54,11 @@ public:
     Client* GetClient () { return this->m_client; }
 
 protected:
-    PyResult ConeScan(PyCallArgs& call, PyRep* ignored1, PyRep* ignored2, PyRep* ignored3, PyRep* ignored4, PyRep* ignored5);
-    PyResult RequestScans(PyCallArgs& call, std::optional <PyDict*> probes);
-    PyResult RecoverProbes(PyCallArgs& call, PyList* probeIDs);
-    PyResult DestroyProbe(PyCallArgs& call, PyInt* probeID);
-    PyResult ReconnectToLostProbes(PyCallArgs& call);
+  EVEResult ConeScan(EVECallArgs& call, PyDataType* ignored1, PyDataType* ignored2, PyDataType* ignored3, PyDataType* ignored4, PyDataType* ignored5);
+  EVEResult RequestScans(EVECallArgs& call, std::optional <PyDict*> probes);
+  EVEResult RecoverProbes(EVECallArgs& call, PyList* probeIDs);
+  EVEResult DestroyProbe(EVECallArgs& call, PyInt* probeID);
+  EVEResult ReconnectToLostProbes(EVECallArgs& call);
 
 private:
     Client* m_client;

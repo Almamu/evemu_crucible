@@ -27,7 +27,7 @@
 #include "eve-server.h"
 
 #include "Client.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "character/Character.h"
 #include "exploration/Probes.h"
 #include "inventory/InventoryDB.h"

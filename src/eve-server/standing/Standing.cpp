@@ -53,21 +53,21 @@ Standing::Standing() :
     this->Add("GetStandingCompositions", &Standing::GetStandingCompositions);
 }
 
-PyResult Standing::GetCharStandings(PyCallArgs &call) {
+EVEResult Standing::GetCharStandings(EVECallArgs&call) {
     return m_db.GetCharStandings(call.client);
 }
 
-PyResult Standing::GetCorpStandings(PyCallArgs &call) {
+EVEResult Standing::GetCorpStandings(EVECallArgs&call) {
     return m_db.GetCorpStandings(call.client);
 }
 
-PyResult Standing::GetNPCNPCStandings(PyCallArgs &call) {
+EVEResult Standing::GetNPCNPCStandings(EVECallArgs&call) {
     return sStandingMgr.GetFactionStandings();
 }
 
 /** @todo  need to add a standing from corpCONCORD to any/all charID, corpID, allyID  for security rating (as seen in client code) */
 
-PyResult Standing::GetSecurityRating(PyCallArgs &call, PyInt* ownerID) {
+EVEResult Standing::GetSecurityRating(EVECallArgs&call, PyInt* ownerID) {
     CharacterRef cRef = sItemFactory.GetCharacterRef(ownerID->value());
     if  (cRef.get() == nullptr) {
         _log(STANDING__WARNING, "Character %u not found.", ownerID->value());
@@ -77,33 +77,33 @@ PyResult Standing::GetSecurityRating(PyCallArgs &call, PyInt* ownerID) {
     return new PyFloat( cRef->GetSecurityRating() );
 }
 
-PyResult Standing::GetMyKillRights(PyCallArgs &call) {
+EVEResult Standing::GetMyKillRights(EVECallArgs&call) {
     // self.killRightsCache, self.killedRightsCache = sm.RemoteSvc('standing2').GetMyKillRights()
     // each cache holds k,v where key is toID or fromID
     _log(STANDING__MESSAGE,  "Standing::Handle_GetMyKillRights()");
-    PyTuple* KillRights = new PyTuple(2);
-    PyDict* killRightsCache = new PyDict();
-    PyDict* killedRightsCache = new PyDict();
-        KillRights->items[0] = killRightsCache;
-        KillRights->items[1] = killedRightsCache;
+
+    PyTuple* killRights = call.arena.Tuple ({
+        call.arena.Dict (), // killRightsCache
+        call.arena.Dict (), // killedRightsCache
+    });
 
     if (is_log_enabled(STANDING__RSPDUMP)) {
         _log(STANDING__RSPDUMP, "Standing::Handle_GetMyKillRights() RSP:" );
-        KillRights->Dump(STANDING__RSPDUMP, "    ");
+        killRights->dump(STANDING__RSPDUMP, "    ");
     }
 
-    return KillRights;
+    return killRights;
 }
 
-PyResult Standing::GetStandingTransactions(PyCallArgs &call, PyInt* fromID, PyInt* toID, PyInt* direction, std::optional<PyInt*> eventID, std::optional<PyInt*> eventType, std::optional<PyLong*> eventDateTime) {
+EVEResult Standing::GetStandingTransactions(EVECallArgs&call, PyInt* fromID, PyInt* toID, PyInt* direction, std::optional<PyInt*> eventID, std::optional<PyInt*> eventType, std::optional<PyInt*> eventDateTime) {
     // data = sm.RemoteSvc('standing2').GetStandingTransactions(fromID, toID, direction, eventID, eventType, eventDateTime)
     _log(STANDING__MESSAGE,  "Standing::Handle_GetStandingTransactions()");
-    call.Dump(STANDING__DUMP);
+    call.dump(STANDING__DUMP);
 
     return m_db.GetStandingTransactions(fromID->value(), toID->value());
 }
 
-PyResult Standing::GetStandingCompositions(PyCallArgs &call, PyInt* fromID, PyInt* toID) {
+EVEResult Standing::GetStandingCompositions(EVECallArgs&call, PyInt* fromID, PyInt* toID) {
 /**  no clue what this is yet
                 self.sr.data = sm.RemoteSvc('standing2').GetStandingCompositions(fromID, toID)
             if self.sr.data:
@@ -113,7 +113,7 @@ PyResult Standing::GetStandingCompositions(PyCallArgs &call, PyInt* fromID, PyIn
                         prior = each.standing
                         */
     _log(STANDING__MESSAGE,  "Standing::Handle_GetStandingCompositions()");
-    call.Dump(STANDING__DUMP);
+    call.dump(STANDING__DUMP);
 
     return m_db.GetStandingCompositions(fromID->value(), toID->value());
 }

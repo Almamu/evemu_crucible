@@ -37,7 +37,7 @@ IndexManager::IndexManager() :
     this->Add("GetDevelopmentIndicesForSystem", &IndexManager::GetDevelopmentIndicesForSystem);
 }
 
-PyResult IndexManager::GetAllDevelopmentIndices(PyCallArgs& call) {
+EVEResult IndexManager::GetAllDevelopmentIndices(EVECallArgs& call) {
 
     /*
 22:49:13 L IndexManager::Handle_GetAllDevelopmentIndices(): size= 0
@@ -49,11 +49,11 @@ PyResult IndexManager::GetAllDevelopmentIndices(PyCallArgs& call) {
     return nullptr;
 }
 
-PyResult IndexManager::GetDevelopmentIndicesForSystem(PyCallArgs& call, PyInt* solarSystemID) {
+EVEResult IndexManager::GetDevelopmentIndicesForSystem(EVECallArgs& call, PyInt* solarSystemID) {
     DBRowDescriptor *header = new DBRowDescriptor();
-    header->AddColumn("attributeID", DBTYPE_I4);
-    header->AddColumn("points", DBTYPE_I2);
-    header->AddColumn("increasing", DBTYPE_BOOL);
+    header->add("attributeID", DBTYPE_I4);
+    header->add("points", DBTYPE_I2);
+    header->add("increasing", DBTYPE_BOOL);
     //CRowSet *rowset = new CRowSet(&header);
 
     SovereigntyData sovData = svDataMgr.GetSovereigntyData(solarSystemID->value());
@@ -62,25 +62,25 @@ PyResult IndexManager::GetDevelopmentIndicesForSystem(PyCallArgs& call, PyInt* s
     PyPackedRow *row3 = new PyPackedRow(header);
     
     // Strategic
-    row1->SetField("attributeID", new PyInt(EveAttrEnum::AttrdevIndexSovereignty));
+    row1->set("attributeID", new PyInt(EveAttrEnum::AttrdevIndexSovereignty));
     double daysSinceClaim = (GetFileTimeNow() - sovData.claimTime) / Win32Time_Day;
-    row1->SetField("points", new PyInt(uint32(daysSinceClaim)));
-    row1->SetField("increasing", new PyBool(false));
+    row1->set("points", new PyInt(uint32(daysSinceClaim)));
+    row1->set("increasing", new PyBool(false));
 
     // Military
-    row2->SetField("attributeID", new PyInt(EveAttrEnum::AttrdevIndexMilitary));
-    row2->SetField("points", new PyInt(sovData.militaryPoints));
-    row2->SetField("increasing", new PyBool(false));
+    row2->set("attributeID", new PyInt(EveAttrEnum::AttrdevIndexMilitary));
+    row2->set("points", new PyInt(sovData.militaryPoints));
+    row2->set("increasing", new PyBool(false));
 
     // Industrial
-    row3->SetField("attributeID", new PyInt(EveAttrEnum::AttrdevIndexIndustrial));
-    row3->SetField("points", new PyInt(sovData.industrialPoints));
-    row3->SetField("increasing", new PyBool(false));
+    row3->set("attributeID", new PyInt(EveAttrEnum::AttrdevIndexIndustrial));
+    row3->set("points", new PyInt(sovData.industrialPoints));
+    row3->set("increasing", new PyBool(false));
 
     PyDict* dict = new PyDict();
-    dict->SetItem(new PyInt(EveAttrEnum::AttrdevIndexSovereignty), row1);
-    dict->SetItem(new PyInt(EveAttrEnum::AttrdevIndexMilitary), row2);
-    dict->SetItem(new PyInt(EveAttrEnum::AttrdevIndexIndustrial), row3);
+    dict->set(new PyInt(EveAttrEnum::AttrdevIndexSovereignty), row1);
+    dict->set(new PyInt(EveAttrEnum::AttrdevIndexMilitary), row2);
+    dict->set(new PyInt(EveAttrEnum::AttrdevIndexIndustrial), row3);
 
     return dict;
 }

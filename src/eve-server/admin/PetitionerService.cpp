@@ -96,30 +96,28 @@ PetitionerService::PetitionerService() :
  sm.RemoteSvc('petitioner').ClosePetition(petitionid)
  */
 
-
-PyResult PetitionerService::GetCategories( PyCallArgs& call )
+EVEResult PetitionerService::GetCategories(EVECallArgs& call )
 {
     uint8 size(call.tuple->size());
     sLog.White( "PetitionerService::Handle_GetCategories()", "size=%u ", size );
 
-    PyList* result = new PyList();
-    result->AddItemString( "Test Cat" );
-    result->AddItemString( "Test Cat2" );
-
-    return result;
+    return call.arena.List ({
+        call.arena.String ("Test Cat"),
+        call.arena.String ("Test Cat2")
+    });
 }
 
-PyResult PetitionerService::GetCategoryHierarchicalInfo( PyCallArgs& call )
+EVEResult PetitionerService::GetCategoryHierarchicalInfo(EVECallArgs& call )
 {
     uint8 size(call.tuple->size());
     sLog.White( "PetitionerService::Handle_GetCategoryHierarchicalInfo()", "size=%u ", size );
 
-    return new PyList();
+    return call.arena.List();
 }
 
 //00:28:58 L PetitionerService::Handle_GetUnreadMessages(): size=0
-PyResult PetitionerService::GetUnreadMessages( PyCallArgs& call )
+EVEResult PetitionerService::GetUnreadMessages(EVECallArgs& call )
 {
     //unknown...
-    return new PyList();
+    return call.arena.List();
 }

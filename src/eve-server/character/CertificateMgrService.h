@@ -41,15 +41,15 @@ protected:
     EVEServiceManager& m_manager;
     CertificateMgrDB m_db;
 
-    PyResult GetMyCertificates(PyCallArgs& call);
-    PyResult GetCertificateCategories(PyCallArgs& call);
-    PyResult GetAllShipCertificateRecommendations(PyCallArgs& call);
-    PyResult GetCertificateClasses(PyCallArgs& call);
-    PyResult GrantCertificate(PyCallArgs& call, PyInt* certificateID);
-    PyResult UpdateCertificateFlags(PyCallArgs& call, PyInt* certificateID, PyInt* visibility);
-    PyResult BatchCertificateGrant(PyCallArgs& call, PyList* certificateIDs);
-    PyResult BatchCertificateUpdate(PyCallArgs& call, PyDict* batchUpdate);
-    PyResult GetCertificatesByCharacter(PyCallArgs& call, PyInt* characterID);
+    EVEResult GetMyCertificates(EVECallArgs& call);
+    EVEResult GetCertificateCategories(EVECallArgs& call);
+    EVEResult GetAllShipCertificateRecommendations(EVECallArgs& call);
+    EVEResult GetCertificateClasses(EVECallArgs& call);
+    EVEResult GrantCertificate(EVECallArgs& call, PyInt* certificateID);
+    EVEResult UpdateCertificateFlags(EVECallArgs& call, PyInt* certificateID, PyInt* visibility);
+    EVEResult BatchCertificateGrant(EVECallArgs& call, PyList* certificateIDs);
+    EVEResult BatchCertificateUpdate(EVECallArgs& call, PyDict* batchUpdate);
+    EVEResult GetCertificatesByCharacter(EVECallArgs& call, PyInt* characterID);
 
 private:
     ObjCacheService* m_cache;

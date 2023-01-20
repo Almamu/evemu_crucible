@@ -43,37 +43,37 @@ class CorporationDB
 : public ServiceDB
 {
 public:
-    PyRep *GetCorpRoles();
-    PyRep *GetCorpRoleGroups();
-    PyRep *GetTitles(uint32 corpID);
+    PyDataType *GetCorpRoles();
+    PyDataType *GetCorpRoleGroups();
+    PyDataType *GetTitles(uint32 corpID);
     bool UpdateTitle(uint32 corpID, Call_UpdateTitleData& args, PyDict* updates);
     void DeleteTitle(uint32 corpID, uint16 titleID);
     void CreateTitleData(uint32 corpID);
-    PyRep *GetMember(uint32 charID);
+    PyDataType *GetMember(uint32 charID);
     uint16 GetMemberCount(uint32 corpID);
     void GetMembers(uint32 corpID, DBQueryResult& res);
     void GetMembersForQuery(std::ostringstream& query, std::vector<uint32>& result);
     void GetMembersPaged(uint32 corpID, uint8 page, DBQueryResult& res);
-    PyRep* GetMemberTrackingInfo(uint32 corpID);
-    PyRep* GetMemberTrackingInfoSimple(uint32 corpID);
-    PyRep *GetCorporations(uint32 corpID);
+    PyDataType* GetMemberTrackingInfo(uint32 corpID);
+    PyDataType* GetMemberTrackingInfoSimple(uint32 corpID);
+    PyDataType *GetCorporations(uint32 corpID);
     PyObject *GetCorporation(uint32 corpID);
     PyObject *GetStations(uint32 corpID);
-    PyObject *GetEveOwners(uint32 corpID);
-    PyRep* GetBulletins(uint32 corpID);
+    PyObject *GetEveOwners(uint32 corpID, PythonArena* arena);
+    PyDataType* GetBulletins(uint32 corpID);
     void DeleteBulletin(uint32 bulletinID);
     void AddBulletin(uint32 corpID, uint32 ownerID, uint32 cCharID, std::string& title, std::string& body);
     void EditBulletin(uint32 bulletinID, uint32 eCharID, int64 eDataTime, std::string& title, std::string& body);
 
-    PyRep *GetMyApplications(uint32 charID);
-    PyRep *GetApplications(uint32 corpID);
+    PyDataType *GetMyApplications(uint32 charID);
+    PyDataType *GetApplications(uint32 corpID);
 
     void MoveShares(uint32 ownerID, uint32 corpID, int32 corporationID, int32 toShareholderID, int32 numberOfShares);
-    PyRep *GetShares(uint32 corpID);
-    PyRep *GetMyShares(uint32 ownerID);
+    PyDataType *GetShares(uint32 corpID);
+    PyDataType *GetMyShares(uint32 ownerID);
     bool HasShares(uint32 charID, uint32 corpID);
-    PyRep* PyHasShares(uint32 charID, uint32 corpID);
-    PyRep* GetSharesForCorp(uint32 corpID);
+    PyDataType* PyHasShares(uint32 charID, uint32 corpID);
+    PyDataType* GetSharesForCorp(uint32 corpID);
 
     PyObject *GetEmploymentRecord(uint32 charID);
 
@@ -81,15 +81,15 @@ public:
 
     void AddItemEvent(uint32 corpID, uint32 charID, uint16 eTypeID);
     void AddRoleHistory(uint32 corpID, uint32 charID, uint32 issuerID, int64 oldRoles, int64 newRoles, bool grantable);
-    PyRep *GetItemEvents(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage);
-    PyRep *GetRoleHistroy(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage);
+    PyDataType *GetItemEvents(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage);
+    PyDataType *GetRoleHistroy(uint32 corpID, uint32 charID, int64 fromDate, int64 toDate, uint8 rowsPerPage);
 
     void CastVote(uint32 corpID, uint32 charID, uint32 voteCaseID, uint8 optionID);
     void AddVoteCase(uint32 corpID, uint32 charID, Call_InsertVoteCase& args);
-    PyRep* GetVotes(uint32 voteCaseID);
-    PyRep* GetVoteItems(uint32 corpID, uint8 status=0, uint8 maxLen=20);
-    PyRep* GetVoteOptions(uint32 voteCaseID);
-    PyRep* GetSanctionedItems(uint32 corpID, uint8 status=0);
+    PyDataType* GetVotes(uint32 voteCaseID);
+    PyDataType* GetVoteItems(uint32 corpID, uint8 status=0, uint8 maxLen=20);
+    PyDataType* GetVoteOptions(uint32 voteCaseID);
+    PyDataType* GetSanctionedItems(uint32 corpID, uint8 status=0);
 
     void GetAutoPay(uint32 corpID, DBQueryResult& res);
     void SetAutoPay();
@@ -98,14 +98,14 @@ public:
     PyObject *ListStationCorps(uint32 station_id);
     PyObject *ListStationOwners(uint32 station_id);
 
-    PyRep *GetCorpInfo(uint32 corpID);
+    PyDataType *GetCorpInfo(uint32 corpID);
 
-    PyRep* GetContacts(uint32 corpID);
+    PyDataType* GetContacts(uint32 corpID);
     void AddContact(uint32 ownerID, int32 contactID, int32 relationshipID);
     void UpdateContact(int32 relationshipID, uint32 contactID, uint32 ownerID);
     void RemoveContact(uint32 contactID, uint32 ownerID);
 
-    PyRep* GetLabels(uint32 corpID);
+    PyDataType* GetLabels(uint32 corpID);
     void SetLabel(uint32 corpID, uint32 color, std::string name);
     void EditLabel(uint32 corpID, uint32 labelID, uint32 color, std::string name);
     void DeleteLabel(uint32 corpID, uint32 labelID);
@@ -129,22 +129,22 @@ public:
 
     double GetCloneTypeCostByID(uint32 cloneTypeID);
 
-    PyRep* GetMedalsReceived(int32 charID);
-    PyRep* GetAllCorpMedals(uint32 corpID);
-    PyRep* GetCorpMedalData(uint32 corpID);
-    PyRep* GetMedalsReceivedDetails(int32 charID);
-    PyRep* GetRecipientsOfMedal(int32 medalID);
-    PyRep* GetMedalStatuses();
+    PyDataType* GetMedalsReceived(int32 charID);
+    PyDataType* GetAllCorpMedals(uint32 corpID);
+    PyDataType* GetCorpMedalData(uint32 corpID);
+    PyDataType* GetMedalsReceivedDetails(int32 charID);
+    PyDataType* GetRecipientsOfMedal(int32 medalID);
+    PyDataType* GetMedalStatuses();
     PyObjectEx* GetMedalDetails(int32 medalID);
     void GiveMedalToCharacters(uint32 issuerID, uint32 corpID, int32 medalID, std::vector< uint32 >& charVec, const std::string& reason);
     uint16 CreateMedal(uint32 ownerID, uint32 creatorID, const std::string& title, const std::string& description);
     void SaveMedalData(int64 medalID, std::vector< Corp::MedalData >& dataList);
     void SetMedalStatus(uint32 charID, uint16 medalID, uint8 status);
 
-    PyRep* GetAdTypeData();
-    PyRep* GetAdGroupData();
-    PyRep* GetAdRegistryData(int64 typeMask=0, bool inAlliance=false, int16 minMembers=0, uint16 maxMembers=12602);
-    PyRep* GetAdvert(uint16 adID);
+    PyDataType* GetAdTypeData();
+    PyDataType* GetAdGroupData();
+    PyDataType* GetAdRegistryData(int64 typeMask=0, bool inAlliance=false, int16 minMembers=0, uint16 maxMembers=12602);
+    PyDataType* GetAdvert(uint16 adID);
     void DeleteAdvert(uint16 adID);
 
     uint32 CreateAdvert(Client* pClient, uint32 corpID, int64 typeMask, int8 days, uint16 members, std::string description,
@@ -155,7 +155,7 @@ public:
 
     int64 GetAdvertTime(uint16 adID, uint32 corpID);
     void AddRecruiters(uint16 adID, int32 corpID, std::vector< int32 >& charVec);
-    PyRep* GetRecruiters(int32 corpID, uint16 adID);
+    PyDataType* GetRecruiters(int32 corpID, uint16 adID);
 
     bool InsertApplication(Corp::ApplicationInfo& aInfo);
     bool UpdateApplication(const Corp::ApplicationInfo& aInfo);
@@ -169,11 +169,11 @@ public:
     bool UpdateCorporation(uint32 corpID, const std::string& description, const std::string& url, double taxRate, PyDict* notif);
     bool UpdateLogo(uint32 corpID, const Call_UpdateLogo & upd, PyDict * notif);
 
-    PyRep* GetAssetInventory(uint32 corpID, EVEItemFlags locFlag, const char* flags);
-    PyRep* GetAssetInventoryForLocation(uint32 corpID, uint32 locationID, const char* flags);
-    PyRep* GetKillsAndLosses(uint32 corpID, uint32 number, uint32 offset);
+    PyDataType* GetAssetInventory(uint32 corpID, EVEItemFlags locFlag, const char* flags);
+    PyDataType* GetAssetInventoryForLocation(uint32 corpID, uint32 locationID, const char* flags);
+    PyDataType* GetKillsAndLosses(uint32 corpID, uint32 number, uint32 offset);
 
-    PyRep* GetMktInfo(uint32 corpID);
+    PyDataType* GetMktInfo(uint32 corpID);
 
     // gets taxrate, allyID, warID of corpID
     static void GetCorpData(CorpData& data);

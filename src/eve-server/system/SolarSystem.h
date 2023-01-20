@@ -27,7 +27,7 @@
 #define __SOLAR_SYSTEM__H__INCL__
 
 
-//#include "EVEServerConfig.h"
+//#include "config/EVEServerConfig.h"
 #include "system/Celestial.h"
 
 struct SolarSystemData;

@@ -186,7 +186,7 @@ void PIDataMgr::GetSchematicData(uint8 schematicID, PI_Schematic& data)
  * baseValue = 1998.0
  */
 
-PyRep* PIDataMgr::GetProgramResultInfo(Colony* pColony, uint32 pinID, uint16 typeID, PyList* heads, float headRadius)
+PyDataType* PIDataMgr::GetProgramResultInfo(Colony* pColony, uint32 pinID, uint16 typeID, PyList* heads, float headRadius)
 {
     //  ECU pinID, resource typeID, list of {headID, lat, long}, radius of head (small number...rad maybe?)
     // qtyToDistribute, cycleTime, numCycles = self.remoteHandler.GetProgramResultInfo(pinID, typeID, pin.heads, headRadius)
@@ -228,13 +228,14 @@ PyRep* PIDataMgr::GetProgramResultInfo(Colony* pColony, uint32 pinID, uint16 typ
     _log(PLANET__TRACE, "PlanetMgr::GetProgramResultInfo() - cycleTime:%.2f, iCycleTime:%lli, length:%.2f, numCycles:%u, qtyPerCycle:%u, heads: %u, headRadius:%.4f", \
                 cycleTime, iCycleTime, length, numCycles, qtyPerCycle, heads->size(), headRadius);
 
-    PyTuple* res = new PyTuple(3);
-        res->SetItem(0, new PyInt(qtyPerCycle));    //qtyToDistribute  (2843)
-        res->SetItem(1, new PyLong(iCycleTime));    //cycleTime - in usec  (9000000000)
-        res->SetItem(2, new PyInt(numCycles));      //numCycles   (12)
+    PyTuple* res = new PyTuple {
+        new PyInt (qtyPerCycle), // qtyToDistribute (2843)
+        new PyInt (iCycleTime), // cycleTime - in usec  (9000000000)
+        new PyInt (numCycles), // numCycles (12)
+    };
 
     if (is_log_enabled(PLANET__RES_DUMP))
-        res->Dump(PLANET__RES_DUMP, "    ");
+        res->dump(PLANET__RES_DUMP, "    ");
 
     pColony->SetProgramResults(pinID, typeID, numCycles, headRadius, cycleTime, qtyPerCycle);
 

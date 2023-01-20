@@ -38,11 +38,11 @@ public:
 protected:
     StationDB m_db;
 
-    PyResult GetStationItemBits(PyCallArgs& call);
-    PyResult GetSolarSystem(PyCallArgs& call, PyInt* solarSystemID);
-    PyResult GetStation(PyCallArgs& call, PyInt* stationID);
-    PyResult GetAllianceSystems(PyCallArgs& call);
-    PyResult GetSystemsForAlliance(PyCallArgs& call, PyInt* allianceID);
+    EVEResult GetStationItemBits(EVECallArgs& call);
+    EVEResult GetSolarSystem(EVECallArgs& call, PyInt* solarSystemID);
+    EVEResult GetStation(EVECallArgs& call, PyInt* stationID);
+    EVEResult GetAllianceSystems(EVECallArgs& call);
+    EVEResult GetSystemsForAlliance(EVECallArgs& call, PyInt* allianceID);
 
 private:
     EVEServiceManager& m_manager;

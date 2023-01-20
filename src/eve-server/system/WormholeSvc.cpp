@@ -41,12 +41,12 @@ WormHoleSvc::WormHoleSvc()
  * {'messageKey': 'CantOnlineSovInWormhole', 'dataID': 17877461, 'suppressable': False, 'bodyID': 257260, 'messageType': 'notify', 'urlAudio': '', 'urlIcon': '', 'titleID': None, 'messageID': 2935}
  * {'messageKey': 'CantTargetWhileEnteringWormhole', 'dataID': 17877231, 'suppressable': False, 'bodyID': 257172, 'messageType': 'notify', 'urlAudio': '', 'urlIcon': '', 'titleID': None, 'messageID': 2798}
  */
-PyResult WormHoleSvc::WormholeJump(PyCallArgs& call, PyInt* itemID) {
+EVEResult WormHoleSvc::WormholeJump(EVECallArgs& call, PyInt* itemID) {
   /**
       sm.RemoteSvc('wormholeMgr').WormholeJump, itemID)
       */
     sLog.White("WormHoleSvc", "Handle_WormholeJump() size=%lli", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     /*
      *    char ci[25];
@@ -88,7 +88,7 @@ PyResult WormHoleSvc::WormholeJump(PyCallArgs& call, PyInt* itemID) {
 
     /* return error msg from this call, if applicable, else nodeid and timestamp */
     // returns nodeID and timestamp
-    return new PyLong(Win32TimeNow());
+    return new PyInt(Win32TimeNow());
 }
 
 //                  ----------  wormhole data sent thru "AddBalls2" packet

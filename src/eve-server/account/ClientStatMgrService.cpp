@@ -34,7 +34,7 @@ ClientStatsMgr::ClientStatsMgr() :
     this->Add("SubmitStats", &ClientStatsMgr::SubmitStats);
 }
 
-PyResult ClientStatsMgr::SubmitStats(PyCallArgs& call, PyTuple* data)
+EVEResult ClientStatsMgr::SubmitStats(EVECallArgs& call, PyTuple* data)
 {
     sLog.Debug( "ClientStatsMgr", "Called SubmitStats stub." );
 

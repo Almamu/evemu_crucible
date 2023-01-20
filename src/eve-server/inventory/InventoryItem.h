@@ -125,7 +125,7 @@ public:
     // same as Move() but xfer ownership also
     // will bcast to corp for item update (incomplete)
     void                    Donate(uint32 new_owner=ownerSystem, uint32 new_location=locTemp, EVEItemFlags new_flag=flagNone, bool notify=true);
-    void                    SendItemChange(uint32 toID, std::map< int32, PyRep* >& changes);
+    void                    SendItemChange(uint32 toID, std::map< int32, PyDataType* >& changes);
     // this is for stacking recovered probes, mined ore, and salvage in ship's cargo
     void                    MergeTypesInCargo(ShipItem* pShip, EVEItemFlags flag=flagNone);  // will test for existing types
     bool                    ChangeSingleton(bool singleton, bool notify=false);
@@ -261,19 +261,20 @@ protected:
 
 public:
     /* Primary public packet builders  */
-    PyRep*                  GetItem() const             { return GetItemRow(); }
+    PyDataType*                  GetItem() const             { return GetItemRow(); }
 
-    void                    GetItemRow( PyPackedRow* into ) const;
-    void                    GetItemStatusRow( PyPackedRow* into ) const;
-    void                    GetChargeStatusRow( uint32 shipID, PyPackedRow* into ) const;
+    void                    GetItemRow (PyPackedRow* into, PythonArena* arena = HeapPythonArena::instance) const;
+    void                    GetItemStatusRow (PyPackedRow* into, PythonArena* arena = HeapPythonArena::instance) const;
+    void                    GetChargeStatusRow (uint32 shipID, PyPackedRow* into, PythonArena* arena = HeapPythonArena::instance) const;
 
-    bool                    Populate(Rsp_CommonGetInfo_Entry &into);
+    // TODO: REMOVE THE DEFAULT PYTHON ARENA PARAMETER ONCE THE MIGRATION IS COMPLETED
+    bool                    Populate(Rsp_CommonGetInfo_Entry &into, PythonArena* arena = HeapPythonArena::instance);
 
     PyList*                 GetItemInfo() const;
     PyObject*               ItemGetInfo();
-    PyPackedRow*            GetItemRow() const;
-    PyPackedRow*            GetItemStatusRow() const;
-    PyPackedRow*            GetChargeStatusRow(uint32 shipID) const;
+    PyPackedRow*            GetItemRow(PythonArena* arena = HeapPythonArena::instance) const;
+    PyPackedRow*            GetItemStatusRow(PythonArena* arena = HeapPythonArena::instance) const;
+    PyPackedRow*            GetChargeStatusRow(uint32 shipID, PythonArena* arena = HeapPythonArena::instance) const;
 
 protected:
     Inventory* pInventory;

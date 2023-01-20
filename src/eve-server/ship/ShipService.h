@@ -40,7 +40,7 @@ public:
 
 protected:
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters) override;
 
 private:
     std::map<uint32, ShipBound*> m_instances;
@@ -55,24 +55,24 @@ public:
     uint32 GetShipID () { return this->pShip->itemID (); }
 
 protected:
-    PyResult Board(PyCallArgs& call, PyInt* newShipID, std::optional<PyInt*> oldShipID);
-    PyResult Eject(PyCallArgs& call);
-    PyResult LeaveShip(PyCallArgs& call, PyInt* shipID);
-    PyResult ActivateShip(PyCallArgs& call, PyInt* newShipID, std::optional<PyInt*> oldShipID);
-    PyResult Undock(PyCallArgs& call, PyInt* shipID, PyBool* ignoreContraband);
-    PyResult Drop(PyCallArgs& call, PyList* PyToDropList, std::optional <PyInt*> ownerID, PyBool* ignoreWarning);
-    PyResult Scoop(PyCallArgs& call, PyInt* itemID);
-    PyResult ScoopDrone(PyCallArgs& call, PyList* itemIDs);
-    PyResult Jettison(PyCallArgs& call, PyList* itemIDs);
-    PyResult AssembleShip(PyCallArgs& args, PyInt* shipID);
-    PyResult AssembleShip(PyCallArgs& call, PyList* itemIDs);
-    PyResult GetShipConfiguration(PyCallArgs& call);
-    PyResult ConfigureShip(PyCallArgs& call, PyDict* configuration);
-    PyResult LaunchFromContainer(PyCallArgs& call, PyInt* structureID, PyList* ids);
-    PyResult ScoopToSMA(PyCallArgs& call, PyInt* objectID);
-    PyResult BoardStoredShip(PyCallArgs& call, PyInt* structureID, PyInt* shipID);
-    PyResult StoreVessel(PyCallArgs& call, PyInt* destID);
-    PyResult SelfDestruct(PyCallArgs& call, PyInt* shipID);
+  EVEResult Board(EVECallArgs& call, PyInt* newShipID, std::optional<PyInt*> oldShipID);
+  EVEResult Eject(EVECallArgs& call);
+  EVEResult LeaveShip(EVECallArgs& call, PyInt* shipID);
+  EVEResult ActivateShip(EVECallArgs& call, PyInt* newShipID, std::optional<PyInt*> oldShipID);
+  EVEResult Undock(EVECallArgs& call, PyInt* shipID, PyBool* ignoreContraband);
+  EVEResult Drop(EVECallArgs& call, PyList* PyToDropList, std::optional <PyInt*> ownerID, PyBool* ignoreWarning);
+  EVEResult Scoop(EVECallArgs& call, PyInt* itemID);
+  EVEResult ScoopDrone(EVECallArgs& call, PyList* itemIDs);
+  EVEResult Jettison(EVECallArgs& call, PyList* itemIDs);
+  EVEResult AssembleShip(EVECallArgs& args, PyInt* shipID);
+  EVEResult AssembleShip(EVECallArgs& call, PyList* itemIDs);
+  EVEResult GetShipConfiguration(EVECallArgs& call);
+  EVEResult ConfigureShip(EVECallArgs& call, PyDict* configuration);
+  EVEResult LaunchFromContainer(EVECallArgs& call, PyInt* structureID, PyList* ids);
+  EVEResult ScoopToSMA(EVECallArgs& call, PyInt* objectID);
+  EVEResult BoardStoredShip(EVECallArgs& call, PyInt* structureID, PyInt* shipID);
+  EVEResult StoreVessel(EVECallArgs& call, PyInt* destID);
+  EVEResult SelfDestruct(EVECallArgs& call, PyInt* shipID);
 
 private:
     ShipItem* pShip;

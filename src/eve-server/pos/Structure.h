@@ -14,7 +14,7 @@
 #include "../eve-server.h"
 
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "inventory/InventoryItem.h"
 #include "pos/PosMgrDB.h"

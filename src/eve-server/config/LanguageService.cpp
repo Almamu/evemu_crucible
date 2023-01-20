@@ -35,11 +35,11 @@ LanguageService::LanguageService() :
     this->Add("GetTextsForGroup", &LanguageService::GetTextsForGroup);
 }
 
-PyResult LanguageService::GetLanguages(PyCallArgs &call) {
+EVEResult LanguageService::GetLanguages(EVECallArgs&call) {
     return m_db.ListLanguages();
 }
 
-PyResult LanguageService::GetTextsForGroup(PyCallArgs &call, PyInt* textGroup, PyString* languageID) {
+EVEResult LanguageService::GetTextsForGroup(EVECallArgs&call, PyInt* textGroup, PyString* languageID) {
 
     return m_db.GetTextsForGroup(languageID->content(), textGroup->value());
 }

@@ -29,7 +29,7 @@
 #include "Client.h"
 #include "ConsoleCommands.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "planet/PlanetDB.h"
 #include "system/DestinyManager.h"
 #include "system/Container.h"
@@ -454,13 +454,14 @@ void WreckContainer::MakeSlimItemChange()
         return;
     if ((mySE == nullptr) or (mySE->SysBubble() == nullptr))
         return;
-    PyDict* slimPod = mySE->MakeSlimItem();
-    PyTuple* shipData = new PyTuple(2);
-        shipData->SetItem(0, new PyLong(itemID()));
-        shipData->SetItem(1, new PyObject( "foo.SlimItem", slimPod));
-    PyTuple* updates = new PyTuple(2);
-        updates->SetItem(0, new PyString("OnSlimItemChange"));
-        updates->SetItem(1, shipData);
+
+    PyTuple* updates = new PyTuple {
+        new PyString ("OnSlimItemChange"),
+        new PyTuple {
+            new PyInt (itemID()),
+            new PyObject ("foo.SlimItem", mySE->MakeSlimItem())
+        }
+    };
     //consumes updates
     mySE->SysBubble()->BubblecastDestinyUpdate(&updates, "destiny" );
 }
@@ -552,34 +553,34 @@ PyDict *WreckSE::MakeSlimItem() {
         nameID->SetItem(1, shipName);
     */
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",           new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",           new PyInt(m_self->typeID()));
-        slim->SetItemString("name",             new PyString(m_self->itemName()));
+        slim->set ("itemID",           new PyInt(m_self->itemID()));
+        slim->set ("typeID",           new PyInt(m_self->typeID()));
+        slim->set ("name",             new PyString(m_self->itemName()));
         if (m_abandoned or (m_fleetID)) { // this is ONLY for abandoned wrecks or wrecks from fleet ops
-            PyTuple* loot = new PyTuple(4);
-                loot->SetItem(0,                new PyInt(m_ownerID));
-                loot->SetItem(1,                IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-                loot->SetItem(2,                IsFleetID(m_fleetID) ? new PyInt(m_fleetID) : PyStatic.NewNone());
-                loot->SetItem(3,                new PyBool(false)); // what is this??
-            slim->SetItemString("lootRights",   loot );
+            slim->set ("lootRights",   new PyTuple {
+                new PyInt (m_ownerID),
+                IsCorp(m_corpID) ? new PyInt (m_corpID) : PyStatic.NewNone(),
+                IsFleetID(m_fleetID) ? new PyInt (m_fleetID) : PyStatic.NewNone(),
+                new PyBool (false) // what is this
+            } );
         }
-        slim->SetItemString("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-        slim->SetItemString("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-        slim->SetItemString("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
-        slim->SetItemString("isEmpty",          new PyBool(m_contRef->IsEmpty()));
-        slim->SetItemString("launcherID",       new PyLong(m_launchedByID));
-        slim->SetItemString("securityStatus",   new PyInt(0));  //FIXME TODO
-        slim->SetItemString("ownerID",          new PyInt(m_ownerID));
-        PyDict* dict = new PyDict;
-            dict->SetItemString("WreckTypeID",  new PyInt(m_self->typeID()));
-        PyTuple* tuple2 = new PyTuple(2);
-            tuple2->SetItem(0, new PyString("UI/Inflight/WreckNameTypeID"));
-            tuple2->SetItem(1, dict);
-        slim->SetItemString("nameID",           tuple2);
+        slim->set ("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+        slim->set ("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+        slim->set ("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+        slim->set ("isEmpty",          new PyBool(m_contRef->IsEmpty()));
+        slim->set ("launcherID",       new PyInt(m_launchedByID));
+        slim->set ("securityStatus",   new PyInt(0));  //FIXME TODO
+        slim->set ("ownerID",          new PyInt(m_ownerID));
+        slim->set ("nameID",           new PyTuple {
+            new PyString ("UI/Inflight/WreckNameTypeID"),
+            new PyDict {
+                {"WreckTypeID", new PyInt (m_self->typeID())}
+            }
+        });
 
     if (is_log_enabled(DESTINY__DEBUG)) {
         _log( DESTINY__DEBUG, "WreckSE::MakeSlimItem() - %s(%u)", GetName(), GetID());
-        slim->Dump(DESTINY__DEBUG, "     ");
+        slim->dump(DESTINY__DEBUG, "     ");
     }
 
     return slim;

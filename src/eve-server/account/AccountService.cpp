@@ -52,42 +52,40 @@
 AccountService::AccountService() :
     Service("account", eAccessLevel_Character)
 {
-    this->Add("GetCashBalance", static_cast <PyResult (AccountService::*)(PyCallArgs &, std::optional<PyBool*>, std::optional<PyInt*>)> (&AccountService::GetCashBalance));
-    this->Add("GetCashBalance", static_cast <PyResult(AccountService::*)(PyCallArgs &, std::optional<PyInt*>, std::optional<PyInt*>)> (&AccountService::GetCashBalance));
+    this->Add("GetCashBalance", static_cast <EVEResult (AccountService::*)(EVECallArgs&, std::optional<PyBool*>, std::optional<PyInt*>)> (&AccountService::GetCashBalance));
+    this->Add("GetCashBalance", static_cast <EVEResult (AccountService::*)(EVECallArgs&, std::optional<PyInt*>, std::optional<PyInt*>)> (&AccountService::GetCashBalance));
     this->Add("GetEntryTypes", &AccountService::GetEntryTypes);
     this->Add("GetKeyMap", &AccountService::GetKeyMap);
-    this->Add("GiveCash", static_cast <PyResult (AccountService::*)(PyCallArgs &, PyInt *, PyInt *, std::optional <PyWString*>)> (&AccountService::GiveCash));
-    this->Add("GiveCash", static_cast <PyResult(AccountService::*)(PyCallArgs &, PyInt *, PyFloat *, std::optional <PyWString*>)> (&AccountService::GiveCash));
-    this->Add("GiveCash", static_cast <PyResult (AccountService::*)(PyCallArgs &, PyInt *, PyInt *, std::optional <PyString*>)> (&AccountService::GiveCash));
-    this->Add("GiveCash", static_cast <PyResult(AccountService::*)(PyCallArgs &, PyInt *, PyFloat *, std::optional <PyString*>)> (&AccountService::GiveCash));
-    this->Add("GiveCashFromCorpAccount", static_cast <PyResult (AccountService::*)(PyCallArgs &, PyInt *, PyInt *, PyInt *)> (&AccountService::GiveCashFromCorpAccount));
-    this->Add("GiveCashFromCorpAccount", static_cast <PyResult (AccountService::*)(PyCallArgs &, PyInt *, PyFloat *, PyInt *)> (&AccountService::GiveCashFromCorpAccount));
-    this->Add("GetJournal", static_cast <PyResult (AccountService::*)(PyCallArgs &, PyInt *, PyLong *, std::optional<PyInt*>, PyInt *, std::optional <PyInt*>, std::optional<PyInt*>)> (&AccountService::GetJournal));
-    this->Add("GetJournal", static_cast <PyResult(AccountService::*)(PyCallArgs&, PyInt*, PyLong*, std::optional<PyInt*>, PyBool*, std::optional <PyInt*>, std::optional<PyInt*>)> (&AccountService::GetJournal));
-    this->Add("GetJournalForAccounts", static_cast <PyResult (AccountService::*) (PyCallArgs &, PyInt *, PyLong *, std::optional<PyInt*>, PyBool *, std::optional <PyInt*>, std::optional<PyInt*>)>(&AccountService::GetJournalForAccounts));
-    this->Add("GetJournalForAccounts", static_cast <PyResult(AccountService::*) (PyCallArgs&, PyInt*, PyLong*, std::optional<PyInt*>, PyInt*, std::optional <PyInt*>, std::optional<PyInt*>)>(&AccountService::GetJournalForAccounts));
+    this->Add("GiveCash", static_cast <EVEResult (AccountService::*)(EVECallArgs&, PyInt *, PyInt *, std::optional <PyString*>)> (&AccountService::GiveCash));
+    this->Add("GiveCash", static_cast <EVEResult (AccountService::*)(EVECallArgs&, PyInt *, PyFloat *, std::optional <PyString*>)> (&AccountService::GiveCash));
+    this->Add("GiveCashFromCorpAccount", static_cast <EVEResult (AccountService::*)(EVECallArgs&, PyInt *, PyInt *, PyInt *)> (&AccountService::GiveCashFromCorpAccount));
+    this->Add("GiveCashFromCorpAccount", static_cast <EVEResult (AccountService::*)(EVECallArgs&, PyInt *, PyFloat *, PyInt *)> (&AccountService::GiveCashFromCorpAccount));
+    this->Add("GetJournal", static_cast <EVEResult (AccountService::*)(EVECallArgs&, PyInt *, PyInt *, std::optional<PyInt*>, PyInt *, std::optional <PyInt*>, std::optional<PyInt*>)> (&AccountService::GetJournal));
+    this->Add("GetJournal", static_cast <EVEResult (AccountService::*)(EVECallArgs&, PyInt*, PyInt*, std::optional<PyInt*>, PyBool*, std::optional <PyInt*>, std::optional<PyInt*>)> (&AccountService::GetJournal));
+    this->Add("GetJournalForAccounts", static_cast <EVEResult (AccountService::*) (EVECallArgs&, PyInt *, PyInt *, std::optional<PyInt*>, PyBool *, std::optional <PyInt*>, std::optional<PyInt*>)>(&AccountService::GetJournalForAccounts));
+    this->Add("GetJournalForAccounts", static_cast <EVEResult (AccountService::*) (EVECallArgs&, PyInt*, PyInt*, std::optional<PyInt*>, PyInt*, std::optional <PyInt*>, std::optional<PyInt*>)>(&AccountService::GetJournalForAccounts));
     this->Add("GetWalletDivisionsInfo", &AccountService::GetWalletDivisionsInfo);
     this->Add("GetDefaultContactCost", &AccountService::GetDefaultContactCost);
     this->Add("SetContactCost", &AccountService::SetContactCost);
 }
 
-PyResult AccountService::GetKeyMap(PyCallArgs &call)
+EVEResult AccountService::GetKeyMap(EVECallArgs&call)
 {
     return sDataMgr.GetKeyMap();    // account key types
 }
 
-PyResult AccountService::GetEntryTypes(PyCallArgs &call)
+EVEResult AccountService::GetEntryTypes(EVECallArgs&call)
 {
     return sDataMgr.GetEntryTypes();    // journal entry IDs
 }
 
-PyResult AccountService::GetWalletDivisionsInfo(PyCallArgs &call)
+EVEResult AccountService::GetWalletDivisionsInfo(EVECallArgs&call)
 {
     return m_db.GetWalletDivisionsInfo(call.client->GetCorporationID());
 }
 
 // from mail/label window->settings
-PyResult AccountService::GetDefaultContactCost(PyCallArgs &call)
+EVEResult AccountService::GetDefaultContactCost(EVECallArgs&call)
 {
     /*
             self.defaultContactCost = self.GetAccountSvc().GetDefaultContactCost()
@@ -96,7 +94,7 @@ PyResult AccountService::GetDefaultContactCost(PyCallArgs &call)
         */
 
     sLog.Log( "AccountService::Handle_GetDefaultContactCost()", "size=%lu", call.tuple->size());
-    call.Dump(ACCOUNT__CALL_DUMP);
+    call.dump(ACCOUNT__CALL_DUMP);
 
     //return m_db.GetDefaultContactCost(call.client->GetCorporationID());
 
@@ -104,7 +102,7 @@ PyResult AccountService::GetDefaultContactCost(PyCallArgs &call)
     return PyStatic.NewNone();
 }
 
-PyResult AccountService::SetContactCost(PyCallArgs &call, std::optional<PyInt*> cost)
+EVEResult AccountService::SetContactCost(EVECallArgs&call, std::optional<PyInt*> cost)
 {
     /*
         self.GetAccountSvc().SetContactCost(cost)
@@ -114,28 +112,28 @@ PyResult AccountService::SetContactCost(PyCallArgs &call, std::optional<PyInt*> 
         */
 
     sLog.Log( "AccountService::Handle_SetContactCost()", "size=%lu", call.tuple->size());
-    call.Dump(ACCOUNT__CALL_DUMP);
+    call.dump(ACCOUNT__CALL_DUMP);
     // m_db.SetContactCost(call.client->GetCorporationID());
 
     // returns nothing
     return nullptr;
 }
 
-PyResult AccountService::GetCashBalance(PyCallArgs& call, std::optional<PyBool*> isCorpWallet, std::optional<PyInt*> walletKey) {
+EVEResult AccountService::GetCashBalance(EVECallArgs& call, std::optional<PyBool*> isCorpWallet, std::optional<PyInt*> walletKey) {
     return GetCashBalance(call, new PyInt(isCorpWallet.has_value() ? isCorpWallet.value()->value() : 0), walletKey);
 }
 
-PyResult AccountService::GetCashBalance(PyCallArgs &call, std::optional<PyInt*> isCorpWallet, std::optional<PyInt*> walletKey) {
+EVEResult AccountService::GetCashBalance(EVECallArgs&call, std::optional<PyInt*> isCorpWallet, std::optional<PyInt*> walletKey) {
     //corrected, updated, optimized     -allan 26jan15      ReVisited/Rewrote  -allan 7Dec17    Update  -allan 20May19
     if (is_log_enabled(ACCOUNT__CALL_DUMP)) {
         sLog.Log( "AccountService::Handle_GetCashBalance()", "size=%lu", call.tuple->size());
-        call.Dump(ACCOUNT__CALL_DUMP);
+        call.dump(ACCOUNT__CALL_DUMP);
     }
 
     double balance(0);
     int16 accountKey(call.client->GetCorpAccountKey());
     if (call.byname.find("accountKey") != call.byname.end())
-        accountKey = PyRep::IntegerValueU32(call.byname.find("accountKey")->second);
+        accountKey = call.byname.find("accountKey")->second->u32();
     else if (walletKey.has_value())
         accountKey = walletKey.value()->value();
 
@@ -154,38 +152,38 @@ PyResult AccountService::GetCashBalance(PyCallArgs &call, std::optional<PyInt*> 
     return new PyFloat(balance);
 }
 
-PyResult AccountService::GetJournal(PyCallArgs& call, PyInt* accountKey, PyLong* fromDate, std::optional<PyInt*> entryTypeID, PyBool* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev) {
+EVEResult AccountService::GetJournal(EVECallArgs& call, PyInt* accountKey, PyInt* fromDate, std::optional<PyInt*> entryTypeID, PyBool* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev) {
     return GetJournal(call, accountKey, fromDate, entryTypeID, new PyInt(corpAccount->value()), transactionID, rev);
 }
 
-PyResult AccountService::GetJournal(PyCallArgs &call, PyInt* accountKey, PyLong* fromDate, std::optional<PyInt*> entryTypeID, PyInt* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev)
+EVEResult AccountService::GetJournal(EVECallArgs&call, PyInt* accountKey, PyInt* fromDate, std::optional<PyInt*> entryTypeID, PyInt* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev)
 {    // this asks for data for a single acctKey
     if (is_log_enabled(ACCOUNT__CALL_DUMP)) {
         sLog.Log( "AccountService::Handle_GetJournal()", "size=%lu", call.tuple->size());
-        call.Dump(ACCOUNT__CALL_DUMP);
+        call.dump(ACCOUNT__CALL_DUMP);
     }
 
     uint32 ownerID(call.client->GetCharacterID());
     if (corpAccount->value())
         ownerID = call.client->GetCorporationID();
 
-    PyRep* res = m_db.GetJournal(ownerID, entryTypeID.has_value() ? entryTypeID.value()->value() : 0, accountKey->value(), fromDate->value(), rev.has_value() ? rev.value()->value() : 0);
+    PyDataType* res = m_db.GetJournal(ownerID, entryTypeID.has_value() ? entryTypeID.value()->value() : 0, accountKey->value(), fromDate->value(), rev.has_value() ? rev.value()->value() : 0);
     if (is_log_enabled(ACCOUNT__RSP_DUMP))
-        res->Dump(ACCOUNT__RSP_DUMP, "    ");
+        res->dump(ACCOUNT__RSP_DUMP, "    ");
     return res;
 }
 
-PyResult AccountService::GetJournalForAccounts(PyCallArgs& call, PyInt* accountKeys, PyLong* fromDate, std::optional<PyInt*> entryTypeID, PyBool* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev) {
+EVEResult AccountService::GetJournalForAccounts(EVECallArgs& call, PyInt* accountKeys, PyInt* fromDate, std::optional<PyInt*> entryTypeID, PyBool* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev) {
     return GetJournalForAccounts(call, accountKeys, fromDate, entryTypeID, new PyInt(corpAccount->value()), transactionID, rev);
 }
 
 /** @todo this isnt right.... */
-PyResult AccountService::GetJournalForAccounts(PyCallArgs &call, PyInt* accountKeys, PyLong* fromDate, std::optional<PyInt*> entryTypeID, PyInt* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev) {
+EVEResult AccountService::GetJournalForAccounts(EVECallArgs&call, PyInt* accountKeys, PyInt* fromDate, std::optional<PyInt*> entryTypeID, PyInt* corpAccount, std::optional <PyInt*> transactionID, std::optional<PyInt*> rev) {
     // this asks for data for multiple acctKeys
     // self.journalData[key] = self.GetAccountSvc().GetJournalForAccounts(accountKeys, fromDate, entryTypeID, corpAccount, transactionID, rev)
     if (is_log_enabled(ACCOUNT__CALL_DUMP)) {
         sLog.Log( "AccountService::Handle_GetJournalForAccounts()", "size=%lu", call.tuple->size());
-        call.Dump(ACCOUNT__CALL_DUMP);
+        call.dump(ACCOUNT__CALL_DUMP);
     }
     uint32 ownerID = call.client->GetCharacterID();
     if (corpAccount->value())
@@ -193,32 +191,24 @@ PyResult AccountService::GetJournalForAccounts(PyCallArgs &call, PyInt* accountK
 
     uint16 acctKey = Account::KeyType::Cash;
 
-    PyRep* res = m_db.GetJournal(ownerID, entryTypeID.has_value() ? entryTypeID.value()->value() : 0, acctKey, fromDate->value(), rev.has_value() ? rev.value()->value() : 0);
+    PyDataType* res = m_db.GetJournal(ownerID, entryTypeID.has_value() ? entryTypeID.value()->value() : 0, acctKey, fromDate->value(), rev.has_value() ? rev.value()->value() : 0);
     if (is_log_enabled(ACCOUNT__RSP_DUMP))
-        res->Dump(ACCOUNT__RSP_DUMP, "    ");
+        res->dump(ACCOUNT__RSP_DUMP, "    ");
     return res;
 }
 
-PyResult AccountService::GiveCash(PyCallArgs& call, PyInt* toID, PyInt* amount, std::optional <PyWString*> reason) {
+EVEResult AccountService::GiveCash(EVECallArgs& call, PyInt* toID, PyInt* amount, std::optional <PyString*> reason) {
     return GiveCash(call, toID, new PyFloat(amount->value()), reason.has_value()?reason.value()->content():std::string());
 }
 
-PyResult AccountService::GiveCash(PyCallArgs& call, PyInt* toID, PyFloat* amount, std::optional <PyWString*> reason) {
+EVEResult AccountService::GiveCash(EVECallArgs& call, PyInt* toID, PyFloat* amount, std::optional <PyString*> reason) {
     return GiveCash(call, toID, amount, reason.has_value()?reason.value()->content():std::string());
 }
 
-PyResult AccountService::GiveCash(PyCallArgs& call, PyInt* toID, PyInt* amount, std::optional <PyString*> reason) {
-    return GiveCash(call, toID, new PyFloat(amount->value()), reason.has_value()?reason.value()->content():std::string());
-}
-
-PyResult AccountService::GiveCash(PyCallArgs& call, PyInt* toID, PyFloat* amount, std::optional <PyString*> reason) {
-    return GiveCash(call, toID, amount, reason.has_value()?reason.value()->content():std::string());
-}
-
-PyResult AccountService::GiveCash(PyCallArgs &call, PyInt* toID, PyFloat* amount, std::string reason) {
+EVEResult AccountService::GiveCash(EVECallArgs&call, PyInt* toID, PyFloat* amount, std::string reason) {
     if (is_log_enabled(ACCOUNT__CALL_DUMP)) {
         sLog.Log( "AccountService::Handle_GiveCash()", "size=%lu", call.tuple->size());
-        call.Dump(ACCOUNT__CALL_DUMP);
+        call.dump(ACCOUNT__CALL_DUMP);
     }
 
     std::string reasonStr = "DESC: ";
@@ -244,25 +234,25 @@ PyResult AccountService::GiveCash(PyCallArgs &call, PyInt* toID, PyFloat* amount
     return nullptr;
 }
 
-PyResult AccountService::GiveCashFromCorpAccount(PyCallArgs& call, PyInt* toID, PyInt* amount, PyInt* fromAcctKey) {
+EVEResult AccountService::GiveCashFromCorpAccount(EVECallArgs& call, PyInt* toID, PyInt* amount, PyInt* fromAcctKey) {
     return GiveCashFromCorpAccount(call, toID, new PyFloat(amount->value()), fromAcctKey);
 }
 
-PyResult AccountService::GiveCashFromCorpAccount(PyCallArgs &call, PyInt* toID, PyFloat* amount, PyInt* fromAcctKey)
+EVEResult AccountService::GiveCashFromCorpAccount(EVECallArgs&call, PyInt* toID, PyFloat* amount, PyInt* fromAcctKey)
 {
     if (is_log_enabled(ACCOUNT__CALL_DUMP)) {
         sLog.Log( "AccountService::Handle_GiveCashFromCorpAccount()", "size=%lu", call.tuple->size());
-        call.Dump(ACCOUNT__CALL_DUMP);
+        call.dump(ACCOUNT__CALL_DUMP);
     }
 
     uint16 toAcctKey = Account::KeyType::Cash;
     if (call.byname.find("toAccountKey") != call.byname.end())
-        toAcctKey = PyRep::IntegerValue(call.byname.find("toAccountKey")->second);
+        toAcctKey = call.byname.find("toAccountKey")->second->i64();
 
     std::string reason= "DESC: ";
     if (call.byname.find("reason") != call.byname.end()) {
         // make sure that the reason has anything in it so YAML parsing is correct
-        std::string content = PyRep::StringContent (call.byname.find ("reason")->second);
+        std::string content = call.byname.find ("reason")->second->string();
 
         if (content.size () < 1) {
             reason += "No Reason Given by ";
@@ -273,7 +263,7 @@ PyResult AccountService::GiveCashFromCorpAccount(PyCallArgs &call, PyInt* toID, 
                 if (EvE::icontains(content, cur))
                     throw CustomError("Reason contains invalid characters");
 
-            reason += PyRep::StringContent(call.byname.find("reason")->second);
+            reason += call.byname.find("reason")->second->string();
         }
     } else {
         reason += "No Reason Given by ";
@@ -539,7 +529,7 @@ void AccountService::HandleCorpTransaction(uint32 corpID, int8 entryTypeID, uint
     // verify funds available for withdraw first
     if (amount < 0) {
         if (-amount > balance) {
-            std::map<std::string, PyRep *> args;
+            std::map<std::string, PyDataType *> args;
             args["owner"] = new PyString(CorporationDB::GetCorpName(corpID));
             args["amount"] = new PyFloat(-amount);
             args["balance"] = new PyFloat(balance);

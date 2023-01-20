@@ -13,11 +13,11 @@ public:
     CorpFittingMgr();
 
 protected:
-    PyResult GetFittings(PyCallArgs& call, PyInt* ownerID);
-    PyResult SaveFitting(PyCallArgs& call, PyInt* ownerID, PyObject* fitting);
-    PyResult SaveManyFittings(PyCallArgs& call, PyInt* ownerID, PyDict* fittingsToSave);
-    PyResult DeleteFitting(PyCallArgs& call, PyInt* ownerID, PyInt* fittingID);
-    PyResult UpdateNameAndDescription(PyCallArgs& call, PyInt* fittingID, PyInt* ownerID, PyWString* name, PyWString* description);
+  EVEResult GetFittings(EVECallArgs& call, PyInt* ownerID);
+  EVEResult SaveFitting(EVECallArgs& call, PyInt* ownerID, PyObject* fitting);
+  EVEResult SaveManyFittings(EVECallArgs& call, PyInt* ownerID, PyDict* fittingsToSave);
+  EVEResult DeleteFitting(EVECallArgs& call, PyInt* ownerID, PyInt* fittingID);
+  EVEResult UpdateNameAndDescription(EVECallArgs& call, PyInt* fittingID, PyInt* ownerID, PyString* name, PyString* description);
 };
 
 #endif  // EVE_COPORATION_FITTING_MGR_H

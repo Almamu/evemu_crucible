@@ -40,27 +40,27 @@ public:
 protected:
     MapDB m_db;
 
-    PyResult GetCurrentEntities(PyCallArgs& call);
-    PyResult GetSolarSystemVisits(PyCallArgs& call);
-    PyResult GetMyExtraMapInfoAgents(PyCallArgs& call);
-    PyResult GetMyExtraMapInfo(PyCallArgs& call);
-    PyResult GetBeaconCount(PyCallArgs& call);
-    PyResult GetStationExtraInfo(PyCallArgs& call);
-    PyResult GetSolarSystemPseudoSecurities(PyCallArgs& call);
-    PyResult GetStationCount(PyCallArgs& call);
-    PyResult GetHistory(PyCallArgs& call, PyInt* int1, PyInt* int2);
-    PyResult GetLinkableJumpArrays(PyCallArgs& call);
-    PyResult GetAllianceJumpBridges(PyCallArgs& call);
-    PyResult GetAllianceBeacons(PyCallArgs& call);
-    PyResult GetCurrentSovData(PyCallArgs& call, PyInt* locationID);
-    PyResult GetRecentSovActivity(PyCallArgs& call);
-    PyResult GetDeadspaceAgentsMap(PyCallArgs& call, PyInt* languageID);
-    PyResult GetDeadspaceComplexMap(PyCallArgs& call, PyInt* languageID);
-    PyResult GetSystemsInIncursions(PyCallArgs& call);
-    PyResult GetSystemsInIncursionsGM(PyCallArgs& call);
-    PyResult GetIncursionGlobalReport(PyCallArgs& call);
-    PyResult GetVictoryPoints(PyCallArgs& call);
-    PyResult GetStuckSystems(PyCallArgs& call);
+    EVEResult GetCurrentEntities(EVECallArgs& call);
+    EVEResult GetSolarSystemVisits(EVECallArgs& call);
+    EVEResult GetMyExtraMapInfoAgents(EVECallArgs& call);
+    EVEResult GetMyExtraMapInfo(EVECallArgs& call);
+    EVEResult GetBeaconCount(EVECallArgs& call);
+    EVEResult GetStationExtraInfo(EVECallArgs& call);
+    EVEResult GetSolarSystemPseudoSecurities(EVECallArgs& call);
+    EVEResult GetStationCount(EVECallArgs& call);
+    EVEResult GetHistory(EVECallArgs& call, PyInt* int1, PyInt* int2);
+    EVEResult GetLinkableJumpArrays(EVECallArgs& call);
+    EVEResult GetAllianceJumpBridges(EVECallArgs& call);
+    EVEResult GetAllianceBeacons(EVECallArgs& call);
+    EVEResult GetCurrentSovData(EVECallArgs& call, PyInt* locationID);
+    EVEResult GetRecentSovActivity(EVECallArgs& call);
+    EVEResult GetDeadspaceAgentsMap(EVECallArgs& call, PyInt* languageID);
+    EVEResult GetDeadspaceComplexMap(EVECallArgs& call, PyInt* languageID);
+    EVEResult GetSystemsInIncursions(EVECallArgs& call);
+    EVEResult GetSystemsInIncursionsGM(EVECallArgs& call);
+    EVEResult GetIncursionGlobalReport(EVECallArgs& call);
+    EVEResult GetVictoryPoints(EVECallArgs& call);
+    EVEResult GetStuckSystems(EVECallArgs& call);
 
 };
 

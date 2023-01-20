@@ -31,7 +31,7 @@
 #include "Client.h"
 #include "EntityList.h"
 #include "EVE_Scanning.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "map/MapData.h"
 #include "system/BubbleManager.h"
 #include "system/Container.h"

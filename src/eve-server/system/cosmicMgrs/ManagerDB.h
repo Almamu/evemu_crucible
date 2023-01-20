@@ -47,10 +47,10 @@ public:
     static void LoadCorpFactions(std::map<uint32, uint32> &into);
     static void LoadFactionStationCounts(std::map<uint32, uint32> &into);
     static void LoadFactionSystemCounts(std::map<uint32, uint32> &into);
-    static void LoadFactionRegions(std::map<int32, PyRep *> &into);
-    static void LoadFactionConstellations(std::map<int32, PyRep *> &into);
-    static void LoadFactionSolarSystems(std::map<int32, PyRep *> &into);
-    static void LoadFactionRaces(std::map<int32, PyRep *> &into);
+    static void LoadFactionRegions(std::map<int32, PyDataType *> &into);
+    static void LoadFactionConstellations(std::map<int32, PyDataType *> &into);
+    static void LoadFactionSolarSystems(std::map<int32, PyDataType *> &into);
+    static void LoadFactionRaces(std::map<int32, PyDataType *> &into);
 
     static PyDict* LoadNPCCorpInfo();
     static PyObject* GetEntryTypes();

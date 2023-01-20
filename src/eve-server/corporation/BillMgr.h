@@ -38,15 +38,15 @@ public:
     BillMgr();
 
 protected:
-    PyResult GetBillTypes(PyCallArgs& call);
-    PyResult GetCorporationBills(PyCallArgs& call);
-    PyResult GetCorporationBillsReceivable(PyCallArgs& call);
-    PyResult CharPayBill(PyCallArgs& call, PyInt* billID);
-    PyResult CharGetBills(PyCallArgs& call);
-    PyResult CharGetBillsReceivable(PyCallArgs& call);
-    PyResult PayCorporationBill(PyCallArgs& call, PyInt* billID);
-    PyResult SendAutomaticPaySettings(PyCallArgs& call, PyDict* automaticPaymentSettings);
-    PyResult GetAutomaticPaySettings(PyCallArgs& call);
+  EVEResult GetBillTypes(EVECallArgs& call);
+  EVEResult GetCorporationBills(EVECallArgs& call);
+  EVEResult GetCorporationBillsReceivable(EVECallArgs& call);
+  EVEResult CharPayBill(EVECallArgs& call, PyInt* billID);
+  EVEResult CharGetBills(EVECallArgs& call);
+  EVEResult CharGetBillsReceivable(EVECallArgs& call);
+  EVEResult PayCorporationBill(EVECallArgs& call, PyInt* billID);
+  EVEResult SendAutomaticPaySettings(EVECallArgs& call, PyDict* automaticPaymentSettings);
+  EVEResult GetAutomaticPaySettings(EVECallArgs& call);
 
     CorporationDB m_db;
 };

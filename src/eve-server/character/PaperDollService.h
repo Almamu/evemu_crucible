@@ -45,12 +45,12 @@ public:
     PaperDollService();
 
 protected:
-    PyResult GetPaperDollData(PyCallArgs& call, PyInt* characterID);
-    PyResult ConvertAndSavePaperDoll(PyCallArgs& call);
-    PyResult UpdateExistingCharacterFull(PyCallArgs& call, PyInt* characterID, PyRep* dollInfo, PyRep* portraitInfo, PyBool* dollExists);
-    PyResult UpdateExistingCharacterLimited(PyCallArgs& call, PyInt* characterID, PyRep* dollData, PyRep* portraitInfo, PyBool* dollExists);
-    PyResult GetPaperDollPortraitDataFor(PyCallArgs& call, PyInt* characterID);
-    PyResult GetMyPaperDollData(PyCallArgs& call, PyInt* characterID);
+  EVEResult GetPaperDollData(EVECallArgs& call, PyInt* characterID);
+  EVEResult ConvertAndSavePaperDoll(EVECallArgs& call);
+  EVEResult UpdateExistingCharacterFull(EVECallArgs& call, PyInt* characterID, PyDataType* dollInfo, PyDataType* portraitInfo, PyBool* dollExists);
+  EVEResult UpdateExistingCharacterLimited(EVECallArgs& call, PyInt* characterID, PyDataType* dollData, PyDataType* portraitInfo, PyBool* dollExists);
+  EVEResult GetPaperDollPortraitDataFor(EVECallArgs& call, PyInt* characterID);
+  EVEResult GetMyPaperDollData(EVECallArgs& call, PyInt* characterID);
 
 private:
 	PaperDollDB m_db;

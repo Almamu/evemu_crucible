@@ -44,10 +44,10 @@ WarRegistryService::WarRegistryService(EVEServiceManager& mgr) :
 {
 }
 
-BoundDispatcher* WarRegistryService::BindObject(Client* client, PyRep* bindParameters) {
+BoundDispatcher* WarRegistryService::BindObject(Client* client, PyDataType* bindParameters) {
     Call_TwoIntegerArgs args;
 
-    if (args.Decode(bindParameters->Clone()) == false) {
+    if (args.Decode(bindParameters->clone()) == false) {
         codelog(SERVICE__ERROR, "%s: Failed to decode bind args.", GetName().c_str());
         return nullptr;
     }
@@ -81,7 +81,7 @@ WarRegistryBound::WarRegistryBound(uint32 corporationID, EVEServiceManager& mgr,
     this->Add("GetWars", &WarRegistryBound::GetWars);
 }
 
-PyResult WarRegistryBound::GetWars(PyCallArgs& args, PyInt* ownerID, std::optional<PyInt*> forceRefresh) {
+EVEResult WarRegistryBound::GetWars(EVECallArgs& args, PyInt* ownerID, std::optional<PyInt*> forceRefresh) {
     sLog.Debug("WarRegistryBound", "Called GetWars stub.");
 
     util_IndexRowset irowset;

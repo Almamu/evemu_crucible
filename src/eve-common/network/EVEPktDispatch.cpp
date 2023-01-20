@@ -27,64 +27,22 @@
 #include "eve-common.h"
 
 #include "network/EVEPktDispatch.h"
-#include "packets/AccountPkts.h"
-#include "packets/General.h"
-#include "python/PyPacket.h"
+#include "python/EVECallStream.h"
+#include "python/EVEPacket.h"
 #include "python/PyVisitor.h"
-#include "python/PyRep.h"
+#include "python/Types.h"
 
-bool EVEPacketDispatcher::DispatchPacket(PyPacket* packet)
-{
-    switch(packet->type) {
-        case AUTHENTICATION_REQ: {
-            //check the string part, just for good measure
-            if (packet->type_string != "macho.AuthenticationReq") {
-                sLog.Error("EVEPacketDispatcher","Received AUTHENTICATION_RSP with invalid type string '%s'", packet->type_string.c_str());
-                return false;
-            }
-
-            AuthenticationReq req;
-            if (!req.Decode(packet->payload))  {
-                sLog.Error("EVEPacketDispatcher","Failed to decode AuthenticationReq");
-                return false;
-            }
-
-            return Handle_AuthenticationReq(packet, req);
-        }
-        case AUTHENTICATION_RSP: {
-            //check the string part, just for good measure
-            if (packet->type_string != "macho.AuthenticationRsp") {
-                sLog.Error("EVEPacketDispatcher","Received AUTHENTICATION_RSP with invalid type string '%s'", packet->type_string.c_str());
-                return false;
-            }
-
-            AuthenticationRsp rsp;
-            if (!rsp.Decode(packet->payload)) {
-                sLog.Error("EVEPacketDispatcher","Failed to decode AuthenticationRsp");
-                return false;
-            }
-
-            return Handle_AuthenticationRsp(packet, rsp);
-        }
+bool EVEPacketDispatcher::DispatchPacket(EVEPacket& packet) {
+    switch(packet.type) {
         case CALL_REQ: {
-            //check the string part, just for good measure
-            if (packet->type_string != "macho.CallReq") {
-                sLog.Error("EVEPacketDispatcher","Received CALL_REQ with invalid type string '%s'", packet->type_string.c_str());
-                return false;
-            }
-
-            PyCallStream call;
-            if (!call.Decode(packet->type_string, packet->payload)) {
-                sLog.Error("EVEPacketDispatcher","Failed to convert packet into a call stream");
-                return false;
-            }
+            EVECallStream call = EVECallStream::from (packet.type_string, packet.payload);
 
             return Handle_CallReq(packet, call);
         }
         case CALL_RSP: {
             //check the string part, just for good measure
-            if (packet->type_string != "macho.CallRsp") {
-                sLog.Error("EVEPacketDispatcher","Received CALL_RSP with invalid type string '%s'", packet->type_string.c_str());
+            if (packet.type_string != "macho.CallRsp") {
+                sLog.Error("EVEPacketDispatcher","Received CALL_RSP with invalid type string '%s'", packet.type_string.c_str());
                 return false;
             }
 
@@ -94,47 +52,17 @@ bool EVEPacketDispatcher::DispatchPacket(PyPacket* packet)
         }
         case NOTIFICATION: {
             //check the string part, just for good measure
-            if (packet->type_string != "macho.Notification") {
-                sLog.Error("EVEPacketDispatcher","Received NOTIFICATION with invalid type string '%s'", packet->type_string.c_str());
+            if (packet.type_string != "macho.Notification") {
+                sLog.Error("EVEPacketDispatcher","Received NOTIFICATION with invalid type string '%s'", packet.type_string.c_str());
                 return false;
             }
 
             return Handle_Notify(packet);
         }
-        case ERRORRESPONSE: {
-            //check the string part, just for good measure
-            if (packet->type_string != "macho.ErrorResponse") {
-                sLog.Error("EVEPacketDispatcher","Received ERRORRESPONSE with invalid type string '%s'", packet->type_string.c_str());
-                return false;
-            }
-
-            ErrorResponse error;
-            if (!error.Decode(packet->payload)) {
-                sLog.Error("EVEPacketDispatcher","Failed to decode Error Response");
-                return false;
-            }
-
-            return Handle_ErrorResponse(packet, error);
-        }
-        case SESSIONCHANGENOTIFICATION: {
-            //check the string part, just for good measure
-            if (packet->type_string != "macho.SessionChangeNotification") {
-                sLog.Error("EVEPacketDispatcher","Received SESSIONCHANGENOTIFICATION with invalid type string '%s'", packet->type_string.c_str());
-                return false;
-            }
-
-            SessionChangeNotification sessionChange;
-            if (!sessionChange.Decode(packet->payload)) {
-                sLog.Error("EVEPacketDispatcher","Failed to decode session change notification");
-                return false;
-            }
-
-            return Handle_SessionChange(packet, sessionChange);
-        }
         case PING_REQ: {
             //check the string part, just for good measure
-            if (packet->type_string != "macho.PingReq") {
-                sLog.Error("EVEPacketDispatcher","Received PING_REQ with invalid type string '%s'", packet->type_string.c_str());
+            if (packet.type_string != "macho.PingReq") {
+                sLog.Error("EVEPacketDispatcher","Received PING_REQ with invalid type string '%s'", packet.type_string.c_str());
                 return false;
             }
 
@@ -142,8 +70,8 @@ bool EVEPacketDispatcher::DispatchPacket(PyPacket* packet)
         }
         case PING_RSP: {
             //check the string part, just for good measure
-            if (packet->type_string != "macho.PingRsp") {
-                sLog.Error("EVEPacketDispatcher","Received PING_RSP with invalid type string '%s'", packet->type_string.c_str());
+            if (packet.type_string != "macho.PingRsp") {
+                sLog.Error("EVEPacketDispatcher","Received PING_RSP with invalid type string '%s'", packet.type_string.c_str());
                 return false;
             }
 
@@ -154,58 +82,34 @@ bool EVEPacketDispatcher::DispatchPacket(PyPacket* packet)
     }
 }
 
-/* default handlers do nothing but print */
-bool EVEPacketDispatcher::Handle_AuthenticationReq(PyPacket* packet, AuthenticationReq& req)
-{
-    sLog.Error("EVEPacketDispatcher","Unhandled Authentication Request");
-    return false;
-}
-bool EVEPacketDispatcher::Handle_AuthenticationRsp(PyPacket* packet, AuthenticationRsp& rsp)
-{
-    sLog.Error("EVEPacketDispatcher","Unhandled Authentication Response");
-    return false;
-}
-
-bool EVEPacketDispatcher::Handle_CallReq(PyPacket* packet, PyCallStream& req)
+bool EVEPacketDispatcher::Handle_CallReq(EVEPacket& packet, EVECallStream& req)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Call Request");
     return false;
 }
-bool EVEPacketDispatcher::Handle_CallRsp(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_CallRsp(EVEPacket& packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Call Response");
     return false;
 }
-bool EVEPacketDispatcher::Handle_ErrorResponse(PyPacket* packet, ErrorResponse& body)
-{
-    sLog.Error("EVEPacketDispatcher","Unhandled Error Response");
-    return false;
-}
-
-bool EVEPacketDispatcher::Handle_Notify(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_Notify(EVEPacket& packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Notification");
     return false;
 }
-bool EVEPacketDispatcher::Handle_SessionChange(PyPacket* packet, SessionChangeNotification& notify)
-{
-    sLog.Error("EVEPacketDispatcher","Unhandled SessionChange");
-    return false;
-}
-
-bool EVEPacketDispatcher::Handle_PingReq(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_PingReq(EVEPacket& packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Ping Request.");
     return false;
 }
-bool EVEPacketDispatcher::Handle_PingRsp(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_PingRsp(EVEPacket& packet)
 {
     sLog.Error("EVEPacketDispatcher","Unhandled Ping Response.");
     return false;
 }
 
-bool EVEPacketDispatcher::Handle_Other(PyPacket* packet)
+bool EVEPacketDispatcher::Handle_Other(EVEPacket& packet)
 {
-    sLog.Error("EVEPacketDispatcher","Unhandled Packet of type %s (%i)", MACHONETMSG_TYPE_NAMES[ packet->type ], (int)packet->type);
+    sLog.Error("EVEPacketDispatcher","Unhandled Packet of type %s (%i)", MACHONETMSG_TYPE_NAMES[ packet.type ], (int)packet.type);
     return false;
 }

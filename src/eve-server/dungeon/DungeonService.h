@@ -35,26 +35,26 @@ public:
     DungeonService();
 
 protected:
-    PyResult IsObjectLocked(PyCallArgs& call, PyInt* objectID);
-    PyResult AddObject(PyCallArgs& call, PyInt* roomID, PyInt* tupeID, PyFloat* x, PyFloat* y, PyFloat* z, PyFloat* pitch, PyFloat* roll, PyFloat* radius);
-    PyResult RemoveObject(PyCallArgs& call, PyInt* objectID);
-    PyResult CopyObject(PyCallArgs& call, PyInt* objectID, PyInt* roomID, PyFloat* offsetX, PyFloat* offsetY, PyFloat* offsetZ);
-    PyResult EditObject(PyCallArgs& call);
-    PyResult EditObjectName(PyCallArgs& call, PyInt* newObjectID, PyWString* objectName);
-    PyResult EditObjectRadius(PyCallArgs& call);
-    PyResult EditObjectXYZ(PyCallArgs& call);
-    PyResult EditObjectYawPitchRoll(PyCallArgs& call);
-    PyResult TemplateAdd(PyCallArgs& call, PyWString* templateName, PyWString* templateDescription);
-    PyResult TemplateRemove(PyCallArgs& call, PyInt* templateID);
-    PyResult TemplateEdit(PyCallArgs& call, PyInt* templateID, PyWString* templateName, PyWString* templateDescription);
-    PyResult AddTemplateObjects(PyCallArgs& call, PyInt* roomID, PyInt* objectID, PyTuple* position);
-    PyResult TemplateObjectAddDungeonList(PyCallArgs& call, PyInt* templateID, PyList* objectIDs);
-    PyResult GetArchetypes(PyCallArgs& call);
-    PyResult DEGetDungeons(PyCallArgs& call);
-    PyResult DEGetTemplates(PyCallArgs& call);
-    PyResult DEGetRooms(PyCallArgs& call);
-    PyResult DEGetRoomObjectPaletteData(PyCallArgs& call);
-    PyResult DEGetFactions(PyCallArgs& call);
+  EVEResult IsObjectLocked(EVECallArgs& call, PyInt* objectID);
+  EVEResult AddObject(EVECallArgs& call, PyInt* roomID, PyInt* tupeID, PyFloat* x, PyFloat* y, PyFloat* z, PyFloat* pitch, PyFloat* roll, PyFloat* radius);
+  EVEResult RemoveObject(EVECallArgs& call, PyInt* objectID);
+  EVEResult CopyObject(EVECallArgs& call, PyInt* objectID, PyInt* roomID, PyFloat* offsetX, PyFloat* offsetY, PyFloat* offsetZ);
+  EVEResult EditObject(EVECallArgs& call);
+  EVEResult EditObjectName(EVECallArgs& call, PyInt* newObjectID, PyString* objectName);
+  EVEResult EditObjectRadius(EVECallArgs& call);
+  EVEResult EditObjectXYZ(EVECallArgs& call);
+  EVEResult EditObjectYawPitchRoll(EVECallArgs& call);
+  EVEResult TemplateAdd(EVECallArgs& call, PyString* templateName, PyString* templateDescription);
+  EVEResult TemplateRemove(EVECallArgs& call, PyInt* templateID);
+  EVEResult TemplateEdit(EVECallArgs& call, PyInt* templateID, PyString* templateName, PyString* templateDescription);
+  EVEResult AddTemplateObjects(EVECallArgs& call, PyInt* roomID, PyInt* objectID, PyTuple* position);
+  EVEResult TemplateObjectAddDungeonList(EVECallArgs& call, PyInt* templateID, PyList* objectIDs);
+  EVEResult GetArchetypes(EVECallArgs& call);
+  EVEResult DEGetDungeons(EVECallArgs& call);
+  EVEResult DEGetTemplates(EVECallArgs& call);
+  EVEResult DEGetRooms(EVECallArgs& call);
+  EVEResult DEGetRoomObjectPaletteData(EVECallArgs& call);
+  EVEResult DEGetFactions(EVECallArgs& call);
 };
 
 

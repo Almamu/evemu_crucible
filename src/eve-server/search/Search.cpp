@@ -35,7 +35,7 @@ Search::Search() :
     this->Add("QuickQuery", &Search::QuickQuery);
 }
 
-PyResult Search::Query(PyCallArgs& call, PyWString* filter, PyList* data) {
+EVEResult Search::Query(EVECallArgs& call, PyString* filter, PyList* data) {
     std::string str = filter->content();
     Replace(str);
 
@@ -50,20 +50,19 @@ PyResult Search::Query(PyCallArgs& call, PyWString* filter, PyList* data) {
     
     PyList::const_iterator list_2_cur = data->begin();
     for (size_t list_2_index(0); list_2_cur != data->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SearchQuery failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ids.push_back(t->value());
     }
 
     return m_db->Query( str, &ids, call.client->GetCharacterID() );
 }
 
-
-PyResult Search::QuickQuery(PyCallArgs& call, PyWString* filter, PyList* data)  {
+EVEResult Search::QuickQuery(EVECallArgs& call, PyString* filter, PyList* data)  {
 /*         QuickQuery(query, groupIDList, hideNPC=hideNPC, onlyAltName=onlyAltName)
 */
     std::string str = filter->content();
@@ -71,10 +70,10 @@ PyResult Search::QuickQuery(PyCallArgs& call, PyWString* filter, PyList* data)  
 
     bool hideNPC = true, onlyAltName = false;
     if (call.byname.find("hideNPC") != call.byname.end())
-        hideNPC = (PyRep::IntegerValue(call.byname.find("hideNPC")->second) != 0);
+        hideNPC = (call.byname.find("hideNPC")->second->i64() != 0);
 
     if (call.byname.find("onlyAltName") != call.byname.end())
-        onlyAltName = (PyRep::IntegerValue(call.byname.find("onlyAltName")->second) != 0);
+        onlyAltName = (call.byname.find("onlyAltName")->second->i64() != 0);
 
     // this hits db directly, so test for possible sql injection code
     for (const auto cur : badCharsSearch)
@@ -88,12 +87,12 @@ PyResult Search::QuickQuery(PyCallArgs& call, PyWString* filter, PyList* data)  
 
     PyList::const_iterator list_2_cur = data->begin();
     for (size_t list_2_index(0); list_2_cur != data->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SearchQuery failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ids.push_back(t->value());
     }
 

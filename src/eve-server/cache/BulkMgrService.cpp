@@ -122,20 +122,20 @@ BULKDATA__INFO=0
 BULKDATA__TRACE=0
 BULKDATA__DUMP=0
 */
-PyResult BulkMgrService::UpdateBulk(PyCallArgs &call, PyInt* changeID, std::optional<PyString*> hashValue, PyInt* branch)
+EVEResult BulkMgrService::UpdateBulk(EVECallArgs&call, PyInt* changeID, std::optional<PyString*> hashValue, PyInt* branch)
 {
     /*
     
-    changeID = PyRep::IntegerValue(tuple1->GetItem(0));
+    changeID = PyRep::IntegerValue(tuple1->at (0));
     PySafeDecRef(hashValue);
-    hashValue = tuple1->GetItem(1);
+    hashValue = tuple1->at (1);
     PyIncRef(hashValue);
 
-    branch = PyRep::IntegerValue(tuple1->GetItem(2));
+    branch = PyRep::IntegerValue(tuple1->at (2));
     */
     /*
     sLog.White( "BulkMgrService::Handle_UpdateBulk()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
     updateData = self.bulkMgr.UpdateBulk(changeID, hashValue, branch)
 
         updateType = updateData['type']
@@ -146,46 +146,49 @@ PyResult BulkMgrService::UpdateBulk(PyCallArgs &call, PyInt* changeID, std::opti
             updateInfo = updateData['data']
     */
 
-    PyDict* res = new PyDict();
+    PyDict* res = call.arena.Dict ({
+        {"version", call.arena.Int (bulkDataChangeID)},
+        {"allowUnsubmitted", call.arena.Bool (false)}
+    });
     // bulkDataChangeID found in eve-common/EVE_Defines.h and defines the serverVersion of this set of bulkdata
     if (changeID->value() != bulkDataChangeID) {
-        res->SetItemString("type", new PyInt(updateBulkStatusTooManyRevisions));
+        res->set("type", call.arena.Int (updateBulkStatusTooManyRevisions));
     } else if (branch->value() != bulkDataBranch) {
-        res->SetItemString("type", new PyInt(updateBulkStatusWrongBranch));
+        res->set("type", call.arena.Int (updateBulkStatusWrongBranch));
     } else if (hashValue.has_value() == false) {  //241bfba3c85c1bb4680be745e6c7d1ee
         // not right response, but easiest to hack, as it compares servers fileIDs to local fileIDs and removes matching ids
-        res->SetItemString("type", new PyInt(updateBulkStatusHashMismatch));
+        res->set ("type", call.arena.Int(updateBulkStatusHashMismatch));
         // make list of fileIDs to send to client.
-        PyList* list = new PyList();
-            list->AddItem(new PyInt(800002));   //cacheDogmaOperands
-            list->AddItem(new PyInt(800003));   //cacheDogmaExpressions
-            list->AddItem(new PyInt(800004));   //cacheDogmaAttributes
-            list->AddItem(new PyInt(800005));   //cacheDogmaEffects
-            list->AddItem(new PyInt(800006));   //cacheDogmaTypeAttributes
-            list->AddItem(new PyInt(800007));   //cacheDogmaTypeEffects
-        res->SetItemString("data", list);
+        res->set (
+            "data",
+            call.arena.List ({
+                call.arena.Int (800002), // cacheDogmaOperands
+                call.arena.Int (800003), // cacheDogmaExpressions
+                call.arena.Int (800004), // cacheDogmaAttributes
+                call.arena.Int (800005), // cacheDogmaEffects
+                call.arena.Int (800006), // cacheDogmaTypeAttributes
+                call.arena.Int (800007), // cacheDogmaTypeEffects
+            })
+        );
     } else {
-        res->SetItemString("type", new PyInt(updateBulkStatusOK));
+        res->set ("type", call.arena.Int (updateBulkStatusOK));
     }
 
-    res->SetItemString("version", new PyInt(bulkDataChangeID));
-    res->SetItemString("allowUnsubmitted", PyStatic.NewFalse());
-
     /*
-    res->SetItemString("data", new PyList(0));
+    res->set ("data", new PyList(0));
         data is PyDict of 'chunkCount','chunk','changedTablesKeys','toBeDeleted','changedTablesKeys','branch' when 'type' = updateBulkStatusNeedToUpdate
         */
     if (is_log_enabled(BULKDATA__TRACE))
-        res->Dump(BULKDATA__TRACE, "  ");
+        res->dump(BULKDATA__TRACE, "  ");
 
     return res;
 }
 
-PyResult BulkMgrService::GetFullFiles(PyCallArgs &call, std::optional<PyList*> toGet)
+EVEResult BulkMgrService::GetFullFiles(EVECallArgs&call, std::optional<PyList*> toGet)
 {
     /*
     sLog.White( "BulkMgrService::Handle_GetFullFiles()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
         toBeChanged, bulksEndingInChunk, numberOfChunks, chunkSetID, self.allowUnsubmitted = self.bulkMgr.GetFullFiles(toGet)
         -- toGet is sent as PyList of fileIDs server should send back
 
@@ -208,117 +211,115 @@ PyResult BulkMgrService::GetFullFiles(PyCallArgs &call, std::optional<PyList*> t
           [PyInt 0]             << chunkSetID
           [PyBool False]        << allowUnsubmitted
         */
-    PyTuple* response = new PyTuple(5);
     //  toBeChanged is populated with k,v of bulkFileID, CRowset
-    PyDict* toBeChanged = new PyDict();
+    PyDict* toBeChanged = call.arena.Dict();
     // bulksEndingInChunk is populated when the last data of a file has been sent.
     //   each complete (or completed) data file's ID is put into this list.
     //   multiple files can be sent in this call, with their listIDs inserted into bulksEndingInChunk list.
     //  fileIDs here tell the client to save the file in it's cache
-    PyList* bulksEndingInChunk = new PyList();  // bulksEndingIn(this)Chunk
+    PyList* bulksEndingInChunk = call.arena.List();  // bulksEndingIn(this)Chunk
+    PyInt* numberOfChunks;
+    PyDataType* chunkSetID;
 
     if (toGet.has_value () == false) {
         // toGet = null.  this means get all bulkdata files
-        toBeChanged->SetItem(new PyInt(800002), sBulkDB.GetBulkData(0));
-        bulksEndingInChunk->AddItem(new PyInt(800002));
-        toBeChanged->SetItem(new PyInt(800004), sBulkDB.GetBulkData(1));
-        bulksEndingInChunk->AddItem(new PyInt(800004));
-        toBeChanged->SetItem(new PyInt(800005), sBulkDB.GetBulkData(2));
-        bulksEndingInChunk->AddItem(new PyInt(800005));
+        toBeChanged->set(call.arena.Int(800002), sBulkDB.GetBulkData(0), false);
+        bulksEndingInChunk->add(call.arena.Int(800002));
+        toBeChanged->set(call.arena.Int(800004), sBulkDB.GetBulkData(1), false);
+        bulksEndingInChunk->add(call.arena.Int(800004));
+        toBeChanged->set(call.arena.Int(800005), sBulkDB.GetBulkData(2), false);
+        bulksEndingInChunk->add(call.arena.Int(800005));
         // will have to determine what files are needed using hash, and then how to arrange and send this data correctly
-        response->SetItem(2, new PyInt(sBulkDB.GetNumChunks()));    //numberOfChunks
-        response->SetItem(3, PyStatic.NewZero());                   //chunkSetID
+        numberOfChunks = call.arena.Int(sBulkDB.GetNumChunks());
+        chunkSetID = call.arena.Int(0);
     } else {
         PyList::const_iterator itr = toGet.value()->begin(), end = toGet.value()->end();
         uint8 setID(1);
         while (itr != end) {
-            switch (PyRep::IntegerValueU32(*itr)) {
+            switch ((*itr)->u32()) {
                 case 800002: {
-                    toBeChanged->SetItem(new PyInt(800002), sBulkDB.GetBulkData(0));
-                    bulksEndingInChunk->AddItem(new PyInt(800002));
+                    toBeChanged->set(call.arena.Int(800002), sBulkDB.GetBulkData(0), false);
+                    bulksEndingInChunk->add(call.arena.Int(800002));
                 } break;
                 case 800004: {
-                    toBeChanged->SetItem(new PyInt(800004), sBulkDB.GetBulkData(1));
-                    bulksEndingInChunk->AddItem(new PyInt(800004));
+                    toBeChanged->set(call.arena.Int(800004), sBulkDB.GetBulkData(1), false);
+                    bulksEndingInChunk->add(call.arena.Int(800004));
                 } break;
                 case 800005: {
-                    toBeChanged->SetItem(new PyInt(800005), sBulkDB.GetBulkData(2));
-                    bulksEndingInChunk->AddItem(new PyInt(800005));
+                    toBeChanged->set(call.arena.Int(800005), sBulkDB.GetBulkData(2), false);
+                    bulksEndingInChunk->add(call.arena.Int(800005));
                 } break;
                 // these are hacked, but this whole system is...however, these *shouldnt* be called
                 case 800003: {
                     setID = 2;
-                    toBeChanged->SetItem(new PyInt(800003), sBulkDB.GetBulkDataChunks(0, 1));
+                    toBeChanged->set(call.arena.Int(800003), sBulkDB.GetBulkDataChunks(0, 1), false);
                 } break;
                 case 800006: {
                     setID = 3;
-                    toBeChanged->SetItem(new PyInt(800006), sBulkDB.GetBulkDataChunks(0, 7));
+                    toBeChanged->set(call.arena.Int(800006), sBulkDB.GetBulkDataChunks(0, 7), false);
                 } break;
                 case 800007: {
                     setID = 4;
-                    toBeChanged->SetItem(new PyInt(800007), sBulkDB.GetBulkDataChunks(0, 3));
+                    toBeChanged->set(call.arena.Int(800007), sBulkDB.GetBulkDataChunks(0, 3), false);
                 } break;
             }
             ++itr;
         }
         // will have to determine what files are needed, and how to arrange this data correctly
-        response->SetItem(2, new PyInt(sBulkDB.GetNumChunks(setID)));   //numberOfChunks
-        response->SetItem(3, new PyInt(setID));    //chunkSetID
+        numberOfChunks = call.arena.Int(sBulkDB.GetNumChunks(setID));
+        chunkSetID = call.arena.Int (setID);
     }
 
-    response->SetItem(0, toBeChanged);
-
-    //  if bulksEndingInChunk is empty, a PyNone is returned, stating this is only partial file data
-    if (bulksEndingInChunk->size() > 0) {
-        response->SetItem(1, bulksEndingInChunk);
-    } else {
-        response->SetItem(1, PyStatic.NewNone());
-    }
-
-    response->SetItem(4, PyStatic.NewFalse());     //allowUnsubmitted isnt supported (yet)
+    PyTuple* response = call.arena.Tuple({
+        toBeChanged,
+        //  if bulksEndingInChunk is empty, a PyNone is returned, stating this is only partial file data
+        bulksEndingInChunk->size() > 0 ? (PyDataType*) bulksEndingInChunk : call.arena.None(),
+        numberOfChunks,
+        chunkSetID,
+        call.arena.Bool(false) // allowUnsubmitted isnt supported (yet)
+    });
 
     if (is_log_enabled(BULKDATA__TRACE))
-        response->Dump(BULKDATA__TRACE, "  ");
+        response->dump(BULKDATA__TRACE, "  ");
 
     return response;
 }
 
-PyResult BulkMgrService::GetFullFilesChunk(PyCallArgs &call, PyInt* chunkSetID, PyInt* chunkNumber)
+EVEResult BulkMgrService::GetFullFilesChunk(EVECallArgs&call, PyInt* chunkSetID, PyInt* chunkNumber)
 {
     /*
     sLog.White( "BulkMgrService::Handle_GetFullFilesChunk()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
         toBeChanged, bulksEndingInChunk = self.bulkMgr.GetFullFilesChunk(chunkSetID, chunkNumber)
             this breaks files up into ?kb chunks for sending to client.  client requests "chunkSetID" and "chunkNumber", where chunkSetID is ???
      */
-    PyTuple* response = new PyTuple(2);
-    PyDict* toBeChanged = new PyDict();
     int32 bulkFileID = sBulkDB.GetFileIDfromChunk(chunkSetID->value(), chunkNumber->value());
     if (bulkFileID < 0) {
         _log(BULKDATA__ERROR, "BulkMgrService::Handle_GetFullFilesChunk(): chunkSetID: %u, chunkNumber: %u, bulkFileID: %i", chunkSetID->value(), chunkNumber->value(), bulkFileID);
         // make and send client error also.  may be able to throw here.
-        return PyStatic.NewNone();
+        return call.arena.None();
     }
 
     _log(BULKDATA__INFO, "BulkMgrService::Handle_GetFullFilesChunk(): bulkFileID: %i, chunkSetID: %u, chunkNumber: %u", bulkFileID, chunkSetID->value(), chunkNumber->value());
-    toBeChanged->SetItem(new PyInt(bulkFileID), sBulkDB.GetBulkDataChunks(chunkSetID->value(), chunkNumber->value()));
+
+    PyDataType* bulksEndingInChunk = nullptr;
 
     // 2, 4, 36
     if (chunkSetID->value() == 0) {
         if (chunkNumber->value() == 2) {
-            PyList* bulksEndingInChunk = new PyList();
-            bulksEndingInChunk->AddItem(new PyInt(bulkFileID));
-            response->SetItem(1, bulksEndingInChunk);
+            bulksEndingInChunk = call.arena.List ({
+                call.arena.Int (bulkFileID)
+            });
         } else if (chunkNumber->value() == 6) {
-            PyList* bulksEndingInChunk = new PyList();
-            bulksEndingInChunk->AddItem(new PyInt(bulkFileID));
-            response->SetItem(1, bulksEndingInChunk);
+            bulksEndingInChunk = call.arena.List ({
+                call.arena.Int (bulkFileID)
+            });
         } else if (chunkNumber->value() == 42) {
-            PyList* bulksEndingInChunk = new PyList();
-            bulksEndingInChunk->AddItem(new PyInt(bulkFileID));
-            response->SetItem(1, bulksEndingInChunk);
+            bulksEndingInChunk = call.arena.List ({
+                call.arena.Int (bulkFileID)
+            });
         } else {
-            response->SetItem(1, PyStatic.NewNone());
+            bulksEndingInChunk = call.arena.None();
         }
     } else if (chunkSetID->value() == 1) {
         // not used yet
@@ -328,48 +329,53 @@ PyResult BulkMgrService::GetFullFilesChunk(PyCallArgs &call, PyInt* chunkSetID, 
         // not used yet
     }
 
-    response->SetItem(0, toBeChanged);
-    return response;
+    // TODO: VALIDATE IF THIS CHECK SHOULD NOT BE PERFORMED OR WHAT
+    return call.arena.Tuple ({
+        call.arena.Dict ({
+            {call.arena.Int (bulkFileID), sBulkDB.GetBulkDataChunks(chunkSetID->value(), chunkNumber->value())}
+        }, false),
+        bulksEndingInChunk
+    });
 }
 
-PyResult BulkMgrService::GetVersion(PyCallArgs &call)
+EVEResult BulkMgrService::GetVersion(EVECallArgs&call)
 {
     // changeID, branch = self.bulkMgr.GetVersion()
 /*
     sLog.White( "BulkMgrService::Handle_GetVersion()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
 */
-    PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(bulkDataChangeID));
-        tuple->SetItem(1, new PyInt(bulkDataBranch));
-    return tuple;
+    return call.arena.Tuple ({
+        call.arena.Int (bulkDataChangeID),
+        call.arena.Int (bulkDataBranch)
+    });
 }
 
-PyResult BulkMgrService::GetAllBulkIDs(PyCallArgs &call)
+EVEResult BulkMgrService::GetAllBulkIDs(EVECallArgs&call)
 {
     /*
     sLog.White( "BulkMgrService::Handle_GetAllBulkIDs()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
      *    serverBulkIDs = self.bulkMgr.GetAllBulkIDs()
      *        PyList of fileIDs of updated data files to be sent to client in bulk
      */
 
     // hard-code a list of 'new' dgm fileIDs here. (updated and edited dogma data)
     // this can also be used to update other data files as needed
-    PyList* list = new PyList();
-        list->AddItem(new PyInt(800002));   //cacheDogmaOperands
-        list->AddItem(new PyInt(800003));   //cacheDogmaExpressions
-        list->AddItem(new PyInt(800004));   //cacheDogmaAttributes
-        list->AddItem(new PyInt(800005));   //cacheDogmaEffects
-        list->AddItem(new PyInt(800006));   //cacheDogmaTypeAttributes
-        list->AddItem(new PyInt(800007));   //cacheDogmaTypeEffects
-    return list;
+    return call.arena.List ({
+        call.arena.Int (800002), // cacheDogmaOperands
+        call.arena.Int (800003), // cacheDogmaExpressions
+        call.arena.Int (800004), // cacheDogmaAttributes
+        call.arena.Int (800005), // cacheDogmaEffects
+        call.arena.Int (800006), // cacheDogmaTypeAttributes
+        call.arena.Int (800007), // cacheDogmaTypeEffects
+    });
 }
 
-PyResult BulkMgrService::GetChunk(PyCallArgs &call, PyInt* changeID, PyInt* chunkNumber)
+EVEResult BulkMgrService::GetChunk(EVECallArgs&call, PyInt* changeID, PyInt* chunkNumber)
 {
     sLog.White( "BulkMgrService::Handle_GetChunk()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
     /*
      *    toBeChanged = self.bulkMgr.GetChunk(changeID, chunkNumber)
      *    changeID is from GetVersion()
@@ -381,31 +387,31 @@ PyResult BulkMgrService::GetChunk(PyCallArgs &call, PyInt* changeID, PyInt* chun
      *    args.changeID;
      *    args.chunkNumber;
      */
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
-PyResult BulkMgrService::GetUnsubmittedChunk(PyCallArgs &call, PyInt* chunkNumber)
+EVEResult BulkMgrService::GetUnsubmittedChunk(EVECallArgs&call, PyInt* chunkNumber)
 {
     sLog.White( "BulkMgrService::Handle_GetUnsubmittedChunk()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
     /*
                 toBeChanged = self.bulkMgr.GetUnsubmittedChunk(chunkNumber)
     need more info to properly implement this
      */
     //args.chunkNumber;
 
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
-PyResult BulkMgrService::GetUnsubmittedChanges(PyCallArgs &call)
+EVEResult BulkMgrService::GetUnsubmittedChanges(EVECallArgs&call)
 {
     sLog.White( "BulkMgrService::Handle_GetUnsubmittedChanges()", "size=%lu", call.tuple->size());
-    call.Dump(BULKDATA__DUMP);
+    call.dump(BULKDATA__DUMP);
     /*
         unsubmitted = self.bulkMgr.GetUnsubmittedChanges()
         PyDict of 'toBeChanged','toBeDeleted','changedTablesKeys','chunkCount'
           this one is complicated.  will need work if we're allowing unsubmitted (whatever that means)
     need more info to properly implement this
      */
-    return PyStatic.NewNone();
+    return call.arena.None();
 }

@@ -56,9 +56,9 @@ public:
     std::map<uint32, ActiveSession> m_activeSessions;      // mapped as myID, ActiveSession
 
 protected:
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters) override;
 
-    PyResult InitiateTrade(PyCallArgs& call, PyInt* characterID);
+    EVEResult InitiateTrade(EVECallArgs& call, PyInt* characterID);
 
     uint32 m_SessionID;
 };
@@ -116,16 +116,16 @@ public:
 protected:
     TradeService* m_TSvc;                // get registered TradeService object
 
-    PyResult OfferMoney(PyCallArgs& call, PyFloat* amount);
-    PyResult Abort(PyCallArgs& call);
-    PyResult ToggleAccept(PyCallArgs& call, PyBool* newAccept);
-    PyResult GetItemID(PyCallArgs& call);
-    PyResult Add(PyCallArgs& call, PyInt* itemID, PyInt* containerID);
-    PyResult MultiAdd(PyCallArgs& call, PyList* itemIDs, PyInt* containerID);
-    PyResult GetItem(PyCallArgs& call);
-    PyResult IsCEOTrade(PyCallArgs& call);
-    PyResult List(PyCallArgs& call);
-    PyResult InitiateTrade(PyCallArgs& call, PyInt* characterID);
+    EVEResult OfferMoney(EVECallArgs& call, PyFloat* amount);
+    EVEResult Abort(EVECallArgs& call);
+    EVEResult ToggleAccept(EVECallArgs& call, PyBool* newAccept);
+    EVEResult GetItemID(EVECallArgs& call);
+    EVEResult Add(EVECallArgs& call, PyInt* itemID, PyInt* containerID);
+    EVEResult MultiAdd(EVECallArgs& call, PyList* itemIDs, PyInt* containerID);
+    EVEResult GetItem(EVECallArgs& call);
+    EVEResult IsCEOTrade(EVECallArgs& call);
+    EVEResult List(EVECallArgs& call);
+    EVEResult InitiateTrade(EVECallArgs& call, PyInt* characterID);
 };
 
 #endif//__TRADE_SERVICE_H_INCL__

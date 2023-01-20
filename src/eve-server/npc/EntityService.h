@@ -27,7 +27,7 @@ public:
     void BoundReleased (EntityBound* bound) override;
 protected:
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters);
 
 private:
     std::map <uint32, EntityBound*> m_instances;
@@ -40,18 +40,18 @@ public:
 
     uint32 GetSystemID() { return this->m_systemID; }
 protected:
-    PyResult CmdEngage(PyCallArgs& call, PyList* droneIDs, PyInt* targetID);
-    PyResult CmdRelinquishControl(PyCallArgs& call, PyList* IDs);
-    PyResult CmdDelegateControl(PyCallArgs& call, PyList* droneIDs, PyInt* controllerID);
-    PyResult CmdAssist(PyCallArgs& call, PyInt* assistID, PyList* droneIDs);
-    PyResult CmdGuard(PyCallArgs& call, PyInt* guardID, PyList* droneIDs);
-    PyResult CmdMine(PyCallArgs& call, PyList* droneIDs, PyInt* targetID);
-    PyResult CmdMineRepeatedly(PyCallArgs& call, PyList* droneIDs, PyInt* targetID);
-    PyResult CmdUnanchor(PyCallArgs& call, PyList* droneIDs, PyInt* targetID);
-    PyResult CmdReturnHome(PyCallArgs& call, PyList* droneIDs);
-    PyResult CmdReturnBay(PyCallArgs& call, PyList* droneIDs);
-    PyResult CmdAbandonDrone(PyCallArgs& call, PyList* droneIDs);
-    PyResult CmdReconnectToDrones(PyCallArgs& call, PyList* droneCandidates);
+  EVEResult CmdEngage(EVECallArgs& call, PyList* droneIDs, PyInt* targetID);
+  EVEResult CmdRelinquishControl(EVECallArgs& call, PyList* IDs);
+  EVEResult CmdDelegateControl(EVECallArgs& call, PyList* droneIDs, PyInt* controllerID);
+  EVEResult CmdAssist(EVECallArgs& call, PyInt* assistID, PyList* droneIDs);
+  EVEResult CmdGuard(EVECallArgs& call, PyInt* guardID, PyList* droneIDs);
+  EVEResult CmdMine(EVECallArgs& call, PyList* droneIDs, PyInt* targetID);
+  EVEResult CmdMineRepeatedly(EVECallArgs& call, PyList* droneIDs, PyInt* targetID);
+  EVEResult CmdUnanchor(EVECallArgs& call, PyList* droneIDs, PyInt* targetID);
+  EVEResult CmdReturnHome(EVECallArgs& call, PyList* droneIDs);
+  EVEResult CmdReturnBay(EVECallArgs& call, PyList* droneIDs);
+  EVEResult CmdAbandonDrone(EVECallArgs& call, PyList* droneIDs);
+  EVEResult CmdReconnectToDrones(EVECallArgs& call, PyList* droneCandidates);
 
 protected:
     SystemManager* m_sysMgr;

@@ -41,14 +41,14 @@ public:
     void BoundReleased (AgentBound* bound) override;
 
 protected:
-    PyResult GetAgents(PyCallArgs& call);
-    PyResult GetSolarSystemOfAgent(PyCallArgs& call, PyInt* agentID);
-    PyResult GetMyJournalDetails(PyCallArgs& call);
-    PyResult GetMyEpicJournalDetails(PyCallArgs& call);
-    PyResult GetCareerAgents(PyCallArgs& call);
+  EVEResult GetAgents(EVECallArgs& call);
+  EVEResult GetSolarSystemOfAgent(EVECallArgs& call, PyInt* agentID);
+  EVEResult GetMyJournalDetails(EVECallArgs& call);
+  EVEResult GetMyEpicJournalDetails(EVECallArgs& call);
+  EVEResult GetCareerAgents(EVECallArgs& call);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters) override;
 
 private:
     std::map<uint32, AgentBound*> m_instances;
@@ -59,7 +59,7 @@ public:
     EpicArcService();
 
 protected:
-    PyResult AgentHasEpicMissionsForCharacter(PyCallArgs& call, PyInt* agentID);
+  EVEResult AgentHasEpicMissionsForCharacter(EVECallArgs& call, PyInt* agentID);
 };
 
 

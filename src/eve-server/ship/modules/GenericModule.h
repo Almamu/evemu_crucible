@@ -10,7 +10,7 @@
 #ifndef _EVE_SHIP_MODULES_GENERIC_MODULE_H
 #define _EVE_SHIP_MODULES_GENERIC_MODULE_H
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "effects/EffectsProcessor.h"
 #include "inventory/InventoryItem.h"
 #include "ship/Ship.h"

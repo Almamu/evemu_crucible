@@ -72,7 +72,7 @@ void PlanetDB::GetPlanetData(DBQueryResult& res)
 }
 
 
-PyRep* PlanetDB::GetPlanetsForChar(uint32 charID) {
+PyDataType* PlanetDB::GetPlanetsForChar(uint32 charID) {
   /** self.colonizationData = sm.RemoteSvc('planetMgr').GetPlanetsForChar()
         returns  (solarSystemID, planetID, typeID, numberOfPins)
     */
@@ -108,7 +108,7 @@ void PlanetDB::UpdatePlanetPins(uint32 ccPinID, uint8 pins)
 }
 
 //  expired = not blue.os.GetWallclockTime() - launch.launchTime < const.piLaunchOrbitDecayTime (5d)
-PyRep* PlanetDB::GetMyLaunchesDetails(uint32 charID) {
+PyDataType* PlanetDB::GetMyLaunchesDetails(uint32 charID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT itemID AS launchID, status, itemID, solarSystemID, planetID, launchTime, x, y, z"
         " FROM piLaunches WHERE charID = %u", charID)) {

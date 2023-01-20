@@ -26,10 +26,10 @@ public:
     void BoundReleased (FleetBound* bound) override;
 
 protected:
-    PyResult CreateFleet(PyCallArgs& call);
+  EVEResult CreateFleet(EVECallArgs& call);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters) override;
 
 private:
     std::map <uint32, FleetBound*> m_instances;

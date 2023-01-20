@@ -40,9 +40,9 @@ FLEET__TRACE
 FLEET__DUMP
 FLEET__BIND_DUMP
 */
-PyResult FleetManager::ForceLeaveFleet(PyCallArgs &call) {
+EVEResult FleetManager::ForceLeaveFleet(EVECallArgs&call) {
     sLog.Warning("FleetManager", "Handle_ForceLeaveFleet() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     sFltSvc.LeaveFleet(call.client);
 
@@ -50,11 +50,11 @@ PyResult FleetManager::ForceLeaveFleet(PyCallArgs &call) {
     return nullptr;
 }
 
-PyResult FleetManager::GetActiveStatus(PyCallArgs &call) {
+EVEResult FleetManager::GetActiveStatus(EVECallArgs&call) {
   //   self.activeStatus = sm.RemoteSvc('fleetMgr').GetActiveStatus()
     // have seen this return PyNone in logs.  dont know why...bad fleetID maybe?
     sLog.Warning("FleetManager", "Handle_GetActiveStatus() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
   /*
     [PyTuple 1 items]                       <- from server
@@ -89,13 +89,13 @@ PyResult FleetManager::GetActiveStatus(PyCallArgs &call) {
     for (auto wingID : wingIDs) {
         WingData wData = WingData();
         sFltSvc.GetWingData(wingID, wData);
-        wings->SetItem(new PyInt(wingID), new PyInt((sFltSvc.IsWingActive(wingID) ? 1 : 0)));
+        wings->set(new PyInt(wingID), new PyInt((sFltSvc.IsWingActive(wingID) ? 1 : 0)));
 
         sFltSvc.GetSquadIDs(wingID, squadIDs);
         for (auto squadID : squadIDs) {
             SquadData sData = SquadData();
             sFltSvc.GetSquadData(squadID, sData);
-            squads->SetItem(new PyInt(squadID), new PyInt(sData.members.size() > 0 ? 1 : 0));
+            squads->set(new PyInt(squadID), new PyInt(sData.members.size() > 0 ? 1 : 0));
         }
     }
 
@@ -111,7 +111,7 @@ PyResult FleetManager::GetActiveStatus(PyCallArgs &call) {
     return rsp.Encode();
 }
 
-PyResult FleetManager::BroadcastToBubble(PyCallArgs &call, PyString* name, PyInt* groupID, PyInt* itemID) {
+EVEResult FleetManager::BroadcastToBubble(EVECallArgs&call, PyString* name, PyInt* groupID, PyInt* itemID) {
   //     sm.RemoteSvc('fleetMgr').BroadcastToBubble(name, self.broadcastScope, itemID)
     /*
      * 00:06:49 W FleetManager: Handle_BroadcastToSysBubble() size=3
@@ -122,44 +122,44 @@ PyResult FleetManager::BroadcastToBubble(PyCallArgs &call, PyString* name, PyInt
      * 00:06:49 [FleetDump]         [ 2] Integer field: 140006694   <-- charID
      */
     sLog.Warning("FleetManager", "Handle_BroadcastToSysBubble() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     sFltSvc.FleetBroadcast(call.client, itemID->value(), Fleet::BCast::Scope::Bubble, groupID->value(), name->content());
 
     return nullptr;
 }
 
-PyResult FleetManager::BroadcastToSystem(PyCallArgs &call, PyString* name, PyInt* groupID, PyInt* itemID) {
+EVEResult FleetManager::BroadcastToSystem(EVECallArgs&call, PyString* name, PyInt* groupID, PyInt* itemID) {
   //     sm.RemoteSvc('fleetMgr').BroadcastToSystem(name, self.broadcastScope, itemID)
     sLog.Warning("FleetManager", "Handle_BroadcastToSystem() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     sFltSvc.FleetBroadcast(call.client, itemID->value(), Fleet::BCast::Scope::System, groupID->value(), name->content());
 
     return nullptr;
 }
 
-PyResult FleetManager::AddToWatchlist(PyCallArgs &call, PyInt* characterID, PyRep* fav) {
+EVEResult FleetManager::AddToWatchlist(EVECallArgs&call, PyInt* characterID, PyDataType* fav) {
     /**
      *        sm.RemoteSvc('fleetMgr').AddToWatchlist(charID, fav)
      */
     sLog.Warning("FleetManager", "Handle_AddToWatchlist() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     return nullptr;
 }
 
-PyResult FleetManager::RemoveFromWatchlist(PyCallArgs &call, PyInt* characterID, PyRep* fav) {
+EVEResult FleetManager::RemoveFromWatchlist(EVECallArgs&call, PyInt* characterID, PyDataType* fav) {
     /**
      *        sm.RemoteSvc('fleetMgr').RemoveFromWatchlist(charID, fav)
      */
     sLog.Warning("FleetManager", "Handle_RemoveFromWatchlist() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     return nullptr;
 }
 
-PyResult FleetManager::RegisterForDamageUpdates(PyCallArgs &call, PyRep* fav) {
+EVEResult FleetManager::RegisterForDamageUpdates(EVECallArgs&call, PyDataType* fav) {
     /**
         fav = self.GetWatchlistMembers()
         sm.RemoteSvc('fleetMgr').RegisterForDamageUpdates(fav)
@@ -170,7 +170,7 @@ PyResult FleetManager::RegisterForDamageUpdates(PyCallArgs &call, PyRep* fav) {
      *        17:38:00 [SvcCall]         [ 0] List: Empty
      */
     sLog.Warning("FleetManager", "Handle_RegisterForDamageUpdates() size=%lli", call.tuple->size());
-    call.Dump(FLEET__DUMP);
+    call.dump(FLEET__DUMP);
 
     // returns nothing
     return nullptr;

@@ -35,8 +35,8 @@ public:
     CalendarProxy();
 
 protected:
-    PyResult GetEventList(PyCallArgs& call, PyInt* month, PyInt* year);
-    PyResult GetEventDetails(PyCallArgs& call, PyInt* eventID, PyInt* ownerID);
+  EVEResult GetEventList(EVECallArgs& call, PyInt* month, PyInt* year);
+  EVEResult GetEventDetails(EVECallArgs& call, PyInt* eventID, PyInt* ownerID);
 
 };
 

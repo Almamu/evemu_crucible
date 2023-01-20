@@ -34,7 +34,7 @@ DogmaService::DogmaService() :
     this->Add("GetOperandsForChar", &DogmaService::GetOperandsForChar);
 }
 
-PyResult DogmaService::GetOperandsForChar(PyCallArgs &call)
+EVEResult DogmaService::GetOperandsForChar(EVECallArgs&call)
 {
     return sDataMgr.GetOperands();
 }

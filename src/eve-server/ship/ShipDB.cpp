@@ -29,7 +29,7 @@ Author: Zhur, Allan
 #include "ship/ShipDB.h"
 
 
-PyRep *ShipDB::GetInsuranceByShipID(uint32 shipID) {
+PyDataType *ShipDB::GetInsuranceByShipID(uint32 shipID) {
     DBQueryResult res;
     DBResultRow row;
     sDatabase.RunQuery(res,
@@ -43,7 +43,7 @@ PyRep *ShipDB::GetInsuranceByShipID(uint32 shipID) {
     return PyStatic.NewZero();
 }
 
-PyRep *ShipDB::GetInsuranceByOwnerID(uint32 ownerID) {
+PyDataType *ShipDB::GetInsuranceByOwnerID(uint32 ownerID) {
     DBQueryResult res;
     sDatabase.RunQuery(res,
         "SELECT startDate, shipName, shipID, endDate, ownerID, fraction"

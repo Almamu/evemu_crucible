@@ -34,9 +34,9 @@ public:
     HoloscreenMgrService();
 
 protected:
-    PyResult GetRecentEpicArcCompletions(PyCallArgs& call);
-    PyResult GetTwoHourCache(PyCallArgs& call);
-    PyResult GetRuntimeCache(PyCallArgs& call);
+  EVEResult GetRecentEpicArcCompletions(EVECallArgs& call);
+  EVEResult GetTwoHourCache(EVECallArgs& call);
+  EVEResult GetRuntimeCache(EVECallArgs& call);
 };
 
 #endif

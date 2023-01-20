@@ -41,10 +41,10 @@ public:
     void BoundReleased (DogmaIMBound* bound) override;
 
 protected:
-    PyResult GetAttributeTypes(PyCallArgs& call);
+  EVEResult GetAttributeTypes(EVECallArgs& call);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters);
 
 private:
     ObjCacheService* m_cache;
@@ -61,38 +61,38 @@ public:
     DogmaIMBound(EVEServiceManager& mgr, DogmaIMService& parent, uint32 locationID, uint32 groupID);
 
 protected:
-    PyResult ChangeDroneSettings(PyCallArgs& call, PyDict* settings);
-    PyResult LinkWeapons(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* fromID);
-    PyResult LinkAllWeapons(PyCallArgs& call, PyInt* shipID);
-    PyResult UnlinkModule(PyCallArgs& call, PyInt* shipID, PyInt* moduleID);
-    PyResult UnlinkAllModules(PyCallArgs& call, PyInt* shipID);
-    PyResult OverloadRack(PyCallArgs& call, PyInt* itemID);
-    PyResult StopOverloadRack(PyCallArgs& call, PyInt* itemID);
-    PyResult CharGetInfo(PyCallArgs& call);
-    PyResult ItemGetInfo(PyCallArgs& call, PyInt* itemID);
-    PyResult GetAllInfo(PyCallArgs& call, PyBool* getCharInfo, PyBool* getShipInfo);
-    PyResult DestroyWeaponBank(PyCallArgs& call, PyInt* shipID, PyInt* itemID);
-    PyResult GetCharacterBaseAttributes(PyCallArgs& call);
-    PyResult Activate(PyCallArgs& call, PyInt* itemID, PyInt* effectID);
-    PyResult Activate(PyCallArgs& call, PyInt* itemID, PyWString* effectName, std::optional <PyInt*> target, PyInt* repeat);
-    PyResult Deactivate(PyCallArgs& call, PyInt* itemID, PyInt* effect);
-    PyResult Deactivate(PyCallArgs& call, PyInt* itemID, PyWString* effectName);
-    PyResult Overload(PyCallArgs& call, PyInt* itemID, PyInt* effectID);
-    PyResult StopOverload(PyCallArgs& call, PyInt* itemID, PyInt* effectID);
-    PyResult CancelOverloading(PyCallArgs& call, PyInt* itemID);
-    PyResult SetModuleOnline(PyCallArgs& call, PyInt* locationID, PyInt* moduleID);
-    PyResult TakeModuleOffline(PyCallArgs& call, PyInt* locationID, PyInt* moduleID);
-    PyResult LoadAmmoToBank(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* chargeTypeID, PyList* cItemIDs, PyInt* chargeLocationID, std::optional <PyInt*> qty);
-    PyResult LoadAmmoToModules(PyCallArgs& call, PyInt* shipID, PyList* cModuleIDs, PyInt* chargeTypeID, PyInt* itemID, PyInt* ammoLocationId);
-    PyResult GetTargets(PyCallArgs& call);
-    PyResult GetTargeters(PyCallArgs& call);
-    PyResult AddTarget(PyCallArgs& call, PyInt* targetID);
-    PyResult RemoveTarget(PyCallArgs& call, PyInt* targetID);
-    PyResult ClearTargets(PyCallArgs& call);
-    PyResult InitiateModuleRepair(PyCallArgs& call, PyInt* itemID);
-    PyResult StopModuleRepair(PyCallArgs& call, PyInt* itemID);
-    PyResult MergeModuleGroups(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID);
-    PyResult PeelAndLink(PyCallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID);
+  EVEResult ChangeDroneSettings(EVECallArgs& call, PyDict* settings);
+  EVEResult LinkWeapons(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* fromID);
+  EVEResult LinkAllWeapons(EVECallArgs& call, PyInt* shipID);
+  EVEResult UnlinkModule(EVECallArgs& call, PyInt* shipID, PyInt* moduleID);
+  EVEResult UnlinkAllModules(EVECallArgs& call, PyInt* shipID);
+  EVEResult OverloadRack(EVECallArgs& call, PyInt* itemID);
+  EVEResult StopOverloadRack(EVECallArgs& call, PyInt* itemID);
+  EVEResult CharGetInfo(EVECallArgs& call);
+  EVEResult ItemGetInfo(EVECallArgs& call, PyInt* itemID);
+  EVEResult GetAllInfo(EVECallArgs& call, PyBool* getCharInfo, PyBool* getShipInfo);
+  EVEResult DestroyWeaponBank(EVECallArgs& call, PyInt* shipID, PyInt* itemID);
+  EVEResult GetCharacterBaseAttributes(EVECallArgs& call);
+  EVEResult Activate(EVECallArgs& call, PyInt* itemID, PyInt* effectID);
+  EVEResult Activate(EVECallArgs& call, PyInt* itemID, PyString* effectName, std::optional <PyInt*> target, PyInt* repeat);
+  EVEResult Deactivate(EVECallArgs& call, PyInt* itemID, PyInt* effect);
+  EVEResult Deactivate(EVECallArgs& call, PyInt* itemID, PyString* effectName);
+  EVEResult Overload(EVECallArgs& call, PyInt* itemID, PyInt* effectID);
+  EVEResult StopOverload(EVECallArgs& call, PyInt* itemID, PyInt* effectID);
+  EVEResult CancelOverloading(EVECallArgs& call, PyInt* itemID);
+  EVEResult SetModuleOnline(EVECallArgs& call, PyInt* locationID, PyInt* moduleID);
+  EVEResult TakeModuleOffline(EVECallArgs& call, PyInt* locationID, PyInt* moduleID);
+  EVEResult LoadAmmoToBank(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* chargeTypeID, PyList* cItemIDs, PyInt* chargeLocationID, std::optional <PyInt*> qty);
+  EVEResult LoadAmmoToModules(EVECallArgs& call, PyInt* shipID, PyList* cModuleIDs, PyInt* chargeTypeID, PyInt* itemID, PyInt* ammoLocationId);
+  EVEResult GetTargets(EVECallArgs& call);
+  EVEResult GetTargeters(EVECallArgs& call);
+  EVEResult AddTarget(EVECallArgs& call, PyInt* targetID);
+  EVEResult RemoveTarget(EVECallArgs& call, PyInt* targetID);
+  EVEResult ClearTargets(EVECallArgs& call);
+  EVEResult InitiateModuleRepair(EVECallArgs& call, PyInt* itemID);
+  EVEResult StopModuleRepair(EVECallArgs& call, PyInt* itemID);
+  EVEResult MergeModuleGroups(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID);
+  EVEResult PeelAndLink(EVECallArgs& call, PyInt* shipID, PyInt* masterID, PyInt* slaveID);
 
     /*  OBO == ??  (pos targeting)
      * flag, targetList = self.GetDogmaLM().AddTargetOBO(sid, tid) (structureID, targetID)

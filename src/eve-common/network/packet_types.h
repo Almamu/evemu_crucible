@@ -69,9 +69,13 @@
 
 enum MACHONETMSG_TYPE
 {
+    // not used anymore
     AUTHENTICATION_REQ              = 0,
+    // not used anymore
     AUTHENTICATION_RSP              = 1,
+    // not used anymore
     IDENTIFICATION_REQ              = 2,
+    // not used anymore
     IDENTIFICATION_RSP              = 3,
     __Fake_Invalid_Type             = 4,
     CALL_REQ                        = 6,
@@ -80,8 +84,11 @@ enum MACHONETMSG_TYPE
     RESOLVE_REQ                     = 10,
     RESOLVE_RSP                     = 11,
     NOTIFICATION                    = 12,
+    // sent from the server to the client only
     ERRORRESPONSE                   = 15,
+    // sent from the server to the client only
     SESSIONCHANGENOTIFICATION       = 16,
+    // sent from the server to the client only
     SESSIONINITIALSTATENOTIFICATION = 18,
     PING_REQ                        = 20,
     PING_RSP                        = 21,

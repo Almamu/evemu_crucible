@@ -35,8 +35,8 @@ class LPStore : public Service<LPStore>
     LPStore();
 
   protected:
-      PyResult AcceptOffer(PyCallArgs& call, PyInt* offerID, PyInt* quantity);
-      PyResult GetAvailableOffers(PyCallArgs& call);
+    EVEResult AcceptOffer(EVECallArgs& call, PyInt* offerID, PyInt* quantity);
+    EVEResult GetAvailableOffers(EVECallArgs& call);
 };
 
 #endif /* !__LP_STORE_H_INCL__ */

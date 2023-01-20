@@ -28,7 +28,7 @@
 
 #include "Client.h"
 #include "ConsoleCommands.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 
 #include "character/Character.h"
@@ -285,25 +285,22 @@ void Inventory::DeleteContents()
     mContentsLoaded = false;
 }
 
-CRowSet* Inventory::List(EVEItemFlags flag, uint32 ownerID/*0*/) const
+CRowset* Inventory::List(EVEItemFlags flag, uint32 ownerID/*0*/) const
 {
     DBRowDescriptor* header = sDataMgr.CreateHeader();
-    CRowSet* rowset = new CRowSet(&header);
+    CRowset* rowset = new CRowset(header);
     List(rowset, flag, ownerID);
 
     if (is_log_enabled(INV__LIST))
-        rowset->Dump(INV__LIST, "    ");
+        rowset->dump(INV__LIST, "    ");
     return rowset;
 }
 
-void Inventory::List(CRowSet* into, EVEItemFlags flag, uint32 ownerID) const {
-    //there has to be a better way to build this...
-    PyPackedRow* row(nullptr);
+void Inventory::List(CRowset* into, EVEItemFlags flag, uint32 ownerID) const {
     // office hangars list ALL items.  client separates by division flag
     if (IsOfficeID(m_myID) or IsCharacterID(m_myID)) {
         for (auto cur : mContents) {
-            row = into->NewRow();
-            cur.second->GetItemRow(row);
+            cur.second->GetItemRow(into->insert ());
         }
     } else if (m_self->categoryID() == EVEDB::invCategories::Ship) {
         bool space = sDataMgr.IsSolarSystem(m_self->locationID());
@@ -313,15 +310,13 @@ void Inventory::List(CRowSet* into, EVEItemFlags flag, uint32 ownerID) const {
             if (space and IsFittingSlot(cur.second->flag()))
                 if (cur.second->categoryID() == EVEDB::invCategories::Charge)
                     continue;
-            row = into->NewRow();
-            cur.second->GetItemRow(row);
+            cur.second->GetItemRow(into->insert());
         }
     } else {
         for (auto cur : mContents) {
             if (((ownerID == 0)        or (cur.second->ownerID() == ownerID))
             and ((flag == flagNone) or (cur.second->flag() == flag))) {
-                row = into->NewRow();
-                cur.second->GetItemRow(row);
+                cur.second->GetItemRow(into->insert());
             }
         }
     }
@@ -827,7 +822,7 @@ bool Inventory::ValidateAddItem(EVEItemFlags flag, InventoryItemRef iRef) const
     // check capy for single unit
     if (capacity < volume) { // smallest volume is 0.0025
         if (pClient != nullptr) {
-            std::map<std::string, PyRep *> args;
+            std::map<std::string, PyDataType *> args;
             args["volume"] = new PyFloat(volume);
             sItemFactory.UnsetUsingClient();
             if (IsCargoHoldFlag(flag))

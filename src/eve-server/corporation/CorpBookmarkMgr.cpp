@@ -53,7 +53,7 @@ CorpBookmarkMgr::CorpBookmarkMgr() :
     this->Add("DeleteBookmarks", &CorpBookmarkMgr::DeleteBookmarks);
 }
 
-PyResult CorpBookmarkMgr::GetBookmarks(PyCallArgs& call)
+EVEResult CorpBookmarkMgr::GetBookmarks(EVECallArgs& call)
 {
     /*
     ObjectCachedMethodID method_id(GetName(), "GetBookmarks");
@@ -61,73 +61,74 @@ PyResult CorpBookmarkMgr::GetBookmarks(PyCallArgs& call)
         PyTuple *tuple = new PyTuple(2);
             tuple->SetItem(0, m_db.GetBookmarks(call.client->GetCorporationID()));
             tuple->SetItem(1, m_db.GetFolders(call.client->GetCorporationID()));
-        PyRep* rep = tuple;
+        PyDataType* rep = tuple;
 
         m_manager->cache_service->GiveCache(method_id, &rep);
     }
 
     return(m_manager->cache_service->MakeObjectCachedMethodCallResult(method_id));
     */
-    PyTuple* result = new PyTuple(2);
-    result->SetItem(0, m_db.GetBookmarks(call.client->GetCorporationID()));
-    result->SetItem(1, m_db.GetFolders(call.client->GetCorporationID()));
-    result->Dump(BOOKMARK__RSP_DUMP, "    ");
+    PyTuple* result = call.arena.Tuple ({
+        m_db.GetBookmarks (call.client->GetCorporationID(), &call.arena),
+        m_db.GetFolders (call.client->GetCorporationID(), &call.arena)
+    });
+    result->dump(BOOKMARK__RSP_DUMP, "    ");
     return result;
 }
 
-PyResult CorpBookmarkMgr::UpdateBookmark(PyCallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyRep* memo, PyRep* comment, std::optional<PyInt*> folderID) {
-    call.Dump(BOOKMARK__CALL_DUMP);
+EVEResult CorpBookmarkMgr::UpdateBookmark(EVECallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyDataType* memo, PyDataType* comment, std::optional<PyInt*> folderID) {
+    call.dump(BOOKMARK__CALL_DUMP);
 
     m_db.UpdateBookmark(bookmarkID->value(), ownerID->value(), folderID.has_value() ? folderID.value()->value() : 0, memo, comment);
 
     return PyStatic.NewNone();
 }
 
-PyResult CorpBookmarkMgr::UpdatePlayerBookmark(PyCallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyRep* memo, PyRep* comment, std::optional<PyInt*> folderID) {
-    call.Dump(BOOKMARK__CALL_DUMP);
+EVEResult CorpBookmarkMgr::UpdatePlayerBookmark(EVECallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyDataType* memo, PyDataType* comment, std::optional<PyInt*> folderID) {
+    call.dump(BOOKMARK__CALL_DUMP);
 
     m_db.UpdateBookmark(bookmarkID->value(), ownerID->value(), folderID.has_value() ? folderID.value()->value() : 0, memo, comment);
 
     return PyStatic.NewNone();
 }
 
-PyResult CorpBookmarkMgr::MoveBookmarksToFolder(PyCallArgs& call, PyInt* folderID, std::optional<PyObjectEx*> bookmarkIDs)
+EVEResult CorpBookmarkMgr::MoveBookmarksToFolder(EVECallArgs& call, PyInt* folderID, std::optional<PyObjectEx*> bookmarkIDs)
 {
     // rows = bookmarkMgr.MoveBookmarksToFolder(folderID, bookmarkIDs)
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     //args.Dump(BOOKMARK__CALL_DUMP, "    ");
 
     if (bookmarkIDs.has_value() == false)
         return PyStatic.NewNone();
 
-    PyList* bmList = bookmarkIDs.value()->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+    PyList* bmList = bookmarkIDs.value()->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
 
     std::vector<int32> bmIDs;
     for (size_t i = 0; i < bmList->size(); ++i)
-        bmIDs.push_back(bmList->GetItem(i)->AsInt()->value());
+        bmIDs.push_back(bmList->at (i)->as<PyInt>()->value());
 
     m_db.MoveBookmarkToFolder(folderID->value(), bmIDs);
 
     return m_db.GetBookmarksInFolder(folderID->value());
 }
 
-PyResult CorpBookmarkMgr::UpdateFolder(PyCallArgs& call, PyInt* folderID, PyRep* folderName)
+EVEResult CorpBookmarkMgr::UpdateFolder(EVECallArgs& call, PyInt* folderID, PyDataType* folderName)
 {
     //if bookmarkMgr.UpdateFolder(folderID, folderName):
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     /** @todo sanitize name */
-    if (!m_db.UpdateFolder(folderID->value(), PyRep::StringContent(folderName)))
+    if (!m_db.UpdateFolder(folderID->value(), folderName->string()))
         return PyStatic.NewFalse();
 
     return PyStatic.NewTrue();
 }
 
-PyResult CorpBookmarkMgr::CreateFolder(PyCallArgs& call, PyRep* folderName)
+EVEResult CorpBookmarkMgr::CreateFolder(EVECallArgs& call, PyDataType* folderName)
 {
     //folder = bookmarkMgr.CreateFolder(folderName)
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     /** @todo sanitize name */
-    std::string name = PyRep::StringContent(folderName);
+    std::string name = folderName->string();
 
     uint32 ownerID = call.client->GetCorporationID();
     Rsp_CreateFolder result;
@@ -140,16 +141,16 @@ PyResult CorpBookmarkMgr::CreateFolder(PyCallArgs& call, PyRep* folderName)
     return result.Encode();
 }
 
-PyResult CorpBookmarkMgr::CopyBookmarks(PyCallArgs& call, std::optional<PyRep*> bookmarksToCopy, PyInt* folderID)
+EVEResult CorpBookmarkMgr::CopyBookmarks(EVECallArgs& call, std::optional<PyDataType*> bookmarksToCopy, PyInt* folderID)
 {
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     return PyStatic.NewNone();
 }
 
-PyResult CorpBookmarkMgr::DeleteFolder(PyCallArgs& call, PyInt* folderID, PyRep* unused)
+EVEResult CorpBookmarkMgr::DeleteFolder(EVECallArgs& call, PyInt* folderID, PyDataType* unused)
 {
     //deleteFolder, bookmarks = self.corpBookmarkMgr.DeleteFolder(folderID, bookmarkIDs)
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
 
     // call db to get list of bmIDs in deleted folder.  return result with this data
     std::vector< int32 > bmIDs;
@@ -158,9 +159,14 @@ PyResult CorpBookmarkMgr::DeleteFolder(PyCallArgs& call, PyInt* folderID, PyRep*
 
     PyList* list = new PyList();
     for (auto cur : bmIDs) {
-        PyDict* dict = new PyDict();
-        dict->SetItemString("bookmarkID", new PyInt(cur));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(
+            new PyObject(
+                "util.KeyVal",
+                new PyDict {
+                    {"bookmarkID", new PyInt (cur)}
+                }
+            )
+        );
     }
 
     m_db.DeleteFolder(folderID->value());
@@ -168,30 +174,35 @@ PyResult CorpBookmarkMgr::DeleteFolder(PyCallArgs& call, PyInt* folderID, PyRep*
     return list;
 }
 
-PyResult CorpBookmarkMgr::MoveFoldersToDB(PyCallArgs& call, PyRep* info)
+EVEResult CorpBookmarkMgr::MoveFoldersToDB(EVECallArgs& call, PyDataType* info)
 {
     //rows, folders = self.corpBookmarkMgr.MoveFoldersToDB(info)
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     return PyStatic.NewNone();
 }
 
-PyResult CorpBookmarkMgr::DeleteBookmarks(PyCallArgs& call, std::optional<PyObjectEx*> bookmarkIDs)
+EVEResult CorpBookmarkMgr::DeleteBookmarks(EVECallArgs& call, std::optional<PyObjectEx*> bookmarkIDs)
 {
     //deletedBookmarks = self.corpBookmarkMgr.DeleteBookmarks(bookmarkIDs)
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
 
     if (bookmarkIDs.has_value() == false)
         return PyStatic.NewNone();
 
-    PyList* bmList = bookmarkIDs.value()->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+    PyList* bmList = bookmarkIDs.value()->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
 
     PyList* list = new PyList();
     for (size_t i = 0; i < bmList->size(); ++i) {
-        uint32 bmID = bmList->GetItem(i)->AsInt()->value();
+        uint32 bmID = bmList->at (i)->as<PyInt>()->value();
         m_db.ChangeOwner(bmID, 1);
-        PyDict* dict = new PyDict();
-        dict->SetItemString("bookmarkID", new PyInt(bmID));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(
+            new PyObject(
+                "util.KeyVal",
+                new PyDict {
+                    {"bookmarkID", new PyInt (bmID)}
+                }
+            )
+        );
     }
     return list;
 }

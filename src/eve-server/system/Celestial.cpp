@@ -142,10 +142,10 @@ PyDict* AnomalySE::MakeSlimItem()
 {
     _log(SE__SLIMITEM, "MakeSlimItem for AnomalySE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",           new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",           new PyInt(m_self->typeID()));
-        slim->SetItemString("dungeonDataID",    new PyInt(0)); //?  seen 2990651
-        slim->SetItemString("ownerID",          new PyInt(m_ownerID));
+        slim->set ("itemID",           new PyInt(m_self->itemID()));
+        slim->set ("typeID",           new PyInt(m_self->typeID()));
+        slim->set ("dungeonDataID",    new PyInt(0)); //?  seen 2990651
+        slim->set ("ownerID",          new PyInt(m_ownerID));
     return slim;
 }
 
@@ -192,15 +192,15 @@ PyDict* WormholeSE::MakeSlimItem()
 {
     _log(SE__SLIMITEM, "MakeSlimItem for WormholeSE %s(%u)", GetName(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",                   new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",                   new PyInt(m_self->typeID()));
-        slim->SetItemString("ownerID",                  new PyInt(m_ownerID));
-        slim->SetItemString("otherSolarSystemClass",    new PyInt(sDataMgr.GetWHSystemClass(m_system->GetID())));
-        slim->SetItemString("wormholeSize",             new PyFloat(m_wormholeSize));
-        slim->SetItemString("wormholeAge",              new PyInt(m_wormholeAge));
-        slim->SetItemString("count",                    new PyInt(m_count));   //ships jumped thru?
-        slim->SetItemString("dunSpawnID",               new PyInt(m_dunSpawnID));
-        slim->SetItemString("nebulaType",               new PyInt(m_nebulaType));
-        slim->SetItemString("expiryDate",               new PyLong(m_expiryDate));
+        slim->set ("itemID",                   new PyInt(m_self->itemID()));
+        slim->set ("typeID",                   new PyInt(m_self->typeID()));
+        slim->set ("ownerID",                  new PyInt(m_ownerID));
+        slim->set ("otherSolarSystemClass",    new PyInt(sDataMgr.GetWHSystemClass(m_system->GetID())));
+        slim->set ("wormholeSize",             new PyFloat(m_wormholeSize));
+        slim->set ("wormholeAge",              new PyInt(m_wormholeAge));
+        slim->set ("count",                    new PyInt(m_count));   //ships jumped thru?
+        slim->set ("dunSpawnID",               new PyInt(m_dunSpawnID));
+        slim->set ("nebulaType",               new PyInt(m_nebulaType));
+        slim->set ("expiryDate",               new PyInt(m_expiryDate));
     return slim;
 }

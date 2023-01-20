@@ -29,14 +29,12 @@
 #include "config/LocalizationServerService.h"
 
 LocalizationServerService::LocalizationServerService() :
-    Service("localizationServer")
-{
+    Service("localizationServer") {
     this->Add("GetAllTextChanges", &LocalizationServerService::GetAllTextChanges);
     this->Add("UpdateLocalizationQASettings", &LocalizationServerService::UpdateLocalizationQASettings);
 }
 
-PyResult LocalizationServerService::GetAllTextChanges(PyCallArgs &call, PyDict* hashDict)
-{
+EVEResult LocalizationServerService::GetAllTextChanges(EVECallArgs&call, PyDict* hashDict) {
 /*
                 cacheData = sm.RemoteSvc('localizationServer').GetAllTextChanges(hashData)
                 localization.LogInfo('Localization Client: done asking for initial text and label data from server')
@@ -44,15 +42,14 @@ PyResult LocalizationServerService::GetAllTextChanges(PyCallArgs &call, PyDict* 
                     localization.LogInfo('Localization Client: updating internal memory with new text and labels.')
                     messagePerLanguage, metaDataPerLanguage, labelsDict = cacheData
             */
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
-PyResult LocalizationServerService::UpdateLocalizationQASettings(PyCallArgs &call)
-{
+EVEResult LocalizationServerService::UpdateLocalizationQASettings(EVECallArgs&call) {
     /*
      *     sm.RemoteSvc('localizationServer').UpdateLocalizationQASettings(showMessageID=showMessageID, enableBoundaryMarkers=enableBoundaryMarkers)
      * sm.RemoteSvc('localizationServer').UpdateLocalizationQASettings(showHardcodedStrings=prefs.GetValue('showHardcodedStrings', 0), showMessageID=prefs.GetValue('showMessageID', 0), enableBoundaryMarkers=prefs.GetValue('enableBoundaryMarkers', 0), characterReplacementMethod=prefs.GetValue('characterReplacementMethod', 0), enableTextExpansion=prefs.GetValue('enableTextExpansion', 0))
      */
 
-    return PyStatic.NewNone();
+    return call.arena.None();
 }

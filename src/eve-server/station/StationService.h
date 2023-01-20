@@ -36,8 +36,8 @@ public:
     StationService();
 
 protected:
-    PyResult GetSolarSystem(PyCallArgs& call, PyInt* solarSystemID);
-    PyResult GetGuests(PyCallArgs& call);
+  EVEResult GetSolarSystem(EVECallArgs& call, PyInt* solarSystemID);
+  EVEResult GetGuests(EVECallArgs& call);
 };
 
 #endif

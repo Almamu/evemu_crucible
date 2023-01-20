@@ -25,128 +25,128 @@ public:
     void BoundReleased (OfficeSparseBound* bound) override;
 
 protected:
-    PyResult GetEveOwners(PyCallArgs& call);
-    PyResult GetCorporation(PyCallArgs& call);
-    PyResult GetCorporations(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetInfoWindowDataForChar(PyCallArgs& call, std::optional <PyInt*> characterID);
-    PyResult GetLockedItemLocations(PyCallArgs& call);
-    PyResult AddCorporation(PyCallArgs& call,
-        PyRep* name, PyRep* ticker, PyRep* description, PyRep* url, PyFloat* taxRate,
-        PyRep* shape1, PyRep* shape2, PyRep* shape3,
-        PyRep* color1, PyRep* color2, PyRep* color3,
-        PyRep* typeface, PyInt* applicationEnabled);
-    PyResult GetSuggestedTickerNames(PyCallArgs& call, PyWString* name);
-    PyResult GetOffices(PyCallArgs& call);
-    PyResult GetStations(PyCallArgs& call);
+  EVEResult GetEveOwners(EVECallArgs& call);
+  EVEResult GetCorporation(EVECallArgs& call);
+  EVEResult GetCorporations(EVECallArgs& call, PyInt* corporationID);
+  EVEResult GetInfoWindowDataForChar(EVECallArgs& call, std::optional <PyInt*> characterID);
+  EVEResult GetLockedItemLocations(EVECallArgs& call);
+  EVEResult AddCorporation(EVECallArgs& call,
+        PyDataType* name, PyDataType* ticker, PyDataType* description, PyDataType* url, PyFloat* taxRate,
+        PyDataType* shape1, PyDataType* shape2, PyDataType* shape3,
+        PyDataType* color1, PyDataType* color2, PyDataType* color3,
+        PyDataType* typeface, PyInt* applicationEnabled);
+  EVEResult GetSuggestedTickerNames(EVECallArgs& call, PyString* name);
+  EVEResult GetOffices(EVECallArgs& call);
+  EVEResult GetStations(EVECallArgs& call);
 
-    PyResult CreateRecruitmentAd(PyCallArgs& call, PyInt* days, PyInt* typeMask, std::optional <PyInt*> allianceID, PyWString* description, PyInt* channelID, PyList* recruiterIDs, PyWString* title);
-    PyResult UpdateRecruitmentAd(PyCallArgs& call, PyInt* adID, PyInt* typeMask, PyWString* description, PyInt* channelID, PyList* recruiterIDs, PyWString* title, PyInt* addedDays);
-    PyResult DeleteRecruitmentAd(PyCallArgs& call, PyInt* adID);
-    PyResult GetRecruiters(PyCallArgs& call, PyInt* corpID, PyInt* adID);
-    PyResult GetRecruitmentAdsForCorporation(PyCallArgs& call);
-    PyResult GetMyApplications(PyCallArgs& call);
-    PyResult InsertApplication(PyCallArgs& call, PyInt* corporationID, PyRep* message);
-    PyResult GetApplications(PyCallArgs& call);
-    PyResult UpdateApplicationOffer(PyCallArgs &call, PyInt* characterID, PyRep* applicationText, PyInt* status, PyNone* applicationDateTime);
-    PyResult DeleteApplication(PyCallArgs& call, PyInt* corporationID, PyInt* characterID);
+  EVEResult CreateRecruitmentAd(EVECallArgs& call, PyInt* days, PyInt* typeMask, std::optional <PyInt*> allianceID, PyString* description, PyInt* channelID, PyList* recruiterIDs, PyString* title);
+  EVEResult UpdateRecruitmentAd(EVECallArgs& call, PyInt* adID, PyInt* typeMask, PyString* description, PyInt* channelID, PyList* recruiterIDs, PyString* title, PyInt* addedDays);
+  EVEResult DeleteRecruitmentAd(EVECallArgs& call, PyInt* adID);
+  EVEResult GetRecruiters(EVECallArgs& call, PyInt* corpID, PyInt* adID);
+  EVEResult GetRecruitmentAdsForCorporation(EVECallArgs& call);
+  EVEResult GetMyApplications(EVECallArgs& call);
+  EVEResult InsertApplication(EVECallArgs& call, PyInt* corporationID, PyDataType* message);
+  EVEResult GetApplications(EVECallArgs& call);
+  EVEResult UpdateApplicationOffer(EVECallArgs&call, PyInt* characterID, PyDataType* applicationText, PyInt* status, PyNone* applicationDateTime);
+  EVEResult DeleteApplication(EVECallArgs& call, PyInt* corporationID, PyInt* characterID);
 
-    PyResult UpdateDivisionNames(PyCallArgs& call,
-        PyRep* div1, PyRep* div2, PyRep* div3, PyRep* div4, PyRep* div5, PyRep* div6, PyRep* div8,
-        PyRep* wal1, PyRep* wal2, PyRep* wal3, PyRep* wal4, PyRep* wal5, PyRep* wal6, PyRep* wal7);
-    PyResult UpdateCorporation(PyCallArgs& call, PyRep* description, PyRep* url, PyFloat* tax);
-    PyResult UpdateLogo(PyCallArgs& call,
-        PyRep* shape1, PyRep* shape2, PyRep* shape3,
-        PyRep* color1, PyRep* color2, PyRep* color3,
-        PyRep* typeface);
-    PyResult SetAccountKey(PyCallArgs& call, PyInt* accountKey);
-    PyResult GetMember(PyCallArgs& call, PyInt* characterID);
-    PyResult GetMembers(PyCallArgs& call);
+  EVEResult UpdateDivisionNames(EVECallArgs& call,
+        PyDataType* div1, PyDataType* div2, PyDataType* div3, PyDataType* div4, PyDataType* div5, PyDataType* div6, PyDataType* div8,
+        PyDataType* wal1, PyDataType* wal2, PyDataType* wal3, PyDataType* wal4, PyDataType* wal5, PyDataType* wal6, PyDataType* wal7);
+  EVEResult UpdateCorporation(EVECallArgs& call, PyDataType* description, PyDataType* url, PyFloat* tax);
+  EVEResult UpdateLogo(EVECallArgs& call,
+        PyDataType* shape1, PyDataType* shape2, PyDataType* shape3,
+        PyDataType* color1, PyDataType* color2, PyDataType* color3,
+        PyDataType* typeface);
+  EVEResult SetAccountKey(EVECallArgs& call, PyInt* accountKey);
+  EVEResult GetMember(EVECallArgs& call, PyInt* characterID);
+  EVEResult GetMembers(EVECallArgs& call);
 
-    PyResult MoveCompanyShares(PyCallArgs& call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares);
-    PyResult MovePrivateShares(PyCallArgs& call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares);
-    PyResult GetSharesByShareholder(PyCallArgs& call, PyBool* corpShares);
-    PyResult GetShareholders(PyCallArgs& call);
-    PyResult PayoutDividend(PyCallArgs& call, PyBool* payShareholders, PyFloat* payoutAmount);
+  EVEResult MoveCompanyShares(EVECallArgs& call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares);
+  EVEResult MovePrivateShares(EVECallArgs& call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares);
+  EVEResult GetSharesByShareholder(EVECallArgs& call, PyBool* corpShares);
+  EVEResult GetShareholders(EVECallArgs& call);
+  EVEResult PayoutDividend(EVECallArgs& call, PyBool* payShareholders, PyFloat* payoutAmount);
 
-    PyResult CanViewVotes(PyCallArgs& call, PyInt* corporationID);
-    PyResult InsertVoteCase(PyCallArgs& call, PyRep* voteCaseText, PyRep* description, PyInt* corporationID, PyInt* voteType, std::optional <PyObject*> voteCaseOptions, PyLong* startDateTime, PyLong* endDateTime);
-    PyResult GetVotes(PyCallArgs& call, PyInt* corporationId, PyInt* voteCaseID);
-    PyResult CanVote(PyCallArgs& call, PyInt* corporationID);
-    PyResult InsertVote(PyCallArgs& call, PyInt* corporationID, PyInt* voteCaseID, PyInt* voteValue);
-    PyResult GetVoteCasesByCorporation(PyCallArgs& call, PyInt* corporationID, std::optional<PyInt*> status, std::optional <PyInt*> maxLen);
-    PyResult GetVoteCaseOptions(PyCallArgs& call, PyInt* corporationID, PyInt* voteCaseID);
-    PyResult GetSanctionedActionsByCorporation(PyCallArgs& call, PyInt* corporationID, PyInt* state);
+  EVEResult CanViewVotes(EVECallArgs& call, PyInt* corporationID);
+  EVEResult InsertVoteCase(EVECallArgs& call, PyDataType* voteCaseText, PyDataType* description, PyInt* corporationID, PyInt* voteType, std::optional <PyObject*> voteCaseOptions, PyInt* startDateTime, PyInt* endDateTime);
+  EVEResult GetVotes(EVECallArgs& call, PyInt* corporationId, PyInt* voteCaseID);
+  EVEResult CanVote(EVECallArgs& call, PyInt* corporationID);
+  EVEResult InsertVote(EVECallArgs& call, PyInt* corporationID, PyInt* voteCaseID, PyInt* voteValue);
+  EVEResult GetVoteCasesByCorporation(EVECallArgs& call, PyInt* corporationID, std::optional<PyInt*> status, std::optional <PyInt*> maxLen);
+  EVEResult GetVoteCaseOptions(EVECallArgs& call, PyInt* corporationID, PyInt* voteCaseID);
+  EVEResult GetSanctionedActionsByCorporation(EVECallArgs& call, PyInt* corporationID, PyInt* state);
 
-    PyResult GetRoleGroups(PyCallArgs& call);
-    PyResult GetRoles(PyCallArgs& call);
+  EVEResult GetRoleGroups(EVECallArgs& call);
+  EVEResult GetRoles(EVECallArgs& call);
 
-    PyResult CreateLabel(PyCallArgs& call, PyRep* name, PyRep* color);
-    PyResult GetLabels(PyCallArgs& call);
-    PyResult DeleteLabel(PyCallArgs& call, PyInt* labelID);
-    PyResult EditLabel(PyCallArgs& call, PyInt* labelID, PyRep* name, PyRep* color);
-    PyResult AssignLabels(PyCallArgs& call, PyList* contactIDs, PyInt* labelMask);
-    PyResult RemoveLabels(PyCallArgs& call, PyList* contactIDs, PyInt* labelMask);
+  EVEResult CreateLabel(EVECallArgs& call, PyDataType* name, PyDataType* color);
+  EVEResult GetLabels(EVECallArgs& call);
+  EVEResult DeleteLabel(EVECallArgs& call, PyInt* labelID);
+  EVEResult EditLabel(EVECallArgs& call, PyInt* labelID, PyDataType* name, PyDataType* color);
+  EVEResult AssignLabels(EVECallArgs& call, PyList* contactIDs, PyInt* labelMask);
+  EVEResult RemoveLabels(EVECallArgs& call, PyList* contactIDs, PyInt* labelMask);
 
-    PyResult GetTitles(PyCallArgs& call);
-    PyResult UpdateTitle(PyCallArgs& call,
-        PyRep* titleID, PyRep* titleName,
-        PyRep* roles, PyRep* grantableRoles,
-        PyRep* rolesAtHQ, PyRep* grantableRolesAtHQ,
-        PyRep* rolesAtBase, PyRep* grantableRolesAtBase,
-        PyRep* rolesAtOther, PyRep* grantableRolesAtOther);
-    PyResult UpdateTitles(PyCallArgs& call, PyObject* titles);
-    PyResult DeleteTitle(PyCallArgs& call, PyInt* titleID);
+  EVEResult GetTitles(EVECallArgs& call);
+  EVEResult UpdateTitle(EVECallArgs& call,
+        PyDataType* titleID, PyDataType* titleName,
+        PyDataType* roles, PyDataType* grantableRoles,
+        PyDataType* rolesAtHQ, PyDataType* grantableRolesAtHQ,
+        PyDataType* rolesAtBase, PyDataType* grantableRolesAtBase,
+        PyDataType* rolesAtOther, PyDataType* grantableRolesAtOther);
+  EVEResult UpdateTitles(EVECallArgs& call, PyObject* titles);
+  EVEResult DeleteTitle(EVECallArgs& call, PyInt* titleID);
 
-    PyResult AddBulletin(PyCallArgs& call, PyRep* title, PyRep* body);
-    PyResult GetBulletins(PyCallArgs& call);
-    PyResult DeleteBulletin(PyCallArgs& call, PyInt* bulletinID);
+  EVEResult AddBulletin(EVECallArgs& call, PyDataType* title, PyDataType* body);
+  EVEResult GetBulletins(EVECallArgs& call);
+  EVEResult DeleteBulletin(EVECallArgs& call, PyInt* bulletinID);
 
-    PyResult GetLocationalRoles(PyCallArgs& call);
-    PyResult GetRecentKillsAndLosses(PyCallArgs& call, PyInt* number, PyInt* offset);
-    PyResult UpdateMember(PyCallArgs& call,
-        PyInt* characterID, PyRep* title, PyRep* divisionID, PyRep* squadronID,
-        PyLong* roles, PyLong* grantableRoles, PyLong* rolesAtHQ, PyLong* grantableRolesAtHQ,
-        PyLong* rolesAtBase, PyLong* grantableRolesAtBase, PyLong* rolesAtOther, PyLong* grantableRolesAtOther,
-        PyRep* baseID, PyRep* titleMask, PyRep* blockRoles);
-    PyResult ExecuteActions(PyCallArgs& call, PyList* targetIDs, PyList* remoteActions);
+  EVEResult GetLocationalRoles(EVECallArgs& call);
+  EVEResult GetRecentKillsAndLosses(EVECallArgs& call, PyInt* number, PyInt* offset);
+  EVEResult UpdateMember(EVECallArgs& call,
+        PyInt* characterID, PyDataType* title, PyDataType* divisionID, PyDataType* squadronID,
+        PyInt* roles, PyInt* grantableRoles, PyInt* rolesAtHQ, PyInt* grantableRolesAtHQ,
+        PyInt* rolesAtBase, PyInt* grantableRolesAtBase, PyInt* rolesAtOther, PyInt* grantableRolesAtOther,
+        PyDataType* baseID, PyDataType* titleMask, PyDataType* blockRoles);
+  EVEResult ExecuteActions(EVECallArgs& call, PyList* targetIDs, PyList* remoteActions);
 
-    PyResult GetCorporateContacts(PyCallArgs& call);
-    PyResult AddCorporateContact(PyCallArgs& call, PyInt* contactID, PyInt* relationshipID);
-    PyResult EditContactsRelationshipID(PyCallArgs& call, PyList* contactIDs, PyInt* relationshipID);
-    PyResult RemoveCorporateContacts(PyCallArgs& call, PyList* contactIDs);
-    PyResult EditCorporateContact(PyCallArgs& call, PyInt* contactID, PyInt* relationshipID);
+  EVEResult GetCorporateContacts(EVECallArgs& call);
+  EVEResult AddCorporateContact(EVECallArgs& call, PyInt* contactID, PyInt* relationshipID);
+  EVEResult EditContactsRelationshipID(EVECallArgs& call, PyList* contactIDs, PyInt* relationshipID);
+  EVEResult RemoveCorporateContacts(EVECallArgs& call, PyList* contactIDs);
+  EVEResult EditCorporateContact(EVECallArgs& call, PyInt* contactID, PyInt* relationshipID);
 
-    PyResult CreateAlliance(PyCallArgs& call, PyRep* allianceName, PyRep* shortName, PyRep* description, PyRep* url);
-    PyResult ApplyToJoinAlliance(PyCallArgs& call, PyInt* allianceID, PyWString* applicationText);
-    PyResult DeleteAllianceApplication(PyCallArgs& call, PyInt* allianceID);
-    PyResult GetAllianceApplications(PyCallArgs& call);
-    PyResult GetSuggestedAllianceShortNames(PyCallArgs& call, PyWString* name);
+  EVEResult CreateAlliance(EVECallArgs& call, PyDataType* allianceName, PyDataType* shortName, PyDataType* description, PyDataType* url);
+  EVEResult ApplyToJoinAlliance(EVECallArgs& call, PyInt* allianceID, PyString* applicationText);
+  EVEResult DeleteAllianceApplication(EVECallArgs& call, PyInt* allianceID);
+  EVEResult GetAllianceApplications(EVECallArgs& call);
+  EVEResult GetSuggestedAllianceShortNames(EVECallArgs& call, PyString* name);
 
-    PyResult GetMemberTrackingInfo(PyCallArgs& call);
-    PyResult GetMembersPaged(PyCallArgs& call, PyInt* page);
-    PyResult GetMembersByIds(PyCallArgs& call, PyList* memberIDs);
-    PyResult GetMemberIDsWithMoreThanAvgShares(PyCallArgs& call);
-    PyResult GetMemberIDsByQuery(PyCallArgs& call, PyList* queryList, std::optional <PyInt*> includeImplied, PyInt* searchTitles);
-    PyResult GetMemberTrackingInfoSimple(PyCallArgs& call);
+  EVEResult GetMemberTrackingInfo(EVECallArgs& call);
+  EVEResult GetMembersPaged(EVECallArgs& call, PyInt* page);
+  EVEResult GetMembersByIds(EVECallArgs& call, PyList* memberIDs);
+  EVEResult GetMemberIDsWithMoreThanAvgShares(EVECallArgs& call);
+  EVEResult GetMemberIDsByQuery(EVECallArgs& call, PyList* queryList, std::optional <PyInt*> includeImplied, PyInt* searchTitles);
+  EVEResult GetMemberTrackingInfoSimple(EVECallArgs& call);
 
-    PyResult GetRentalDetailsPlayer(PyCallArgs& call);
-    PyResult GetRentalDetailsCorp(PyCallArgs& call);
+  EVEResult GetRentalDetailsPlayer(EVECallArgs& call);
+  EVEResult GetRentalDetailsCorp(EVECallArgs& call);
 
-    PyResult UpdateCorporationAbilities(PyCallArgs& call);
-    PyResult UpdateStationManagementSettings(PyCallArgs& call,
-        PyRep* modifiedServiceAccessRulesByServiceID, PyRep* modifiedServiceCostModifiers,
-        PyRep* modifiedRentableItems, PyRep* stationName, PyRep* description,
-        PyRep* dockingCostPerVolume, PyRep* officeRentalCost, PyRep* reprocessingStationsTake,
-        PyRep* reprocessingHangarFlag, PyRep* exitTime, PyRep* standingOwnerID);
-    PyResult GetNumberOfPotentialCEOs(PyCallArgs& call);
+  EVEResult UpdateCorporationAbilities(EVECallArgs& call);
+  EVEResult UpdateStationManagementSettings(EVECallArgs& call,
+        PyDataType* modifiedServiceAccessRulesByServiceID, PyDataType* modifiedServiceCostModifiers,
+        PyDataType* modifiedRentableItems, PyDataType* stationName, PyDataType* description,
+        PyDataType* dockingCostPerVolume, PyDataType* officeRentalCost, PyDataType* reprocessingStationsTake,
+        PyDataType* reprocessingHangarFlag, PyDataType* exitTime, PyDataType* standingOwnerID);
+  EVEResult GetNumberOfPotentialCEOs(EVECallArgs& call);
 
-    PyResult CanLeaveCurrentCorporation(PyCallArgs& call);
+  EVEResult CanLeaveCurrentCorporation(EVECallArgs& call);
     
 
 protected:
     static void FillOCApplicationChange(OnCorporationApplicationChanged& OCAC, const Corp::ApplicationInfo& Old, const Corp::ApplicationInfo& New);
 
-    bool GetSearchValues(int8 op, PyRep* rep, std::ostringstream& query);
+    bool GetSearchValues(int8 op, PyDataType* rep, std::ostringstream& query);
     uint8 GetQueryType(std::string queryType);
 
     CorporationDB& m_db;

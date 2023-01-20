@@ -39,7 +39,7 @@ public:
     void BoundReleased (VoucherBound* bound) override;
 
 protected:
-    PyResult GetObject(PyCallArgs& args, PyInt* voucherID);
+  EVEResult GetObject(EVECallArgs& args, PyInt* voucherID);
 
 private:
     EVEServiceManager& m_manager;
@@ -53,7 +53,7 @@ public:
 
     int32 GetVoucherID () { return this->m_itemRef->itemID(); }
 protected:
-    PyResult GetDescription(PyCallArgs& call);
+  EVEResult GetDescription(EVECallArgs& call);
 
 private:
     InventoryItemRef m_itemRef;

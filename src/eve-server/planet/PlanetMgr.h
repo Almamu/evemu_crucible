@@ -25,7 +25,7 @@ public:
     PlanetMgr(Client* pClient, PlanetSE* pPlanet, Colony* pColony);
     virtual ~PlanetMgr()    { /* do nothing here */ }
 
-    PyRep* UpdateNetwork(PyList* commandList);
+    PyDataType* UpdateNetwork(PyList* commandList);
 
 protected:
     bool CreatePin(UUNCommand& nc);

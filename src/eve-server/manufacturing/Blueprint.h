@@ -27,7 +27,7 @@
 #ifndef __BLUEPRINT_ITEM__H__INCL__
 #define __BLUEPRINT_ITEM__H__INCL__
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "inventory/ItemType.h"
 #include "inventory/InventoryItem.h"

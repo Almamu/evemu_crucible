@@ -27,7 +27,7 @@
 #include "eve-server.h"
 #include "EVE_Consts.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "account/BrowserLockdownSvc.h"
 
 BrowserLockdownService::BrowserLockdownService()
@@ -39,7 +39,7 @@ BrowserLockdownService::BrowserLockdownService()
     this->Add("IsBrowserInLockdown", &BrowserLockdownService::IsBrowserInLockdown);
 }
 
-PyResult BrowserLockdownService::GetFlaggedSitesHash(PyCallArgs &call)
+EVEResult BrowserLockdownService::GetFlaggedSitesHash(EVECallArgs&call)
 {
     /* Future updates should be the md5 sum of the cache/browser/flaggedsites.dat file from user/appdata/Local/CCP/EVE
      *  as we dont have this list (which is sent from GetFlaggedSitesList), we send the md5 sum for an empty set.
@@ -48,19 +48,19 @@ PyResult BrowserLockdownService::GetFlaggedSitesHash(PyCallArgs &call)
     //return new PyString("d751713988987e9331980363e24189ce");    // avianrr
 }
 
-PyResult BrowserLockdownService::GetFlaggedSitesList(PyCallArgs &call)
+EVEResult BrowserLockdownService::GetFlaggedSitesList(EVECallArgs&call)
 {
     // all packets show none here, however, this throws error for me in crucible.
     //  needs to be empty list to play nice with above hash
     return PyStatic.mtList();
 }
 
-PyResult BrowserLockdownService::GetDefaultHomePage(PyCallArgs &call)
+EVEResult BrowserLockdownService::GetDefaultHomePage(EVECallArgs&call)
 {
-    return new PyWString(HomePageURL);
+    return new PyString(HomePageURL, true);
 }
 
-PyResult BrowserLockdownService::IsBrowserInLockdown(PyCallArgs &call)
+EVEResult BrowserLockdownService::IsBrowserInLockdown(EVECallArgs&call)
 {
     return new PyBool(sConfig.server.DisableIGB);
 }

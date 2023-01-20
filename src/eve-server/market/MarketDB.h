@@ -37,15 +37,15 @@ class MarketDB
 : public ServiceDB
 {
 public:
-    static PyRep* GetMarketGroups();
-    static PyRep* GetOrders(uint32 regionID, uint16 typeID);
-    static PyRep* GetOrderRow(uint32 orderID);
-    static PyRep* GetRegionBest(uint32 regionID);
-    static PyRep* GetSystemAsks(uint32 solarSystemID);
-    static PyRep* GetStationAsks(uint32 stationID);
-    static PyRep* GetOrdersForOwner(uint32 ownerID);
+    static PyDataType* GetMarketGroups();
+    static PyDataType* GetOrders(uint32 regionID, uint16 typeID);
+    static PyDataType* GetOrderRow(uint32 orderID);
+    static PyDataType* GetRegionBest(uint32 regionID);
+    static PyDataType* GetSystemAsks(uint32 solarSystemID);
+    static PyDataType* GetStationAsks(uint32 stationID);
+    static PyDataType* GetOrdersForOwner(uint32 ownerID);
 
-    static PyRep* GetTransactions(uint32 ownerID, Market::TxData &data);
+    static PyDataType* GetTransactions(uint32 ownerID, Market::TxData &data);
 
     static bool DeleteOrder(uint32 orderID);
     static bool GetOrderInfo(uint32 orderID, Market::OrderInfo &oInfo);

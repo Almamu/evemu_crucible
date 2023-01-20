@@ -22,7 +22,7 @@ void PosMgrDB::DeleteData(uint32 itemID) {
     sDatabase.RunQuery(err, "DELETE FROM posTowerData WHERE itemID = %u", itemID);
 }
 
-PyRep* PosMgrDB::GetSiloCapacityForType(uint16 typeID) {
+PyDataType* PosMgrDB::GetSiloCapacityForType(uint16 typeID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
             "SELECT attributeID, valueFloat FROM dgmTypeAttributes"
@@ -35,7 +35,7 @@ PyRep* PosMgrDB::GetSiloCapacityForType(uint16 typeID) {
     return DBResultToCRowset(res);
 }
 
-PyRep* PosMgrDB::GetCorpControlTowers(uint32 corpID)
+PyDataType* PosMgrDB::GetCorpControlTowers(uint32 corpID)
 {
     /** @todo  update this to pull from tower data table first to avoid iterating thru entity */
     DBQueryResult res;

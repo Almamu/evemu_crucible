@@ -35,23 +35,21 @@ public:
     ContractProxy();
 
 protected:
-    PyResult CreateContract(PyCallArgs &call, PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description);
-    PyResult CreateContract(PyCallArgs &call, PyInt* contractType, PyBool* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description);
-    PyResult CreateContract(PyCallArgs &call, PyInt* contractType, PyBool* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyWString* title, PyString* description);
-    PyResult CreateContract(PyCallArgs &call, PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyInt*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description);
-    PyResult CreateContract(PyCallArgs &call, PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyWString* title, PyString* description);
-    PyResult CreateContract(PyCallArgs& call, PyInt* contractType, PyInt* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyInt*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyWString* title, PyWString* description);
-    PyResult GetContract(PyCallArgs& call, PyInt* contractID);
-    PyResult AcceptContract(PyCallArgs& call, PyInt* contractID);
-    PyResult CompleteContract(PyCallArgs& call, PyInt* contractID, PyInt* completionStatus);
-    PyResult DeleteContract(PyCallArgs& call, PyInt* contractID);
-    PyResult NumOutstandingContracts(PyCallArgs& call);
-    PyResult GetItemsInStation(PyCallArgs& call, PyInt* stationID, std::optional<PyInt*> forCorp);
-    PyResult GetLoginInfo(PyCallArgs& call);
-    PyResult SearchContracts(PyCallArgs& call);
-    PyResult CollectMyPageInfo(PyCallArgs& call);
-    PyResult GetMyExpiredContractList(PyCallArgs& call);
-    PyResult GetContractListForOwner(PyCallArgs& call, PyInt* ownerID, PyInt* contractStatus, std::optional <PyInt*> contractType, std::optional <PyBool*> issuedToBy);
+  EVEResult CreateContract(EVECallArgs&call, PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description);
+  EVEResult CreateContract(EVECallArgs&call, PyInt* contractType, PyBool* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description);
+  EVEResult CreateContract(EVECallArgs&call, PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyInt*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description);
+  EVEResult CreateContract(EVECallArgs& call, PyInt* contractType, PyInt* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyInt*> endStationID, PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description);
+  EVEResult GetContract(EVECallArgs& call, PyInt* contractID);
+  EVEResult AcceptContract(EVECallArgs& call, PyInt* contractID);
+  EVEResult CompleteContract(EVECallArgs& call, PyInt* contractID, PyInt* completionStatus);
+  EVEResult DeleteContract(EVECallArgs& call, PyInt* contractID);
+  EVEResult NumOutstandingContracts(EVECallArgs& call);
+  EVEResult GetItemsInStation(EVECallArgs& call, PyInt* stationID, std::optional<PyInt*> forCorp);
+  EVEResult GetLoginInfo(EVECallArgs& call);
+  EVEResult SearchContracts(EVECallArgs& call);
+  EVEResult CollectMyPageInfo(EVECallArgs& call);
+  EVEResult GetMyExpiredContractList(EVECallArgs& call);
+  EVEResult GetContractListForOwner(EVECallArgs& call, PyInt* ownerID, PyInt* contractStatus, std::optional <PyInt*> contractType, std::optional <PyBool*> issuedToBy);
 };
 
 #endif /* !__CONTRACT_PROXY_H__INCL__ */

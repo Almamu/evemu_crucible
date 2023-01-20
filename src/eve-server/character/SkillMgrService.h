@@ -43,7 +43,7 @@ public:
 protected:
     CharacterDB m_db;
 
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters) override;
 };
 
 class SkillMgrBound : public EVEBoundObject <SkillMgrBound>
@@ -54,20 +54,20 @@ public:
 protected:
     CharacterDB &m_db;
 
-    PyResult GetRespecInfo(PyCallArgs& call);
-    PyResult GetSkillQueueAndFreePoints(PyCallArgs& call);
-    PyResult GetEndOfTraining(PyCallArgs& call);
-    PyResult GetSkillHistory(PyCallArgs& call);
-    PyResult CharStopTrainingSkill(PyCallArgs& call);
-    PyResult CharStartTrainingSkill(PyCallArgs& call, PyInt* itemID, PyInt* locationID);
-    PyResult AddToEndOfSkillQueue(PyCallArgs& call, PyInt* skillID, PyInt* nextLevel);
-    PyResult InjectSkillIntoBrain(PyCallArgs& call, PyList* skillItemIDs, PyInt* stationID);
-    PyResult SaveSkillQueue(PyCallArgs& call, PyList* skillQueue);
-    PyResult CharStartTrainingSkillByTypeID(PyCallArgs& call, PyInt* skillTypeID);
-    PyResult RespecCharacter(PyCallArgs& call, PyInt* charisma, PyInt* intelligence, PyInt* memory, PyInt* perception, PyInt* willpower);
-    PyResult GetCharacterAttributeModifiers(PyCallArgs& call, PyInt* attr);
-    PyResult CharAddImplant(PyCallArgs& call, PyInt* itemID);
-    PyResult RemoveImplantFromCharacter(PyCallArgs& call, PyInt* itemID);
+    EVEResult GetRespecInfo(EVECallArgs& call);
+    EVEResult GetSkillQueueAndFreePoints(EVECallArgs& call);
+    EVEResult GetEndOfTraining(EVECallArgs& call);
+    EVEResult GetSkillHistory(EVECallArgs& call);
+    EVEResult CharStopTrainingSkill(EVECallArgs& call);
+    EVEResult CharStartTrainingSkill(EVECallArgs& call, PyInt* itemID, PyInt* locationID);
+    EVEResult AddToEndOfSkillQueue(EVECallArgs& call, PyInt* skillID, PyInt* nextLevel);
+    EVEResult InjectSkillIntoBrain(EVECallArgs& call, PyList* skillItemIDs, PyInt* stationID);
+    EVEResult SaveSkillQueue(EVECallArgs& call, PyList* skillQueue);
+    EVEResult CharStartTrainingSkillByTypeID(EVECallArgs& call, PyInt* skillTypeID);
+    EVEResult RespecCharacter(EVECallArgs& call, PyInt* charisma, PyInt* intelligence, PyInt* memory, PyInt* perception, PyInt* willpower);
+    EVEResult GetCharacterAttributeModifiers(EVECallArgs& call, PyInt* attr);
+    EVEResult CharAddImplant(EVECallArgs& call, PyInt* itemID);
+    EVEResult RemoveImplantFromCharacter(EVECallArgs& call, PyInt* itemID);
 };
 
 #endif

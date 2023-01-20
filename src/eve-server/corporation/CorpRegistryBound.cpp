@@ -139,45 +139,43 @@ CorpRegistryBound::CorpRegistryBound(EVEServiceManager& mgr, CorpRegistryService
     this->m_lsc = this->GetServiceManager().Lookup <LSCService>("LSC");
 }
 
-PyResult CorpRegistryBound::GetLocationalRoles(PyCallArgs &call)
+EVEResult CorpRegistryBound::GetLocationalRoles(EVECallArgs&call)
 {       // not sure if this is used...
-    PyList* list = new PyList();
-    list->AddItem(new PyInt(Corp::Role::HangarCanTake1));
-    list->AddItem(new PyInt(Corp::Role::HangarCanTake2));
-    list->AddItem(new PyInt(Corp::Role::HangarCanTake3));
-    list->AddItem(new PyInt(Corp::Role::HangarCanTake4));
-    list->AddItem(new PyInt(Corp::Role::HangarCanTake5));
-    list->AddItem(new PyInt(Corp::Role::HangarCanTake6));
-    list->AddItem(new PyInt(Corp::Role::HangarCanTake7));
-    list->AddItem(new PyInt(Corp::Role::HangarCanQuery1));
-    list->AddItem(new PyInt(Corp::Role::HangarCanQuery2));
-    list->AddItem(new PyInt(Corp::Role::HangarCanQuery3));
-    list->AddItem(new PyInt(Corp::Role::HangarCanQuery4));
-    list->AddItem(new PyInt(Corp::Role::HangarCanQuery5));
-    list->AddItem(new PyInt(Corp::Role::HangarCanQuery6));
-    list->AddItem(new PyInt(Corp::Role::HangarCanQuery7));
-    list->AddItem(new PyLong(Corp::Role::ContainerCanTake1));
-    list->AddItem(new PyLong(Corp::Role::ContainerCanTake2));
-    list->AddItem(new PyLong(Corp::Role::ContainerCanTake3));
-    list->AddItem(new PyLong(Corp::Role::ContainerCanTake4));
-    list->AddItem(new PyLong(Corp::Role::ContainerCanTake5));
-    list->AddItem(new PyLong(Corp::Role::ContainerCanTake6));
-    list->AddItem(new PyLong(Corp::Role::ContainerCanTake7));
-
-    return list;
+    return new PyList {
+         new PyInt (Corp::Role::HangarCanTake1),
+         new PyInt (Corp::Role::HangarCanTake2),
+         new PyInt (Corp::Role::HangarCanTake3),
+         new PyInt (Corp::Role::HangarCanTake4),
+         new PyInt (Corp::Role::HangarCanTake5),
+         new PyInt (Corp::Role::HangarCanTake6),
+         new PyInt (Corp::Role::HangarCanTake7),
+         new PyInt (Corp::Role::HangarCanQuery1),
+         new PyInt (Corp::Role::HangarCanQuery2),
+         new PyInt (Corp::Role::HangarCanQuery3),
+         new PyInt (Corp::Role::HangarCanQuery4),
+         new PyInt (Corp::Role::HangarCanQuery5),
+         new PyInt (Corp::Role::HangarCanQuery6),
+         new PyInt (Corp::Role::HangarCanQuery7),
+         new PyInt (Corp::Role::ContainerCanTake1),
+         new PyInt (Corp::Role::ContainerCanTake2),
+         new PyInt (Corp::Role::ContainerCanTake3),
+         new PyInt (Corp::Role::ContainerCanTake4),
+         new PyInt (Corp::Role::ContainerCanTake5),
+         new PyInt (Corp::Role::ContainerCanTake6),
+         new PyInt (Corp::Role::ContainerCanTake7),
+    };
 }
 
-PyResult CorpRegistryBound::GetEveOwners(PyCallArgs &call) {
+EVEResult CorpRegistryBound::GetEveOwners(EVECallArgs&call) {
     /* this is a method-chaining call.
      * it comes with the bind request for a particular corp.
      *
      * the client wants a member list for given corp
      */
-    return m_db.GetEveOwners(m_corpID);
+    return m_db.GetEveOwners(m_corpID, &call.arena);
 }
 
-PyResult CorpRegistryBound::GetInfoWindowDataForChar(PyCallArgs& call, std::optional <PyInt*> characterID)
-{
+EVEResult CorpRegistryBound::GetInfoWindowDataForChar(EVECallArgs& call, std::optional <PyInt*> characterID) {
     // if no characterID is specified, just return information for current character
     if (characterID.has_value() == false)
         return CharacterDB::GetInfoWindowDataForChar (call.client->GetCharacterID ());
@@ -185,133 +183,110 @@ PyResult CorpRegistryBound::GetInfoWindowDataForChar(PyCallArgs& call, std::opti
     return CharacterDB::GetInfoWindowDataForChar (characterID.value()->value());
 }
 
-PyResult CorpRegistryBound::GetCorporation(PyCallArgs &call) {
+EVEResult CorpRegistryBound::GetCorporation(EVECallArgs&call) {
     // called by member of this corp
     return m_db.GetCorporation(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetRoles(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetRoles(EVECallArgs&call) {   // working
     return m_db.GetCorpRoles();
 }
 
-PyResult CorpRegistryBound::GetRoleGroups(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetRoleGroups(EVECallArgs&call) {   // working
     return m_db.GetCorpRoleGroups();
 }
 
-PyResult CorpRegistryBound::GetTitles(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetTitles(EVECallArgs&call) {   // working
     return m_db.GetTitles(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetBulletins(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetBulletins(EVECallArgs&call) {   // working
     return m_db.GetBulletins(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetCorporateContacts(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetCorporateContacts(EVECallArgs&call) {   // working
     return m_db.GetContacts(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetApplications(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetApplications(EVECallArgs&call) {   // working
     return m_db.GetApplications(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetRecruitmentAdsForCorporation(PyCallArgs &call)
-{   // recruitments = self.GetCorpRegistry().GetRecruitmentAdsForCorporation()
+EVEResult CorpRegistryBound::GetRecruitmentAdsForCorporation(EVECallArgs&call) {   // recruitments = self.GetCorpRegistry().GetRecruitmentAdsForCorporation()
     return m_db.GetAdRegistryData();
 }
 
-PyResult CorpRegistryBound::GetMyApplications(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetMyApplications(EVECallArgs&call) {   // working
     return m_db.GetMyApplications(call.client->GetCharacterID());
 }
 
-PyResult CorpRegistryBound::GetMemberTrackingInfo(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetMemberTrackingInfo(EVECallArgs&call) {   // working
     return m_db.GetMemberTrackingInfo(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetMemberTrackingInfoSimple(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetMemberTrackingInfoSimple(EVECallArgs&call) {   // working
     return m_db.GetMemberTrackingInfoSimple(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetShareholders(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetShareholders(EVECallArgs&call) {   // working
     return m_db.GetShares(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetLabels(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetLabels(EVECallArgs&call) {   // working
     return m_db.GetLabels(call.client->GetCorporationID());
 }
 
-PyResult CorpRegistryBound::CanViewVotes(PyCallArgs &call, PyInt* corporationID)
-{   // working
+EVEResult CorpRegistryBound::CanViewVotes(EVECallArgs&call, PyInt* corporationID) {   // working
     return m_db.PyHasShares(call.client->GetCharacterID(), corporationID->value());
 }
 
-PyResult CorpRegistryBound::GetMemberIDsWithMoreThanAvgShares(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetMemberIDsWithMoreThanAvgShares(EVECallArgs&call) {   // working
     return m_db.GetSharesForCorp(m_corpID);
 }
 
-PyResult CorpRegistryBound::GetRecruiters(PyCallArgs &call, PyInt* corpID, PyInt* adID)
-{   // working
+EVEResult CorpRegistryBound::GetRecruiters(EVECallArgs&call, PyInt* corpID, PyInt* adID) {   // working
     return m_db.GetRecruiters(corpID->value(), adID->value());
 }
 
-PyResult CorpRegistryBound::DeleteTitle(PyCallArgs &call, PyInt* titleID)
-{   // working
+EVEResult CorpRegistryBound::DeleteTitle(EVECallArgs&call, PyInt* titleID) {   // working
     m_db.DeleteTitle(call.client->GetCorporationID(), titleID->value());
     return nullptr;
 }
 
-PyResult CorpRegistryBound::DeleteRecruitmentAd(PyCallArgs &call, PyInt* adID)
-{   // working
+EVEResult CorpRegistryBound::DeleteRecruitmentAd(EVECallArgs&call, PyInt* adID) {   // working
     m_db.DeleteAdvert(adID->value());
     return nullptr;
 }
 
-PyResult CorpRegistryBound::GetSharesByShareholder(PyCallArgs &call, PyBool* corpShares)
-{   // working
+EVEResult CorpRegistryBound::GetSharesByShareholder(EVECallArgs&call, PyBool* corpShares) {   // working
     return m_db.GetMyShares(corpShares->value() ? call.client->GetCorporationID() : call.client->GetCharacterID());
 }
 
-PyResult CorpRegistryBound::GetCorporations(PyCallArgs &call, PyInt* corporationID) {
+EVEResult CorpRegistryBound::GetCorporations(EVECallArgs&call, PyInt* corporationID) {
     // working
     return m_db.GetCorporations(corporationID->value());
 }
 
-PyResult CorpRegistryBound::GetRecentKillsAndLosses(PyCallArgs &call, PyInt* number, PyInt* offset)
-{   // working
+EVEResult CorpRegistryBound::GetRecentKillsAndLosses(EVECallArgs&call, PyInt* number, PyInt* offset) {   // working
     return m_db.GetKillsAndLosses(m_corpID, number->value(), offset->value());
 }
 
-PyResult CorpRegistryBound::GetMember(PyCallArgs &call, PyInt* characterID)
-{   // not working
+EVEResult CorpRegistryBound::GetMember(EVECallArgs&call, PyInt* characterID) {   // not working
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetMember()");
-    PyRep* rep = m_db.GetMember(characterID->value());
+    PyDataType* rep = m_db.GetMember(characterID->value());
 
     if (is_log_enabled(CORP__RSP_DUMP))
-        rep->Dump(CORP__RSP_DUMP, "");
+        rep->dump(CORP__RSP_DUMP, "");
 
     return rep;
 }
 
-PyResult CorpRegistryBound::SetAccountKey(PyCallArgs &call, PyInt* accountKey)
-{   // working
+EVEResult CorpRegistryBound::SetAccountKey(EVECallArgs&call, PyInt* accountKey) {   // working
     call.client->GetChar()->SetAccountKey(accountKey->value());
     return this->GetOID();
 }
 
-PyResult CorpRegistryBound::GetSuggestedTickerNames(PyCallArgs &call, PyWString* name)
-{
-    PyList* result = new PyList();
+EVEResult CorpRegistryBound::GetSuggestedTickerNames(EVECallArgs&call, PyString* name) {
     SuggestedTickerName sTN;
     sTN.tName.clear();
     uint32 cnLen = name->content().length();
@@ -320,13 +295,12 @@ PyResult CorpRegistryBound::GetSuggestedTickerNames(PyCallArgs &call, PyWString*
         if (name->content()[i] >= 'A' && name->content()[i] <= 'Z')
             sTN.tName += name->content()[i];
 
-    result->AddItem( sTN.Encode() );
-    return result;
+    return new PyList {
+        sTN.Encode ()
+    };
 }
 
-PyResult CorpRegistryBound::GetSuggestedAllianceShortNames(PyCallArgs &call, PyWString* name)
-{
-    PyList* result = new PyList();
+EVEResult CorpRegistryBound::GetSuggestedAllianceShortNames(EVECallArgs&call, PyString* name) {
     SuggestedShortName sSN;
     sSN.sName.clear();
     uint32 cnLen = name->content().length();
@@ -335,12 +309,12 @@ PyResult CorpRegistryBound::GetSuggestedAllianceShortNames(PyCallArgs &call, PyW
         if (name->content()[i] >= 'A' && name->content()[i] <= 'Z')
             sSN.sName += name->content()[i];
 
-    result->AddItem( sSN.Encode() );
-    return result;
+    return new PyList {
+        sSN.Encode ()
+    };
 }
 
-PyResult CorpRegistryBound::GetMembers(PyCallArgs &call)
-{   // working
+EVEResult CorpRegistryBound::GetMembers(EVECallArgs&call) {   // working
     // this just wants a member count and time (and headers)
     uint16 rowCount = m_db.GetMemberCount(m_corpID);
 
@@ -382,46 +356,45 @@ PyResult CorpRegistryBound::GetMembers(PyCallArgs &call)
     */
 
 
-    PyList* headers = new PyList;
-
-    headers->AddItemString ("characterID");
-    headers->AddItemString ("corporationID");
-    headers->AddItemString ("divisionID");
-    headers->AddItemString ("squadronID");
-    headers->AddItemString ("title");
-    headers->AddItemString ("roles");
-    headers->AddItemString ("grantableRoles");
-    headers->AddItemString ("startDateTime");
-    headers->AddItemString ("baseID");
-    headers->AddItemString ("rolesAtHQ");
-    headers->AddItemString ("grantableRolesAtHQ");
-    headers->AddItemString ("rolesAtBase");
-    headers->AddItemString ("grantableRolesAtBase");
-    headers->AddItemString ("rolesAtOther");
-    headers->AddItemString ("grantableRolesAtOther");
-    headers->AddItemString ("titleMask");
-    headers->AddItemString ("accountKey");
-    headers->AddItemString ("rowDate");
-    headers->AddItemString ("blockRoles");
+    PyList* headers = new PyList {
+        new PyString ("characterID"),
+        new PyString ("corporationID"),
+        new PyString ("divisionID"),
+        new PyString ("squadronID"),
+        new PyString ("title"),
+        new PyString ("roles"),
+        new PyString ("grantableRoles"),
+        new PyString ("startDateTime"),
+        new PyString ("baseID"),
+        new PyString ("rolesAtHQ"),
+        new PyString ("grantableRolesAtHQ"),
+        new PyString ("rolesAtBase"),
+        new PyString ("grantableRolesAtBase"),
+        new PyString ("rolesAtOther"),
+        new PyString ("grantableRolesAtOther"),
+        new PyString ("titleMask"),
+        new PyString ("accountKey"),
+        new PyString ("rowDate"),
+        new PyString ("blockRoles"),
+    };
 
     // TODO: rewrite this to properly use different services, right now any calls to the MembersSparseRowset will be directed here
-    PyDict *dict = new PyDict();
-        dict->SetItemString("realRowCount", new PyInt(rowCount));   // this is current member count
-    PyTuple* boundObject = new PyTuple(3);
-        boundObject->SetItem(0, new PyString (this->GetIDString()));    // node info here
-        boundObject->SetItem(1, dict);
-        boundObject->SetItem(2, new PyLong(GetFileTimeNow()));
 
     GetMembersSparseRowset ret;
-        ret.boundObject = boundObject;
-        ret.realRowCount = rowCount;
+    ret.boundObject = new PyTuple {
+        new PyString (this->GetIDString()),
+        new PyDict {
+            {"realRowCount", new PyInt (rowCount)}
+        },
+        new PyInt (GetFileTimeNow())
+    };
+    ret.realRowCount = rowCount;
     return ret.Encode();
 }
 
-PyResult CorpRegistryBound::UpdateDivisionNames(PyCallArgs &call,
-    PyRep* div1, PyRep* div2, PyRep* div3, PyRep* div4, PyRep* div5, PyRep* div6, PyRep* div8,
-    PyRep* wal1, PyRep* wal2, PyRep* wal3, PyRep* wal4, PyRep* wal5, PyRep* wal6, PyRep* wal7)
-{   // working
+EVEResult CorpRegistryBound::UpdateDivisionNames(EVECallArgs&call,
+    PyDataType* div1, PyDataType* div2, PyDataType* div3, PyDataType* div4, PyDataType* div5, PyDataType* div6, PyDataType* div8,
+    PyDataType* wal1, PyDataType* wal2, PyDataType* wal3, PyDataType* wal4, PyDataType* wal5, PyDataType* wal6, PyDataType* wal7) {   // working
     // TODO: stop using this and make use of the parameters, changing this is way too out of the scope of the service manager changes
     Call_UpdateDivisionNames args;
     if (!args.Decode(&call.tuple)) {
@@ -440,7 +413,7 @@ PyResult CorpRegistryBound::UpdateDivisionNames(PyCallArgs &call,
     }
 
     // Only send notification if it is needed...
-    if (notif.data->items.size()) {
+    if (notif.data->size()) {
         /** @todo update this to use CorpNotify() */
         MulticastTarget mct;
             mct.corporations.insert(notif.key);
@@ -453,7 +426,7 @@ PyResult CorpRegistryBound::UpdateDivisionNames(PyCallArgs &call,
     return this->GetOID();
 }
 
-PyResult CorpRegistryBound::GetMembersPaged(PyCallArgs &call, PyInt* page) {
+EVEResult CorpRegistryBound::GetMembersPaged(EVECallArgs&call, PyInt* page) {
     //return self.GetCorpRegistry().GetMembersPaged(page)
     DBQueryResult res;
     m_db.GetMembersPaged(m_corpID, page->value(), res);
@@ -464,56 +437,61 @@ PyResult CorpRegistryBound::GetMembersPaged(PyCallArgs &call, PyInt* page) {
     while (res.GetRow(row)) {
         //SELECT characterID, corporationID, title, rolesAtAll, grantableRoles, startDateTime, rolesAtHQ, grantableRolesAtHQ, \
           rolesAtBase, grantableRolesAtBase, rolesAtOther, grantableRolesAtOther, titleMask, corpAccountKey, baseID, blockRoles, name
-        PyDict* dict = new PyDict();
-        dict->SetItemString( "characterID",             new PyInt(row.GetInt(0)));
-        dict->SetItemString( "corporationID",           new PyInt(row.GetInt(1)));
-        dict->SetItemString( "divisionID",              new PyInt(0));
-        dict->SetItemString( "squadronID",              new PyInt(0));
-        dict->SetItemString( "title",                   new PyInt(row.GetInt(2)));
-        dict->SetItemString( "roles",                   new PyLong(row.GetInt64(3)));
-        dict->SetItemString( "grantableRoles",          new PyInt(row.GetInt(4)));
-        dict->SetItemString( "startDateTime",           new PyLong(row.GetInt64(5)));
-        dict->SetItemString( "rolesAtHQ",               new PyLong(row.GetInt64(6)));
-        dict->SetItemString( "grantableRolesAtHQ",      new PyLong(row.GetInt64(7)));
-        dict->SetItemString( "rolesAtBase",             new PyLong(row.GetInt64(8)));
-        dict->SetItemString( "grantableRolesAtBase",    new PyLong(row.GetInt64(9)));
-        dict->SetItemString( "rolesAtOther",            new PyLong(row.GetInt64(10)));
-        dict->SetItemString( "grantableRolesAtOther",   new PyLong(row.GetInt64(11)));
-        dict->SetItemString( "titleMask",               new PyLong(row.GetInt64(12))); // titleID
-        dict->SetItemString( "accountKey",              new PyInt(row.GetInt(13)));
-        dict->SetItemString( "rowDate",                 new PyLong(GetFileTimeNow())); //may not be right
-        dict->SetItemString( "baseID",                  new PyInt(row.GetInt(14))); /** @todo update this */
-        dict->SetItemString( "blockRoles",              new PyBool(row.GetInt(15)));
-        dict->SetItemString( "ownerName",               new PyString(row.GetText(16)));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(
+            new PyObject(
+                "util.KeyVal",
+                new PyDict {
+                    {"characterID", new PyInt (row.GetInt (0))},
+                    {"corporationID", new PyInt (row.GetInt (1))},
+                    {"divisionID", new PyInt (0)},
+                    {"squadronID", new PyInt (0)},
+                    {"title", new PyInt (row.GetInt (2))},
+                    {"roles", new PyInt (row.GetInt64 (3))},
+                    {"grantableRoles", new PyInt (row.GetInt (4))},
+                    {"startDateTime", new PyInt (row.GetInt64 (5))},
+                    {"rolesAtHQ", new PyInt (row.GetInt64 (6))},
+                    {"grantableRolesAtHQ", new PyInt (row.GetInt64 (7))},
+                    {"rolesAtBase", new PyInt (row.GetInt64 (8))},
+                    {"grantableRolesAtBase", new PyInt (row.GetInt64 (9))},
+                    {"rolesAtOther", new PyInt (row.GetInt64 (10))},
+                    {"grantableRolesAtOther", new PyInt (row.GetInt64 (11))},
+                    {"titleMask", new PyInt (row.GetInt64 (12))}, // titleID
+                    {"accountKey", new PyInt (row.GetInt (13))},
+                    {"rowDate", new PyInt (GetFileTimeNow ())}, // may not be right
+                    {"baseID", new PyInt (row.GetInt (14))},/** @todo update this */
+                    {"blockRoles", new PyBool (row.GetInt (15))},
+                    {"ownerName", new PyString (row.GetText (16))},
+                }
+            )
+        );
     }
 
     if (is_log_enabled(CORP__RSP_DUMP))
-        list->Dump(CORP__RSP_DUMP, "");
+        list->dump(CORP__RSP_DUMP, "");
 
     return list;
 }
 
-PyResult CorpRegistryBound::GetMembersByIds(PyCallArgs &call, PyList* memberIDs) {
+EVEResult CorpRegistryBound::GetMembersByIds(EVECallArgs&call, PyList* memberIDs) {
     //return self.GetCorpRegistry().GetMembersByIds(memberIDs)
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetMembersByIds()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     PyList* list = new PyList();
     for (PyList::const_iterator itr = memberIDs->begin(); itr != memberIDs->end(); ++itr)
-        list->AddItem(new PyObject("util.KeyVal", m_db.GetMember(PyRep::IntegerValueU32(*itr))));
+        list->add(new PyObject("util.KeyVal", m_db.GetMember((*itr)->u32())));
 
     if (is_log_enabled(CORP__RSP_DUMP))
-        list->Dump(CORP__RSP_DUMP, "");
+        list->dump(CORP__RSP_DUMP, "");
 
     return list;
 }
 
-PyResult CorpRegistryBound::AddCorporation(PyCallArgs &call,
-    PyRep* name, PyRep* ticker, PyRep* description, PyRep* url, PyFloat* taxRate,
-    PyRep* shape1, PyRep* shape2, PyRep* shape3,
-    PyRep* color1, PyRep* color2, PyRep* color3,
-    PyRep* typeface, PyInt* applicationEnabled) {
+EVEResult CorpRegistryBound::AddCorporation(EVECallArgs&call,
+    PyDataType* name, PyDataType* ticker, PyDataType* description, PyDataType* url, PyFloat* taxRate,
+    PyDataType* shape1, PyDataType* shape2, PyDataType* shape3,
+    PyDataType* color1, PyDataType* color2, PyDataType* color3,
+    PyDataType* typeface, PyInt* applicationEnabled) {
 
     Client* pClient(call.client);
     // TODO: stop using this and make use of the parameters, changing this is way too out of the scope of the service manager changes
@@ -636,15 +614,15 @@ PyResult CorpRegistryBound::AddCorporation(PyCallArgs &call,
     return m_db.GetCorporations(corpID);
 }
 
-PyResult CorpRegistryBound::UpdateTitle(PyCallArgs &call,
-    PyRep* titleID, PyRep* titleName,
-    PyRep* roles, PyRep* grantableRoles,
-    PyRep* rolesAtHQ, PyRep* grantableRolesAtHQ, 
-    PyRep* rolesAtBase, PyRep* grantableRolesAtBase, 
-    PyRep* rolesAtOther, PyRep* grantableRolesAtOther) {
+EVEResult CorpRegistryBound::UpdateTitle(EVECallArgs&call,
+    PyDataType* titleID, PyDataType* titleName,
+    PyDataType* roles, PyDataType* grantableRoles,
+    PyDataType* rolesAtHQ, PyDataType* grantableRolesAtHQ,
+    PyDataType* rolesAtBase, PyDataType* grantableRolesAtBase,
+    PyDataType* rolesAtOther, PyDataType* grantableRolesAtOther) {
     // self.GetCorpRegistry().UpdateTitle(titleID, titleName, roles, grantableRoles, rolesAtHQ, grantableRolesAtHQ, rolesAtBase, grantableRolesAtBase, rolesAtOther, grantableRolesAtOther)
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateTitle()");
-    //call.Dump(CORP__CALL_DUMP);
+    //call.dump(CORP__CALL_DUMP);
 
     // TODO: stop using this and make use of the parameters, changing this is way too out of the scope of the service manager changes
     Call_UpdateTitleData args;
@@ -670,47 +648,47 @@ PyResult CorpRegistryBound::UpdateTitle(PyCallArgs &call,
     return nullptr;
 }
 
-PyResult CorpRegistryBound::UpdateTitles(PyCallArgs &call, PyObject* titles) {
+EVEResult CorpRegistryBound::UpdateTitles(EVECallArgs&call, PyObject* titles) {
     //    self.GetCorpRegistry().UpdateTitles(titles)
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateTitles()");
-    //call.Dump(CORP__CALL_DUMP);
-    if (!call.tuple->GetItem(0)->IsObject()) {
-        codelog(CORP__ERROR, "Tuple Item is wrong type: %s.  Expected PyObject.", call.tuple->GetItem(0)->TypeString());
+    //call.dump(CORP__CALL_DUMP);
+    if (!call.tuple->at (0)->is<PyObject>()) {
+        codelog(CORP__ERROR, "Tuple Item is wrong type: %s.  Expected PyObject.", call.tuple->at (0)->TypeString());
         return nullptr;
     }
 
-    if (!titles->arguments()->IsDict()) {
+    if (!titles->arguments()->is<PyDict>()) {
         codelog(CORP__ERROR, "Object Argument is wrong type: %s.  Expected PyDict.", titles->arguments()->TypeString());
         return nullptr;
     }
 
-    PyDict* dict = titles->arguments()->AsDict();
+    PyDict* dict = titles->arguments()->as<PyDict>();
     //dict->Dump(CORP__TRACE, "    ");
-    PyRep* rep = dict->GetItemString("lines");
-    if (!rep->IsList()) {
+    PyDataType* rep = dict->get("lines");
+    if (!rep->is<PyList>()) {
         codelog(CORP__ERROR, "'lines' item is not PyList: %s", rep->TypeString());
         return nullptr;
     }
 
     Call_UpdateTitleData args;
-    PyList* list = rep->AsList();
+    PyList* list = rep->as<PyList>();
     for (PyList::const_iterator itr = list->begin(); itr != list->end(); ++itr) {
-        if (!(*itr)->IsList()) {
+        if (!(*itr)->is<PyList>()) {
             codelog(CORP__ERROR, "itr item is not PyList: %s", (*itr)->TypeString());
             continue;
         }
         PyDict* updates = new PyDict();
-        PyList* list2 = (*itr)->AsList();
-        args.titleID = list2->GetItem(0)->AsInt()->value();
-        args.titleName = PyRep::StringContent(list2->GetItem(1));
-        args.roles = PyRep::IntegerValue(list2->GetItem(2));
-        args.grantableRoles = PyRep::IntegerValue(list2->GetItem(3));
-        args.rolesAtHQ = PyRep::IntegerValue(list2->GetItem(4));
-        args.grantableRolesAtHQ = PyRep::IntegerValue(list2->GetItem(5));
-        args.rolesAtBase = PyRep::IntegerValue(list2->GetItem(6));
-        args.grantableRolesAtBase = PyRep::IntegerValue(list2->GetItem(7));
-        args.rolesAtOther = PyRep::IntegerValue(list2->GetItem(8));
-        args.grantableRolesAtOther = PyRep::IntegerValue(list2->GetItem(9));
+        PyList* list2 = (*itr)->as<PyList>();
+        args.titleID = list2->at (0)->as<PyInt>()->value();
+        args.titleName = list2->at (1)->string();
+        args.roles = list2->at (2)->i64();
+        args.grantableRoles = list2->at (3)->i64();
+        args.rolesAtHQ = list2->at (4)->i64();
+        args.grantableRolesAtHQ = list2->at (5)->i64();
+        args.rolesAtBase = list2->at (6)->i64();
+        args.grantableRolesAtBase = list2->at (7)->i64();
+        args.rolesAtOther = list2->at (8)->i64();
+        args.grantableRolesAtOther = list2->at (9)->i64();
         if (m_db.UpdateTitle(m_corpID, args, updates)) {
             /** @todo update this to use CorpNotify() */
             OnTitleChanged change;
@@ -727,21 +705,21 @@ PyResult CorpRegistryBound::UpdateTitles(PyCallArgs &call, PyObject* titles) {
     return nullptr;
 }
 
-PyResult CorpRegistryBound::UpdateCorporation(PyCallArgs &call, PyRep* description, PyRep* url, PyFloat* tax) {
+EVEResult CorpRegistryBound::UpdateCorporation(EVECallArgs&call, PyDataType* description, PyDataType* url, PyFloat* tax) {
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateCorporation() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
     Notify_IntRaw notif;
     notif.key = m_corpID;
     notif.data = new PyDict();
 
-    if (!m_db.UpdateCorporation(notif.key, PyRep::StringContent(description), PyRep::StringContent (url), tax->value(), notif.data)) {
+    if (!m_db.UpdateCorporation(notif.key, description->string(), url->string(), tax->value(), notif.data)) {
         codelog(SERVICE__ERROR, "%s: Failed to update corporation data for corp %u", call.client->GetName(), notif.key);
         PyDecRef( notif.data );
         return PyStatic.NewNone();
     }
 
     // Only send notification if it is needed...
-    if (notif.data->items.size()) {
+    if (notif.data->size()) {
         /** @todo update this to use CorpNotify() */
         MulticastTarget mct;
         mct.corporations.insert(notif.key);
@@ -753,11 +731,10 @@ PyResult CorpRegistryBound::UpdateCorporation(PyCallArgs &call, PyRep* descripti
     return PyStatic.NewNone();
 }
 
-PyResult CorpRegistryBound::UpdateLogo(PyCallArgs &call,
-    PyRep* shape1, PyRep* shape2, PyRep* shape3,
-    PyRep* color1, PyRep* color2, PyRep* color3,
-    PyRep* typeface)
-{
+EVEResult CorpRegistryBound::UpdateLogo(EVECallArgs&call,
+    PyDataType* shape1, PyDataType* shape2, PyDataType* shape3,
+    PyDataType* color1, PyDataType* color2, PyDataType* color3,
+    PyDataType* typeface) {
     // TODO: stop using this and make use of the parameters, changing this is way too out of the scope of the service manager changes
     Call_UpdateLogo args;
     if (!args.Decode(&call.tuple)) {
@@ -805,21 +782,21 @@ PyResult CorpRegistryBound::UpdateLogo(PyCallArgs &call,
     return m_db.GetCorporation(notif.key);
 }
 
-PyResult CorpRegistryBound::AddBulletin(PyCallArgs &call, PyRep* title, PyRep* body) {
+EVEResult CorpRegistryBound::AddBulletin(EVECallArgs&call, PyDataType* title, PyDataType* body) {
     // self.GetCorpRegistry().AddBulletin(title, body)
     // self.GetCorpRegistry().AddBulletin(title, body, bulletinID=bulletinID, editDateTime=editDateTime)    <-- this is to update bulletin
     _log(CORP__CALL, "CorpRegistryBound::Handle_AddBulletin()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
-    std::string titleStr = PyRep::StringContent(title);
-    std::string bodyStr = PyRep::StringContent(body);
+    std::string titleStr = title->string();
+    std::string bodyStr = body->string();
 
     bool edit = false;
     int64 editDateTime = 0;
     if (call.byname.find("editDateTime") != call.byname.end()) {
-        if (call.byname.find("editDateTime")->second->IsLong()) {
+        if (call.byname.find("editDateTime")->second->is<PyInt>()) {
             edit = true;
-            editDateTime = PyInt::IntegerValue(call.byname.find("editDateTime")->second);
+            editDateTime = call.byname.find("editDateTime")->second->i64();
         } else {
             _log(CORP__ERROR, "Handle_AddBulletin - editDateTime is of the wrong type: '%s'.  Expected PyString or PyWString.", \
                             call.byname.find("editDateTime")->second->TypeString());
@@ -828,9 +805,9 @@ PyResult CorpRegistryBound::AddBulletin(PyCallArgs &call, PyRep* title, PyRep* b
 
     int64 bulletinID = 0;
     if (call.byname.find("bulletinID") != call.byname.end()) {
-        if (call.byname.find("bulletinID")->second->IsInt()) {
+        if (call.byname.find("bulletinID")->second->is<PyInt>()) {
             edit = true;
-            bulletinID = PyInt::IntegerValue(call.byname.find("bulletinID")->second);
+            bulletinID = call.byname.find("bulletinID")->second->i64();
         } else {
             _log(CORP__ERROR, "Handle_AddBulletin - bulletinID is of the wrong type: '%s'.  Expected PyInt.", \
                             call.byname.find("bulletinID")->second->TypeString());
@@ -851,10 +828,10 @@ PyResult CorpRegistryBound::AddBulletin(PyCallArgs &call, PyRep* title, PyRep* b
     return nullptr;
 }
 
-PyResult CorpRegistryBound::DeleteBulletin(PyCallArgs &call, PyInt* bulletinID) {
+EVEResult CorpRegistryBound::DeleteBulletin(EVECallArgs&call, PyInt* bulletinID) {
     //self.GetCorpRegistry().DeleteBulletin(id)
     _log(CORP__CALL, "CorpRegistryBound::Handle_DeleteBulletin() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     if (bulletinID->value() >= 100000) {
         AllianceDB::DeleteBulletin(bulletinID->value());
@@ -864,10 +841,10 @@ PyResult CorpRegistryBound::DeleteBulletin(PyCallArgs &call, PyInt* bulletinID) 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::CreateRecruitmentAd(PyCallArgs &call, PyInt* days, PyInt* typeMask, std::optional <PyInt*> allianceID, PyWString* description, PyInt* channelID, PyList* recruiterIDs, PyWString* title) {
+EVEResult CorpRegistryBound::CreateRecruitmentAd(EVECallArgs&call, PyInt* days, PyInt* typeMask, std::optional <PyInt*> allianceID, PyString* description, PyInt* channelID, PyList* recruiterIDs, PyString* title) {
     // return self.GetCorpRegistry().CreateRecruitmentAd(days, typeMask, allianceID, description, channelID, recruiters, title)
     _log(CORP__CALL, "CorpRegistryBound::Handle_CreateRecruitmentAd()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
     /*
      * 00:41:50 [SvcCall] Service CorpRegistryBound::CreateRecruitmentAd()
      * 00:41:50 W CorpRegistryBound::Handle_CreateRecruitmentAd(): size= 7
@@ -897,8 +874,8 @@ PyResult CorpRegistryBound::CreateRecruitmentAd(PyCallArgs &call, PyInt* days, P
     std::vector<int32> recruiters;
     recruiters.clear();
     for (PyList::const_iterator itr = recruiterIDs->begin(); itr != recruiterIDs->end(); ++itr)
-        recruiters.push_back(PyRep::IntegerValue(*itr));
-    //recruiters.push_back((*itr)->AsInt()->value());
+        recruiters.push_back((*itr)->i64());
+    //recruiters.push_back((*itr)->as<PyInt>()->value());
 
     // if no recruiters defined, default to creating character
     if (recruiters.empty())
@@ -909,10 +886,10 @@ PyResult CorpRegistryBound::CreateRecruitmentAd(PyCallArgs &call, PyInt* days, P
     return nullptr;
 }
 
-PyResult CorpRegistryBound::UpdateRecruitmentAd(PyCallArgs &call, PyInt* adID, PyInt* typeMask, PyWString* description, PyInt* channelID, PyList* recruiterIDs, PyWString* title, PyInt* addedDays) {
+EVEResult CorpRegistryBound::UpdateRecruitmentAd(EVECallArgs&call, PyInt* adID, PyInt* typeMask, PyString* description, PyInt* channelID, PyList* recruiterIDs, PyString* title, PyInt* addedDays) {
     // return self.GetCorpRegistry().UpdateRecruitmentAd(adID, typeMask, description, channelID, recruiters, title, addedDays)
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateRecruitmentAd() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /*
      * 04:47:40 [CorpCall] CorpRegistryBound::Handle_UpdateRecruitmentAd() size=7
@@ -956,7 +933,7 @@ PyResult CorpRegistryBound::UpdateRecruitmentAd(PyCallArgs &call, PyInt* adID, P
     std::vector<int32> recruiters;
     recruiters.clear();
     for (PyList::const_iterator itr = recruiterIDs->begin(); itr != recruiterIDs->end(); ++itr)
-        recruiters.push_back(PyRep::IntegerValue(*itr));
+        recruiters.push_back((*itr)->i64());
 
     // if no recruiters defined, default to creating character
     if (recruiters.empty())
@@ -967,10 +944,10 @@ PyResult CorpRegistryBound::UpdateRecruitmentAd(PyCallArgs &call, PyInt* adID, P
     return m_db.GetAdvert(adID->value());
 }
 
-PyResult CorpRegistryBound::MoveCompanyShares(PyCallArgs &call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares) {
+EVEResult CorpRegistryBound::MoveCompanyShares(EVECallArgs&call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares) {
     // return self.GetCorpRegistry().MoveCompanyShares(corporationID, toShareholderID, numberOfShares)
     _log(CORP__CALL, "CorpRegistryBound::Handle_MoveCompanyShares()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     if (IsCorp(toShareholderID->value())) {
         call.client->SendInfoModalMsg("You cannot give shares to a corporation.");
@@ -990,10 +967,10 @@ PyResult CorpRegistryBound::MoveCompanyShares(PyCallArgs &call, PyInt* corporati
     return nullptr;
 }
 
-PyResult CorpRegistryBound::MovePrivateShares(PyCallArgs &call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares) {
+EVEResult CorpRegistryBound::MovePrivateShares(EVECallArgs&call, PyInt* corporationID, PyInt* toShareholderID, PyInt* numberOfShares) {
     // return self.GetCorpRegistry().MovePrivateShares(corporationID, toShareholderID, numberOfShares)
     _log(CORP__CALL, "CorpRegistryBound::Handle_MovePrivateShares()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     uint32 corpID = 0;
     Client* pClient = sEntityList.FindClientByCharID(toShareholderID->value());
@@ -1009,14 +986,13 @@ PyResult CorpRegistryBound::MovePrivateShares(PyCallArgs &call, PyInt* corporati
     return nullptr;
 }
 
-
-PyResult CorpRegistryBound::GetMemberIDsByQuery(PyCallArgs &call, PyList* queryList, std::optional <PyInt*> includeImplied, PyInt* searchTitles) {
+EVEResult CorpRegistryBound::GetMemberIDsByQuery(EVECallArgs&call, PyList* queryList, std::optional <PyInt*> includeImplied, PyInt* searchTitles) {
     /*this is performed thru corp window using a multitude of options, to get specific members based on quite variable criteria
      * not as complicated as i had originally thought.
      */
 
     //return self.GetCorpRegistry().GetMemberIDsByQuery(query, includeImplied, searchTitles)
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     if (queryList->empty()) {
         call.client->SendErrorMsg("You must choose a role to search for.");
@@ -1064,7 +1040,7 @@ PyResult CorpRegistryBound::GetMemberIDsByQuery(PyCallArgs &call, PyList* queryL
     // decode query format
     PyList* list(nullptr);
     for (PyList::const_iterator itr = queryList->begin(); itr != queryList->end(); ++itr) {
-        list = (*itr)->AsList();
+        list = (*itr)->as<PyList>();
         if (list == nullptr)
             continue;
         if (list->size() == 3) {
@@ -1145,10 +1121,10 @@ PyResult CorpRegistryBound::GetMemberIDsByQuery(PyCallArgs &call, PyList* queryL
 
     // populate results
     for (auto cur : result)
-        list->AddItem(new PyInt(cur));
+        list->add(new PyInt(cur));
 
     if (is_log_enabled(CORP__RSP_DUMP))
-        list->Dump(CORP__RSP_DUMP, "");
+        list->dump(CORP__RSP_DUMP, "");
 
     // return results
     return list;
@@ -1158,63 +1134,63 @@ PyResult CorpRegistryBound::GetMemberIDsByQuery(PyCallArgs &call, PyList* queryL
 `corpRole`, `rolesAtAll`, `rolesAtHQ`, `rolesAtBase`, `rolesAtOther`, \
 `grantableRoles`, `grantableRolesAtHQ`, `grantableRolesAtBase`, `grantableRolesAtOther`,\
 `titleMask`, `blockRoles`, `baseID`, `startDateTime` FROM `chrCharacters` WHERE 1
-bool CorpRegistryBound::GetSearchValues(int8 op, PyRep* rep, std::ostringstream& query)
+bool CorpRegistryBound::GetSearchValues(int8 op, PyDataType* rep, std::ostringstream& query)
 {
     using namespace Corp;
     switch (op) {
         case SearchOp::EQUAL: {
             query << " = ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::GREATER: {
             query << " > ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::GREATER_OR_EQUAL: {
             query << " >= ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::LESS: {
             query << " < ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::LESS_OR_EQUAL: {
             query << " <= ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::NOT_EQUAL: {
             query << " != ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::HAS_BIT: {
             query << " &";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
             query << " = ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::NOT_HAS_BIT: {
             query << " ~";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
             query << " = ";
-            query << PyRep::IntegerValue(rep);
+            query << rep->i64();
         } break;
         case SearchOp::STR_CONTAINS:
         case SearchOp::STR_LIKE: {
             query << "%";
-            query << PyRep::StringContent(rep);
+            query << rep->string();
             query << "% ";
         } break;
         case SearchOp::STR_STARTS_WITH: {
-            query << PyRep::StringContent(rep);
+            query << rep->string();
             query << "%";
         } break;
         case SearchOp::STR_ENDS_WITH: {
             query << "%";
-            query << PyRep::StringContent(rep);
+            query << rep->string();
         } break;
         case SearchOp::STR_IS: {
             query << " = ";
-            query << PyRep::StringContent(rep);
+            query << rep->string();
         } break;
         default: {
             _log(CORP__ERROR, "CorpRegistryBound::GetSearchValues() sent invalid searchOp %i", op);
@@ -1262,7 +1238,7 @@ uint8 CorpRegistryBound::GetQueryType(std::string queryType)
  * @note   these below are partially coded
  */
 
-PyResult CorpRegistryBound::PayoutDividend(PyCallArgs &call, PyBool* payShareholders, PyFloat* payoutAmount) {
+EVEResult CorpRegistryBound::PayoutDividend(EVECallArgs&call, PyBool* payShareholders, PyFloat* payoutAmount) {
     //self.GetCorpRegistry().PayoutDividend(payShareholders, payoutAmount)
     /*** shareholders
      * 04:42:43 W CorpRegistryBound::Handle_PayoutDividend(): size= 2
@@ -1278,7 +1254,7 @@ PyResult CorpRegistryBound::PayoutDividend(PyCallArgs &call, PyBool* paySharehol
      * 04:42:50 [CorpCallDump]         [ 1] Real field: 1.000000
      */
     _log(CORP__CALL, "CorpRegistryBound::Handle_PayoutDividend()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /** @todo finish this... */
 
@@ -1307,11 +1283,11 @@ PyResult CorpRegistryBound::PayoutDividend(PyCallArgs &call, PyBool* paySharehol
     return nullptr;
 }
 
-PyResult CorpRegistryBound::UpdateMember(PyCallArgs &call,
-    PyInt* characterID, PyRep* title, PyRep* divisionID, PyRep* squadronID,
-    PyLong* roles, PyLong* grantableRoles, PyLong* rolesAtHQ, PyLong* grantableRolesAtHQ,
-    PyLong* rolesAtBase, PyLong* grantableRolesAtBase, PyLong* rolesAtOther, PyLong* grantableRolesAtOther,
-    PyRep* baseID, PyRep* titleMask, PyRep* blockRoles) {
+EVEResult CorpRegistryBound::UpdateMember(EVECallArgs&call,
+    PyInt* characterID, PyDataType* title, PyDataType* divisionID, PyDataType* squadronID,
+    PyInt* roles, PyInt* grantableRoles, PyInt* rolesAtHQ, PyInt* grantableRolesAtHQ,
+    PyInt* rolesAtBase, PyInt* grantableRolesAtBase, PyInt* rolesAtOther, PyInt* grantableRolesAtOther,
+    PyDataType* baseID, PyDataType* titleMask, PyDataType* blockRoles) {
     //return self.GetCorpRegistry().UpdateMember(charIDToUpdate, title, divisionID, squadronID, roles, grantableRoles, rolesAtHQ, grantableRolesAtHQ, rolesAtBase, grantableRolesAtBase, rolesAtOther, grantableRolesAtOther, baseID, titleMask, blockRoles)
     /** @todo there is more to this call......havent fully figured it out yet.  */
     /*  called when clicking on "member details - roles tab - apply"
@@ -1366,7 +1342,7 @@ PyResult CorpRegistryBound::UpdateMember(PyCallArgs &call,
      * 21:17:46 [SvcError] Handle_UpdateMember(/usr/local/src/eve/EVE/src/eve-server/corporation/CorpRegistryBound.cpp:1270): allan: Failed to decode arguments.
      */
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateMember()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // TODO: stop using this and make use of the parameters, changing this is way too out of the scope of the service manager changes
     Call_UpdateMember args;
@@ -1406,7 +1382,7 @@ PyResult CorpRegistryBound::UpdateMember(PyCallArgs &call,
     return nullptr;
 }
 
-PyResult CorpRegistryBound::InsertApplication(PyCallArgs &call, PyInt* corporationID, PyRep* message)
+EVEResult CorpRegistryBound::InsertApplication(EVECallArgs&call, PyInt* corporationID, PyDataType* message)
 {
     // should "corp jumpers" be time-limited?   config option?   parameters?
     //  if so, put check here and return msg to player on hit
@@ -1430,7 +1406,7 @@ PyResult CorpRegistryBound::InsertApplication(PyCallArgs &call, PyInt* corporati
         aInfo.valid = true;
         aInfo.charID = charID;
         aInfo.corpID = corporationID->value();
-        aInfo.appText = PyRep::StringContent (message);
+        aInfo.appText = message->string();
         aInfo.role = Corp::Role::Member;
         aInfo.grantRole = Corp::Role::Member;  // this is "None"
         aInfo.status = Corp::AppStatus::AppliedByCharacter;
@@ -1471,9 +1447,9 @@ PyResult CorpRegistryBound::InsertApplication(PyCallArgs &call, PyInt* corporati
     // should this be sent from mail system?  maybe not...cannot determine type from mail.
     // for now, this notification will need to be created/sent from same method sending mail.
     PyDict* dict = new PyDict();
-        dict->SetItemString("applicationText", new PyString(aInfo.appText));
-        dict->SetItemString("corpID", new PyInt(corporationID->value()));
-        dict->SetItemString("charID", new PyInt(charID));
+        dict->set ("applicationText", new PyString(aInfo.appText));
+        dict->set ("corpID", new PyInt(corporationID->value()));
+        dict->set ("charID", new PyInt(charID));
     OnNotify onn;
         onn.created = GetFileTimeNow();
         onn.data    = dict;
@@ -1487,10 +1463,10 @@ PyResult CorpRegistryBound::InsertApplication(PyCallArgs &call, PyInt* corporati
     return nullptr;
 }
 
-PyResult CorpRegistryBound::UpdateApplicationOffer(PyCallArgs &call, PyInt* characterID, PyRep* applicationText, PyInt* status, PyNone* applicationDateTime) {
+EVEResult CorpRegistryBound::UpdateApplicationOffer(EVECallArgs&call, PyInt* characterID, PyDataType* applicationText, PyInt* status, PyNone* applicationDateTime) {
     //     return self.GetCorpRegistry().UpdateApplicationOffer(characterID, applicationText, status, applicationDateTime = None) NOTE: time not used.
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateApplicationOffer() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // can we send app to non-player corp?
     if (!IsPlayerCorp(m_corpID))
@@ -1498,7 +1474,7 @@ PyResult CorpRegistryBound::UpdateApplicationOffer(PyCallArgs &call, PyInt* char
 
     Corp::ApplicationInfo oldInfo = Corp::ApplicationInfo();
         oldInfo.valid = true;
-        oldInfo.appText = PyRep::StringContent(applicationText);
+        oldInfo.appText = applicationText->string();
         oldInfo.charID = characterID->value();
         oldInfo.corpID = m_corpID;  // is this applicants current corpID or applied-to corpID??
     if (!m_db.GetCurrentApplicationInfo(oldInfo)) {
@@ -1546,8 +1522,8 @@ PyResult CorpRegistryBound::UpdateApplicationOffer(PyCallArgs &call, PyInt* char
         // OnCorporationMemberChanged event
         OnCorpMemberChange ocmc;
             ocmc.charID = characterID->value();
-            ocmc.newCorpID = PyRep::IntegerValue(change.corporationIDNew);
-            ocmc.oldCorpID = PyRep::IntegerValue(change.corporationIDOld);
+            ocmc.newCorpID = change.corporationIDNew->i64();
+            ocmc.oldCorpID = change.corporationIDOld->i64();
             ocmc.newDate = (int64)GetFileTimeNow(); //PyRep::IntegerValue(OCAC.applicationDateTimeNew);
             ocmc.oldDate = oldInfo.appTime; // PyRep::IntegerValue(OCAC.applicationDateTimeOld);
 
@@ -1599,11 +1575,11 @@ PyResult CorpRegistryBound::UpdateApplicationOffer(PyCallArgs &call, PyInt* char
     return nullptr;
 }
 
-PyResult CorpRegistryBound::DeleteApplication(PyCallArgs & call, PyInt* corporationID, PyInt* characterID)
+EVEResult CorpRegistryBound::DeleteApplication(EVECallArgs& call, PyInt* corporationID, PyInt* characterID)
 {
     //  self.GetCorpRegistry().DeleteApplication(corporationID, characterID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_DeleteApplication() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     OnCorporationApplicationChanged ocac;
         ocac.corpID = corporationID->value();
@@ -1632,21 +1608,21 @@ PyResult CorpRegistryBound::DeleteApplication(PyCallArgs & call, PyInt* corporat
 
 void CorpRegistryBound::FillOCApplicationChange(OnCorporationApplicationChanged& OCAC, const Corp::ApplicationInfo& Old, const Corp::ApplicationInfo& New)
 {
-    //  ? (PyRep*)new PyInt(x) : PyStatic.NewNone();
+    //  ? (PyDataType*)new PyInt(x) : PyStatic.NewNone();
     if (Old.valid) {
         OCAC.applicationIDOld = new PyInt(Old.appID);
-        //OCAC.applicationDateTimeOld = new PyLong(Old.appTime);
+        //OCAC.applicationDateTimeOld = new PyInt(Old.appTime);
         OCAC.applicationTextOld = new PyString(Old.appText);
         OCAC.characterIDOld = new PyInt(Old.charID);
         OCAC.corporationIDOld = new PyInt(Old.corpID);
         //OCAC.deletedOld = new PyInt(Old.deleted);
-        //OCAC.grantableRolesOld = new PyLong(Old.grantRole);
+        //OCAC.grantableRolesOld = new PyInt(Old.grantRole);
         if (Old.lastCID) {
             OCAC.lastCorpUpdaterIDOld = new PyInt(Old.lastCID);
         } else {
             OCAC.lastCorpUpdaterIDOld = PyStatic.NewNone();
         }
-        //OCAC.rolesOld = new PyLong(Old.role);
+        //OCAC.rolesOld = new PyInt(Old.role);
         OCAC.statusOld = new PyInt(Old.status);
     } else {
         OCAC.applicationIDOld = PyStatic.NewNone();
@@ -1663,18 +1639,18 @@ void CorpRegistryBound::FillOCApplicationChange(OnCorporationApplicationChanged&
 
     if (New.valid) {
         OCAC.applicationIDNew = new PyInt(New.appID);
-        //OCAC.applicationDateTimeNew = new PyLong(New.appTime);
+        //OCAC.applicationDateTimeNew = new PyInt(New.appTime);
         OCAC.applicationTextNew = new PyString(New.appText);
         OCAC.characterIDNew = new PyInt(New.charID);
         OCAC.corporationIDNew = new PyInt(New.corpID);
         //OCAC.deletedNew = new PyInt(New.deleted);
-        //OCAC.grantableRolesNew = new PyLong(New.grantRole);
+        //OCAC.grantableRolesNew = new PyInt(New.grantRole);
         if (New.lastCID) {
             OCAC.lastCorpUpdaterIDNew = new PyInt(New.lastCID);
         } else {
             OCAC.lastCorpUpdaterIDNew = PyStatic.NewNone();
         }
-        //OCAC.rolesNew = new PyLong(New.role);
+        //OCAC.rolesNew = new PyInt(New.role);
         OCAC.statusNew = new PyInt(New.status);
     } else {
         OCAC.applicationIDNew = PyStatic.NewNone();
@@ -1690,11 +1666,11 @@ void CorpRegistryBound::FillOCApplicationChange(OnCorporationApplicationChanged&
     }
 }
 
-PyResult CorpRegistryBound::GetStations(PyCallArgs &call)
+EVEResult CorpRegistryBound::GetStations(EVECallArgs&call)
 {   // not working
     //  logs show this should be SparseRowset, but handled by bound corp registry object
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetStations() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /*
      *    [PyTuple 1 items]
@@ -1734,7 +1710,7 @@ PyResult CorpRegistryBound::GetStations(PyCallArgs &call)
     rsp.officeNumber = StationDB::GetOfficeCount(m_corpID);
 
     PyDict *dict = new PyDict();
-    dict->SetItemString("realRowCount", new PyInt(rsp.officeNumber));
+    dict->set ("realRowCount", new PyInt(rsp.officeNumber));
 
     rsp.boundObject = m_manager->BindObject(call.client, bObj, dict);
 
@@ -1747,7 +1723,7 @@ PyResult CorpRegistryBound::GetStations(PyCallArgs &call)
     PyObject* obj = m_db.GetStations(m_corpID);
 
     if (is_log_enabled(CORP__RSP_DUMP))
-        obj->Dump(CORP__RSP_DUMP, "");
+        obj->dump(CORP__RSP_DUMP, "");
 
     return obj;
 }
@@ -1756,17 +1732,17 @@ void CorpRegistryBound::BoundReleased (OfficeSparseBound* bound) {
     this->m_offices = nullptr;
 }
 
-PyResult CorpRegistryBound::GetOffices(PyCallArgs &call) {
+EVEResult CorpRegistryBound::GetOffices(EVECallArgs&call) {
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetOffices() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
-    PyList* headers = new PyList;
-
-    headers->AddItemString ("itemID");
-    headers->AddItemString ("stationID");
-    headers->AddItemString ("stationTypeID");
-    headers->AddItemString ("officeFolderID");
-    headers->AddItemString ("typeID");
+    PyList* headers = new PyList {
+        new PyString ("itemID"),
+        new PyString ("stationID"),
+        new PyString ("stationTypeID"),
+        new PyString ("officeFolderID"),
+        new PyString ("typeID")
+    };
 
     if (this->m_offices == nullptr) {
         this->m_offices = new OfficeSparseBound (this->GetServiceManager (), *this, m_db, m_corpID, headers);
@@ -1833,12 +1809,12 @@ PyResult CorpRegistryBound::GetOffices(PyCallArgs &call) {
     */
 }
 
-PyResult CorpRegistryBound::InsertVoteCase(PyCallArgs &call, PyRep* voteCaseText, PyRep* description, PyInt* corporationID, PyInt* voteType, std::optional <PyObject*> voteCaseOptions, PyLong* startDateTime, PyLong* endDateTime) {
+EVEResult CorpRegistryBound::InsertVoteCase(EVECallArgs&call, PyDataType* voteCaseText, PyDataType* description, PyInt* corporationID, PyInt* voteType, std::optional <PyObject*> voteCaseOptions, PyInt* startDateTime, PyInt* endDateTime) {
     //  return self.GetCorpRegistry().InsertVoteCase(voteCaseText, description, corporationID, voteType, voteCaseOptions, startDateTime, endDateTime)
     // see notes in m_db.AddVoteCase() for more info on data
 
     _log(CORP__CALL, "CorpRegistryBound::Handle_InsertVoteCase()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /*
      * 10:10:55 W CorpRegistryBound::Handle_InsertVoteCase(): size= 7
@@ -1892,8 +1868,8 @@ PyResult CorpRegistryBound::InsertVoteCase(PyCallArgs &call, PyRep* voteCaseText
      */
 
 
-    if (!call.tuple->GetItem(4)->IsObject()) {
-        codelog(CORP__ERROR, "Tuple Item is wrong type: %s.  Expected PyObject.", call.tuple->GetItem(0)->TypeString());
+    if (!call.tuple->at (4)->is<PyObject>()) {
+        codelog(CORP__ERROR, "Tuple Item is wrong type: %s.  Expected PyObject.", call.tuple->at (0)->TypeString());
         return nullptr;
     }
     Call_InsertVoteCase args;
@@ -1902,7 +1878,7 @@ PyResult CorpRegistryBound::InsertVoteCase(PyCallArgs &call, PyRep* voteCaseText
         return nullptr;
     }
 
-    if (!args.voteCaseOptions->arguments()->IsDict()) {
+    if (!args.voteCaseOptions->arguments()->is<PyDict>()) {
         codelog(CORP__ERROR, "voteCaseOptions Argument is wrong type: %s.  Expected PyDict.", args.voteCaseOptions->arguments()->TypeString());
         return nullptr;
     }
@@ -1957,7 +1933,7 @@ PyResult CorpRegistryBound::InsertVoteCase(PyCallArgs &call, PyRep* voteCaseText
     return nullptr;
 }
 
-PyResult CorpRegistryBound::GetVoteCasesByCorporation(PyCallArgs &call, PyInt* corporationID, std::optional<PyInt*> status, std::optional <PyInt*> maxLen)
+EVEResult CorpRegistryBound::GetVoteCasesByCorporation(EVECallArgs&call, PyInt* corporationID, std::optional<PyInt*> status, std::optional <PyInt*> maxLen)
 {
     //  xxx  = self.GetCorpRegistry().GetVoteCasesByCorporation(corpid)
     //return self.GetCorpRegistry().GetVoteCasesByCorporation(corpid, status, maxLen)
@@ -2016,7 +1992,7 @@ PyResult CorpRegistryBound::GetVoteCasesByCorporation(PyCallArgs &call, PyInt* c
               [PyString "endDateTime"]
               */
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetVoteCasesByCorporation()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     if (status.has_value() && maxLen.has_value()) {
         return m_db.GetVoteItems(corporationID->value(), status.value()->value(), maxLen.value()->value());
@@ -2029,23 +2005,23 @@ PyResult CorpRegistryBound::GetVoteCasesByCorporation(PyCallArgs &call, PyInt* c
     return nullptr;
 }
 
-PyResult CorpRegistryBound::GetVoteCaseOptions(PyCallArgs &call, PyInt* corporationID, PyInt* voteCaseID) {
+EVEResult CorpRegistryBound::GetVoteCaseOptions(EVECallArgs&call, PyInt* corporationID, PyInt* voteCaseID) {
     // options = self.GetCorpRegistry().GetVoteCaseOptions(corpID, voteCaseID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetVoteCaseOptions()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // TODO: also support specifying corporationID as parameters so shareholders can vote
-    PyRep* rsp = m_db.GetVoteOptions(voteCaseID->value());
+    PyDataType* rsp = m_db.GetVoteOptions(voteCaseID->value());
     if (is_log_enabled(CORP__RSP_DUMP))
-        rsp->Dump(CORP__RSP_DUMP, "");
+        rsp->dump(CORP__RSP_DUMP, "");
 
     return rsp;
 }
 
-PyResult CorpRegistryBound::GetVotes(PyCallArgs &call, PyInt* corporationId, PyInt* voteCaseID) {
+EVEResult CorpRegistryBound::GetVotes(EVECallArgs&call, PyInt* corporationId, PyInt* voteCaseID) {
     // charVotes = sm.GetService('corp').GetVotes(self.corpID, vote.voteCaseID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetVotes() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // this will need a bit more thought....
     /*
@@ -2058,9 +2034,9 @@ PyResult CorpRegistryBound::GetVotes(PyCallArgs &call, PyInt* corporationId, PyI
             */
 
     // TODO: also support specifying corporationID as parameters so shareholders can vote
-    PyRep* rsp = m_db.GetVotes(voteCaseID->value());
+    PyDataType* rsp = m_db.GetVotes(voteCaseID->value());
     if (is_log_enabled(CORP__RSP_DUMP))
-        rsp->Dump(CORP__RSP_DUMP, "");
+        rsp->dump(CORP__RSP_DUMP, "");
 
     return rsp;
 }
@@ -2123,8 +2099,7 @@ PyResult CorpRegistryBound::GetVotes(PyCallArgs &call, PyInt* corporationId, PyI
 
               */
 
-
-PyResult CorpRegistryBound::GetSanctionedActionsByCorporation(PyCallArgs &call, PyInt* corporationID, PyInt* state) {
+EVEResult CorpRegistryBound::GetSanctionedActionsByCorporation(EVECallArgs&call, PyInt* corporationID, PyInt* state) {
     //  rows = sm.GetService('corp').GetSanctionedActionsByCorporation(eve.session.corpid, state)
     /*
 05:09:00 [CorpCallDump]   Call Arguments:
@@ -2133,7 +2108,7 @@ PyResult CorpRegistryBound::GetSanctionedActionsByCorporation(PyCallArgs &call, 
 05:09:00 [CorpCallDump]       [ 1]    Integer: 1
 */
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetSanctionedActionsByCorporation()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /*  this still needs work...used to show voting items in corp that 'mean something'
      *
@@ -2161,19 +2136,18 @@ PyResult CorpRegistryBound::GetSanctionedActionsByCorporation(PyCallArgs &call, 
     return m_db.GetSanctionedItems(corporationID->value(), state->value());
 }
 
-PyResult CorpRegistryBound::CanVote(PyCallArgs &call, PyInt* corporationID) {
+EVEResult CorpRegistryBound::CanVote(EVECallArgs&call, PyInt* corporationID) {
     // canVote = sm.GetService('corp').CanVote(self.corpID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_CanVote() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return PyStatic.NewFalse();
 }
 
-
-PyResult CorpRegistryBound::InsertVote(PyCallArgs &call, PyInt* corporationID, PyInt* voteCaseID, PyInt* voteValue) {
+EVEResult CorpRegistryBound::InsertVote(EVECallArgs&call, PyInt* corporationID, PyInt* voteCaseID, PyInt* voteValue) {
     // return self.GetCorpRegistry().InsertVote(corporationID, voteCaseID, voteValue)
     _log(CORP__CALL, "CorpRegistryBound::Handle_InsertVote() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // can you change your vote?  will we have to check for votes already cast and update them?
     m_db.CastVote(corporationID->value(), call.client->GetCharacterID(), voteCaseID->value(), voteValue->value());
@@ -2186,7 +2160,8 @@ PyResult CorpRegistryBound::InsertVote(PyCallArgs &call, PyInt* corporationID, P
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult CorpRegistryBound::GetLockedItemLocations(PyCallArgs& call)
+EVEResult CorpRegistryBound::GetLockedItemLocations(
+    EVECallArgs& call)
 {    /*
     03:15:28 W CorpRegistryBound::Handle_GetLockedItemLocations(): size= 0
     03:15:28 [CorpCallDump]   Call Arguments:
@@ -2196,64 +2171,64 @@ PyResult CorpRegistryBound::GetLockedItemLocations(PyCallArgs& call)
 
     // called from corp.assets.lockdown
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetLockedItemLocations()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     //this returns an empty list for me on live.
     //  ...because there are no locked items for your corp. :/
     return new PyList();
 }
 
-PyResult CorpRegistryBound::AddCorporateContact(PyCallArgs &call, PyInt* contactID, PyInt* relationshipID) {
+EVEResult CorpRegistryBound::AddCorporateContact(EVECallArgs&call, PyInt* contactID, PyInt* relationshipID) {
     //self.GetCorpRegistry().AddCorporateContact(contactID, relationshipID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_AddCorporateContact()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     m_db.AddContact(m_corpID, contactID->value(), relationshipID->value());
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::EditCorporateContact(PyCallArgs &call, PyInt* contactID, PyInt* relationshipID) {
+EVEResult CorpRegistryBound::EditCorporateContact(EVECallArgs&call, PyInt* contactID, PyInt* relationshipID) {
     //self.GetCorpRegistry().EditCorporateContact(contactID, relationshipID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_EditCorporateContact()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     m_db.UpdateContact(relationshipID->value(), contactID->value(), m_corpID);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::EditContactsRelationshipID(PyCallArgs &call, PyList* contactIDs, PyInt* relationshipID) {
+EVEResult CorpRegistryBound::EditContactsRelationshipID(EVECallArgs&call, PyList* contactIDs, PyInt* relationshipID) {
     //self.GetCorpRegistry().EditContactsRelationshipID(contactIDs, relationshipID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_EditContactsRelationshipID()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     for (PyList::const_iterator itr = contactIDs->begin(); itr != contactIDs->end(); ++itr) {
-        m_db.UpdateContact(relationshipID->value(), PyRep::IntegerValueU32(*itr), m_corpID);
+        m_db.UpdateContact(relationshipID->value(), (*itr)->u32(), m_corpID);
     }
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::RemoveCorporateContacts(PyCallArgs &call, PyList* contactIDs) {
+EVEResult CorpRegistryBound::RemoveCorporateContacts(EVECallArgs&call, PyList* contactIDs) {
     // self.GetCorpRegistry().RemoveCorporateContacts(contactIDs)
     _log(CORP__CALL, "CorpRegistryBound::Handle_RemoveCorporateContacts()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     for (PyList::const_iterator itr = contactIDs->begin(); itr != contactIDs->end(); ++itr) {
-        m_db.RemoveContact(PyRep::IntegerValueU32(*itr), m_corpID);
+        m_db.RemoveContact((*itr)->u32(), m_corpID);
     }
 
     return nullptr;
 }
 
 // this is a member role/title update by memberIDs called from corp->members->find in role->task mgmt
-PyResult CorpRegistryBound::ExecuteActions(PyCallArgs &call, PyList* targetIDs, PyList* remoteActions) {
+EVEResult CorpRegistryBound::ExecuteActions(EVECallArgs&call, PyList* targetIDs, PyList* remoteActions) {
     //      verb, property, value = action
     //      remoteActions.append(action)
     //  return self.GetCorpRegistry().ExecuteActions(targetIDs, remoteActions)
     _log(CORP__CALL, "CorpRegistryBound::Handle_ExecuteActions() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /*
      *   args.memberIDs = list of charIDs to update
@@ -2265,58 +2240,58 @@ PyResult CorpRegistryBound::ExecuteActions(PyCallArgs &call, PyList* targetIDs, 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::CreateLabel(PyCallArgs &call, PyRep* name, PyRep* color) {
+EVEResult CorpRegistryBound::CreateLabel(EVECallArgs&call, PyDataType* name, PyDataType* color) {
     // return self.GetCorpRegistry().CreateLabel(name, color)
     _log(CORP__CALL, "CorpRegistryBound::Handle_CreateLabel() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::DeleteLabel(PyCallArgs &call, PyInt* labelID) {
+EVEResult CorpRegistryBound::DeleteLabel(EVECallArgs&call, PyInt* labelID) {
     // self.GetCorpRegistry().DeleteLabel(labelID)
     _log(CORP__CALL, "CorpRegistryBound::Handle_DeleteLabel() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::EditLabel(PyCallArgs &call, PyInt* labelID, PyRep* name, PyRep* color) {
+EVEResult CorpRegistryBound::EditLabel(EVECallArgs&call, PyInt* labelID, PyDataType* name, PyDataType* color) {
     // self.GetCorpRegistry().EditLabel(labelID, name, color)
     _log(CORP__CALL, "CorpRegistryBound::Handle_EditLabel() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::AssignLabels(PyCallArgs &call, PyList* contactIDs, PyInt* labelMask) {
+EVEResult CorpRegistryBound::AssignLabels(EVECallArgs&call, PyList* contactIDs, PyInt* labelMask) {
     // self.GetCorpRegistry().AssignLabels(contactIDs, labelMask)
     _log(CORP__CALL, "CorpRegistryBound::Handle_AssignLabels() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::RemoveLabels(PyCallArgs &call, PyList* contactIDs, PyInt* labelMask) {
+EVEResult CorpRegistryBound::RemoveLabels(EVECallArgs&call, PyList* contactIDs, PyInt* labelMask) {
     // self.GetCorpRegistry().RemoveLabels(contactIDs, labelMask)
     _log(CORP__CALL, "CorpRegistryBound::Handle_RemoveLabels() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::CreateAlliance(PyCallArgs &call, PyRep* allianceName, PyRep* shortName, PyRep* description, PyRep* url) {
+EVEResult CorpRegistryBound::CreateAlliance(EVECallArgs&call, PyDataType* allianceName, PyDataType* shortName, PyDataType* description, PyDataType* url) {
     //self.GetCorpRegistry().CreateAlliance(allianceName, shortName, description, url)
     _log(CORP__CALL, "CorpRegistryBound::Handle_CreateAlliance() size=%lli", call.tuple->size());
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     AllianceDB a_db;
     Client* pClient(call.client);
 
-    std::string allianceNameStr = PyRep::StringContent(allianceName);
-    std::string shortNameStr = PyRep::StringContent(shortName);
-    std::string descriptionStr = PyRep::StringContent(description);
-    std::string urlStr = PyRep::StringContent(url);
+    std::string allianceNameStr = allianceName->string();
+    std::string shortNameStr = shortName->string();
+    std::string descriptionStr = description->string();
+    std::string urlStr = url->string();
 
     // verify they're not using bad words in their alliance name
     for (const auto cur : badWords)
@@ -2399,9 +2374,9 @@ PyResult CorpRegistryBound::CreateAlliance(PyCallArgs &call, PyRep* allianceName
     return a_db.GetAlliance(allyID);
 }
 
-PyResult CorpRegistryBound::ApplyToJoinAlliance(PyCallArgs &call, PyInt* allianceID, PyWString* applicationText) {
+EVEResult CorpRegistryBound::ApplyToJoinAlliance(EVECallArgs&call, PyInt* allianceID, PyString* applicationText) {
     _log(CORP__CALL, "CorpRegistryBound::Handle_ApplyToJoinAlliance()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     AllianceDB a_db;
 
@@ -2462,17 +2437,17 @@ PyResult CorpRegistryBound::ApplyToJoinAlliance(PyCallArgs &call, PyInt* allianc
     return nullptr;
 }
 
-PyResult CorpRegistryBound::GetAllianceApplications(PyCallArgs &call) {
+EVEResult CorpRegistryBound::GetAllianceApplications(EVECallArgs&call) {
     //application = sm.GetService('corp').GetAllianceApplications()[allianceID]
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetAllianceApplications()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return AllianceDB::GetMyApplications(m_corpID);
 }
 
-PyResult CorpRegistryBound::DeleteAllianceApplication(PyCallArgs &call, PyInt* allianceID) {
+EVEResult CorpRegistryBound::DeleteAllianceApplication(EVECallArgs&call, PyInt* allianceID) {
     _log(CORP__CALL, "CorpRegistryBound::Handle_DeleteAllianceApplication()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     //This is not implemented by client, no context menu option
 
@@ -2530,65 +2505,64 @@ PyResult CorpRegistryBound::DeleteAllianceApplication(PyCallArgs &call, PyInt* a
     return nullptr;
 }
 
-PyResult CorpRegistryBound::GetRentalDetailsPlayer(PyCallArgs &call) {
+EVEResult CorpRegistryBound::GetRentalDetailsPlayer(EVECallArgs&call) {
     //return self.GetCorpRegistry().GetRentalDetailsPlayer()
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetRentalDetailsPlayer()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::GetRentalDetailsCorp(PyCallArgs &call) {
+EVEResult CorpRegistryBound::GetRentalDetailsCorp(EVECallArgs&call) {
     // return self.GetCorpRegistry().GetRentalDetailsCorp()
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetRentalDetailsCorp()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::UpdateCorporationAbilities(PyCallArgs &call) {
+EVEResult CorpRegistryBound::UpdateCorporationAbilities(EVECallArgs&call) {
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateCorporationAbilities()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     //this will need to update corp memberlimit, allowed races, and then update all members with new data
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::UpdateStationManagementSettings(PyCallArgs &call,
-    PyRep* modifiedServiceAccessRulesByServiceID, PyRep* modifiedServiceCostModifiers,
-    PyRep* modifiedRentableItems, PyRep* stationName, PyRep* description,
-    PyRep* dockingCostPerVolume, PyRep* officeRentalCost, PyRep* reprocessingStationsTake,
-    PyRep* reprocessingHangarFlag, PyRep* exitTime, PyRep* standingOwnerID) {
+EVEResult CorpRegistryBound::UpdateStationManagementSettings(
+    EVECallArgs&call,
+    PyDataType* modifiedServiceAccessRulesByServiceID, PyDataType* modifiedServiceCostModifiers,
+    PyDataType* modifiedRentableItems, PyDataType* stationName, PyDataType* description,
+    PyDataType* dockingCostPerVolume, PyDataType* officeRentalCost, PyDataType* reprocessingStationsTake,
+    PyDataType* reprocessingHangarFlag, PyDataType* exitTime, PyDataType* standingOwnerID) {
     //  self.corpStationMgr.UpdateStationManagementSettings(self.modifiedServiceAccessRulesByServiceID, self.modifiedServiceCostModifiers, self.modifiedRentableItems, self.station.stationName, self.station.description, self.station.dockingCostPerVolume, self.station.officeRentalCost, self.station.reprocessingStationsTake, self.station.reprocessingHangarFlag, self.station.exitTime, self.station.standingOwnerID)
 
     _log(CORP__CALL, "CorpRegistryBound::Handle_UpdateStationManagementSettings()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // not real sure what this does yet....outpost shit maybe?
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::GetNumberOfPotentialCEOs(PyCallArgs &call) {
+EVEResult CorpRegistryBound::GetNumberOfPotentialCEOs(EVECallArgs&call) {
     //  return self.GetCorpRegistry().GetNumberOfPotentialCEOs()
     _log(CORP__CALL, "CorpRegistryBound::Handle_GetNumberOfPotentialCEOs()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
 
     return nullptr;
 }
 
-PyResult CorpRegistryBound::CanLeaveCurrentCorporation(PyCallArgs &call) {
+EVEResult CorpRegistryBound::CanLeaveCurrentCorporation(EVECallArgs&call) {
     //  canLeave, error, errorDetails = corpSvc.CanLeaveCurrentCorporation()
     // error:  CrpCantQuitNotInStasis  and canLeave=false for member that has roles
-
-    PyTuple* tuple = new PyTuple(3);
-        tuple->SetItem(0, PyStatic.NewTrue());  //canLeave - set this to timer or w/e to deter corp jumpers
-        tuple->SetItem(1, PyStatic.NewNone());
-        tuple->SetItem(2, PyStatic.NewNone());
-
-    return tuple;
+    return new PyTuple {
+        PyStatic.NewTrue(), // canLeave - set this to timer or w/e to deter corp jumpers
+        PyStatic.NewNone(),
+        PyStatic.NewNone()
+    };
 }
 
 

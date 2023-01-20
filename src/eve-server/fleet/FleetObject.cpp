@@ -23,25 +23,25 @@ FleetObject::FleetObject(EVEServiceManager& mgr) :
     this->Add("CreateFleet", &FleetObject::CreateFleet);
 }
 
-BoundDispatcher* FleetObject::BindObject(Client* client, PyRep* bindParameters)
+BoundDispatcher* FleetObject::BindObject(Client* client, PyDataType* bindParameters)
 {
     if (is_log_enabled(FLEET__BIND_DUMP)) {
         _log( FLEET__BIND_DUMP, "FleetObject bind request for:" );
-        bindParameters->Dump( FLEET__BIND_DUMP, "    " );
+        bindParameters->dump( FLEET__BIND_DUMP, "    " );
     }
 
-    if (!bindParameters->IsInt()) {
+    if (!bindParameters->is<PyInt>()) {
         _log(FLEET__ERROR, "%s Service: invalid bind argument type %s", GetName().c_str(), bindParameters->TypeString());
         return nullptr;
     }
 
-    uint32 fleetID = bindParameters->AsInt()->value();
+    uint32 fleetID = bindParameters->as<PyInt>()->value();
     auto it = this->m_instances.find (fleetID);
 
     if (it != this->m_instances.end ())
         return it->second;
 
-    FleetBound* bound = new FleetBound(this->GetServiceManager(), *this, bindParameters->AsInt()->value());
+    FleetBound* bound = new FleetBound(this->GetServiceManager(), *this, bindParameters->as<PyInt>()->value());
 
     this->m_instances.insert_or_assign (fleetID, bound);
 
@@ -58,7 +58,7 @@ void FleetObject::BoundReleased (FleetBound* bound) {
 }
 
 // FOH::CreateFleet, FOH::
-PyResult FleetObject::CreateFleet(PyCallArgs &call) {
+EVEResult FleetObject::CreateFleet(EVECallArgs&call) {
     //self.fleet = sm.RemoteSvc('fleetObjectHandler').CreateFleet()
     FleetBindRSP fbr;
         fbr.nodeID = this->GetServiceManager().GetNodeID();    // may have to update this later, or use dedicated fleet node

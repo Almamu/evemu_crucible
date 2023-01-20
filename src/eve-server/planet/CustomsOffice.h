@@ -63,7 +63,7 @@ public:
     uint32                      GetPlanetID()           { return m_oData.planetID; }
     float                       GetTaxRate(Client* pClient);
 
-    PyRep*                      GetSettingsInfo();
+    PyDataType*                      GetSettingsInfo();
     void     GetSettingsInfo(EVEPOS::CustomsData &data) { data = m_cData; }
 
     void    UpdateSettings(int8 selectedHour, int8 standingValue, bool ally, bool standings, Call_TaxRateValuesDict& taxRateValues);

@@ -29,53 +29,56 @@
 #include "database/dbcore.h"
 #include "network/packet_types.h"
 
-class PyRep;
-class PyObject;
-class PyTuple;
-class PyList;
-class PyDict;
-class PyObjectEx;
-class PyPackedRow;
-class DBRowDescriptor;
-
+#include "python/Types.h"
 
 void DBResultToIntIntDict(DBQueryResult &result, std::map<int32, int32> &into);
 void DBResultToUIntUIntDict(DBQueryResult &result, std::map<uint32, uint32> &into);
 // result is assumed to be "ORDER BY result[0]"
-void DBResultToIntIntlistDict(DBQueryResult &result, std::map<int32, PyRep *> &into);
+void DBResultToIntIntlistDict(DBQueryResult &result, std::map<int32, PyDataType *> &into,
+                               PythonArena* arena = HeapPythonArena::instance);
 
-PyRep *DBColumnToPyRep(const DBResultRow &row, uint32 column_index);
+PyDataType *DBColumnToPyDataType(const DBResultRow &row, uint32 column_index,
+                                  PythonArena* arena = HeapPythonArena::instance);
 
 // this returns a std PyObject "util.Rowset" with data in 'lines'
-PyObject *DBResultToRowset(DBQueryResult &result);
-PyObject *DBResultToIndexRowset(DBQueryResult &result, const char *key);
-PyObject *DBResultToIndexRowset(DBQueryResult &result, uint32 key_index);
+PyObject *DBResultToRowset(DBQueryResult &result, PythonArena* arena = HeapPythonArena::instance);
+PyObject *DBResultToIndexRowset(DBQueryResult &result, const char *key,
+                                 PythonArena* arena = HeapPythonArena::instance);
+PyObject *DBResultToIndexRowset(DBQueryResult &result, uint32 key_index,
+                                 PythonArena* arena = HeapPythonArena::instance);
 
-PyTuple *DBResultToTupleSet(DBQueryResult &result);
-void populateResListWithValues(DBQueryResult &result, PyList *into);
+PyTuple *DBResultToTupleSet(DBQueryResult &result, PythonArena* arena = HeapPythonArena::instance);
+void populateResListWithValues(DBQueryResult &result, PyList *into, PythonArena* arena = HeapPythonArena::instance);
 // 2 lists, 1-colNames, 2-PyObject "util.Row" with data in 'lines'
-PyTuple *DBResultToRowList(DBQueryResult &result, const char *type = "util.Row");
-PyTuple *DBResultToPackedRowListTuple(DBQueryResult &result);
+PyTuple *DBResultToRowList(DBQueryResult &result,
+                            PythonArena* arena = HeapPythonArena::instance, const char *type = "util.Row");
+PyTuple *DBResultToPackedRowListTuple(DBQueryResult &result, PythonArena* arena = HeapPythonArena::instance);
 
-PyDict *DBResultToIntRowDict(DBQueryResult &result, uint32 key_index, const char *type = "util.Row");
-PyDict *DBResultToIntIntDict(DBQueryResult &result);
-PyDict *DBResultToPackedRowDict(DBQueryResult &result, const char *key);
-PyDict *DBResultToPackedRowDict(DBQueryResult &result, uint32 key_index);
+PyDict *DBResultToIntRowDict(DBQueryResult &result, uint32 key_index,
+                              PythonArena* arena = HeapPythonArena::instance, const char *type = "util.Row");
+PyDict *DBResultToIntIntDict(DBQueryResult &result, PythonArena* arena = HeapPythonArena::instance);
+PyDict *DBResultToPackedRowDict(DBQueryResult &result, const char *key,
+                                 PythonArena* arena = HeapPythonArena::instance);
+PyDict *DBResultToPackedRowDict(DBQueryResult &result, uint32 key_index,
+                                 PythonArena* arena = HeapPythonArena::instance);
 
-PyList *DBResultToPackedRowList(DBQueryResult &result);
+PyList *DBResultToPackedRowList(DBQueryResult &result, PythonArena* arena = HeapPythonArena::instance);
 
 // this fills PyObjectEx2(util.KeyVal)'s 'list" with PacketRow objects
-PyObjectEx *DBResultToCRowset(DBQueryResult &result);
+PyObjectEx *DBResultToCRowset(DBQueryResult &result, PythonArena* arena = HeapPythonArena::instance);
 // this fills PyObjectEx2(util.KeyVal)'s 'list" with Indexed PacketRow objects
-PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, const char *key);
-PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, uint32 key_index);
+PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, const char *key,
+                                      PythonArena* arena = HeapPythonArena::instance);
+PyObjectEx *DBResultToCIndexedRowset(DBQueryResult &result, uint32 key_index,
+                                      PythonArena* arena = HeapPythonArena::instance);
 
 //single rows:
-PyObject *DBRowToKeyVal(DBResultRow &row);
-PyObject *DBRowToRow(DBResultRow &row, const char *type = "util.Row");
-PyPackedRow *DBRowToPackedRow(DBResultRow &row);
+PyObject *DBRowToKeyVal(DBResultRow &row, PythonArena* arena = HeapPythonArena::instance);
+PyObject *DBRowToRow(DBResultRow &row, const char *type = "util.Row", PythonArena* arena = HeapPythonArena::instance);
+PyPackedRow *DBRowToPackedRow(DBResultRow &row, PythonArena* arena = HeapPythonArena::instance);
 
-PyPackedRow* CreatePackedRow( const DBResultRow& row, DBRowDescriptor* header );
+PyPackedRow* CreatePackedRow (const DBResultRow& row, DBRowDescriptor* header,
+                              PythonArena* arena = HeapPythonArena::instance);
 
 #endif
 

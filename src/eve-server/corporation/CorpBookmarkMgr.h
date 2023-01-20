@@ -38,16 +38,16 @@ public:
 protected:
     BookmarkDB m_db;
 
-    PyResult GetBookmarks(PyCallArgs& call);
-    PyResult UpdateBookmark(PyCallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyRep* memo, PyRep* comment, std::optional<PyInt*> folderID);
-    PyResult UpdatePlayerBookmark(PyCallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyRep* memo, PyRep* comment, std::optional<PyInt*> folderID);
-    PyResult MoveBookmarksToFolder(PyCallArgs& call, PyInt* folderID, std::optional<PyObjectEx*> bookmarkIDs);
-    PyResult CreateFolder(PyCallArgs& call, PyRep* folderName);
-    PyResult UpdateFolder(PyCallArgs& call, PyInt* folderID, PyRep* folderName);
-    PyResult CopyBookmarks(PyCallArgs& call, std::optional<PyRep*> bookmarksToCopy, PyInt* folderID);
-    PyResult DeleteFolder(PyCallArgs& call, PyInt* folderID, PyRep* unused);
-    PyResult MoveFoldersToDB(PyCallArgs& call, PyRep* info);
-    PyResult DeleteBookmarks(PyCallArgs& call, std::optional<PyObjectEx*> bookmarkIDs);
+    EVEResult GetBookmarks(EVECallArgs& call);
+    EVEResult UpdateBookmark(EVECallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyDataType* memo, PyDataType* comment, std::optional<PyInt*> folderID);
+    EVEResult UpdatePlayerBookmark(EVECallArgs& call, PyInt* bookmarkID, PyInt* ownerID, PyDataType* memo, PyDataType* comment, std::optional<PyInt*> folderID);
+    EVEResult MoveBookmarksToFolder(EVECallArgs& call, PyInt* folderID, std::optional<PyObjectEx*> bookmarkIDs);
+    EVEResult CreateFolder(EVECallArgs& call, PyDataType* folderName);
+    EVEResult UpdateFolder(EVECallArgs& call, PyInt* folderID, PyDataType* folderName);
+    EVEResult CopyBookmarks(EVECallArgs& call, std::optional<PyDataType*> bookmarksToCopy, PyInt* folderID);
+    EVEResult DeleteFolder(EVECallArgs& call, PyInt* folderID, PyDataType* unused);
+    EVEResult MoveFoldersToDB(EVECallArgs& call, PyDataType* info);
+    EVEResult DeleteBookmarks(EVECallArgs& call, std::optional<PyObjectEx*> bookmarkIDs);
 
 };
 

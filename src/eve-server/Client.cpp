@@ -33,7 +33,7 @@
 
 #include "Client.h"
 #include "ConsoleCommands.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "LiveUpdateDB.h"
 
 #include "StaticDataMgr.h"
@@ -64,7 +64,7 @@
 static const uint32 PING_INTERVAL_MS = 600000; //10m
 
 Client::Client(EVEServiceManager& services, EVETCPConnection** con)
-: EVEClientSession(con),
+: EVEClientSession(con, new TrackedPythonArena()),
   m_TS(nullptr),
   m_char(CharacterRef(nullptr)),
   m_scan(nullptr),
@@ -88,8 +88,7 @@ Client::Client(EVEServiceManager& services, EVETCPConnection** con)
   m_uncloakTimer(0),
   m_destinyEventQueue(new PyList()),
   m_destinyUpdateQueue(new PyList()),
-  m_nextNotifySequence(0)
-{
+  m_nextNotifySequence(0) {
     m_pod = ShipItemRef(nullptr);
     m_ship = ShipItemRef(nullptr);
 
@@ -137,6 +136,8 @@ Client::Client(EVEServiceManager& services, EVETCPConnection** con)
 Client::~Client() {
     if (!m_loaded)
         return;
+
+    delete mArena;
 
     m_loaded = false;
 
@@ -209,21 +210,21 @@ bool Client::ProcessNet()
     if (state != TCPConnection::STATE_CONNECTED)
         return false;
 
-    PyPacket *p(nullptr);
-    while ((p = PopPacket())) {
+    EVEPacket* p = nullptr;
+
+    while ((p = PopPacket(mArena))) {
         try {
-            if (!DispatchPacket(p))
+            if (!DispatchPacket(*p))
                 sLog.Error("Client", "%s: Failed to dispatch packet of type %s (%i).", m_char->name(), MACHONETMSG_TYPE_NAMES[ p->type ], (int)p->type);
-        }
-        catch(PyException& e) {
+        } catch(PyException& e) {
             _SendException(p->dest, p->source.callID, p->type, WRAPPEDEXCEPTION, &e.ssException);
         }
 
-        p = nullptr;
+        SafeDelete (p);
     }
 
-    // cleanup
-    SafeDelete(p);
+    mArena->clear();
+
     // send queue
     _SendQueuedUpdates();
 
@@ -1288,7 +1289,7 @@ void Client::SetShip(ShipItemRef shipRef) {
     m_char->SetActiveShip(m_shipId);
     if (sDataMgr.IsSolarSystem(m_locationID)) {
         m_char->Move(m_shipId, flagPilot, true);
-        pSession->SetInt("shipid", m_shipId); // update shipID in session
+        pSession->set ("shipid", m_shipId); // update shipID in session
     }
 
     if (m_validSession or m_charCreation)
@@ -1386,7 +1387,7 @@ bool Client::IsJetcanAvalible() {
     }
 }
 
-PyRep *Client::GetAggressors() const {
+PyDataType *Client::GetAggressors() const {
     PyDict* dict(nullptr);
     /*
      *            for aggressorID, aggressor in aggressors.iteritems():
@@ -1919,33 +1920,35 @@ void Client::InitSession(int32 characterID)
     int32 solarSystemID     = (int32)(characterDataMap["solarSystemID"]);
     m_shipId                = (int32)(characterDataMap["shipID"]);
 
-    pSession->SetInt("genderID",         (int32)(characterDataMap["gender"]));
-    pSession->SetInt("bloodlineID",      (int32)(characterDataMap["bloodlineID"]));
-    pSession->SetInt("raceID",           (int32)(characterDataMap["raceID"]));
-    pSession->SetInt("charid",           characterID);
-    pSession->SetInt("corpid",           (int32)(characterDataMap["corporationID"]));
+    pSession->set ("genderID",         (int32)(characterDataMap["gender"]));
+    pSession->set ("bloodlineID",      (int32)(characterDataMap["bloodlineID"]));
+    pSession->set ("raceID",           (int32)(characterDataMap["raceID"]));
+    pSession->set ("charid",           characterID);
+    pSession->set ("corpid",           (int32)(characterDataMap["corporationID"]));
 
-    pSession->SetInt("cloneStationID",   (int32)(characterDataMap["cloneStationID"]));
-    pSession->SetInt("solarsystemid2",   solarSystemID);
-    pSession->SetInt("constellationid",  (int32)(characterDataMap["constellationID"]));
-    pSession->SetInt("regionid",         (int32)(characterDataMap["regionID"]));
+    pSession->set ("cloneStationID",   (int32)(characterDataMap["cloneStationID"]));
+    pSession->set ("solarsystemid2",   solarSystemID);
+    pSession->set ("constellationid",  (int32)(characterDataMap["constellationID"]));
+    pSession->set ("regionid",         (int32)(characterDataMap["regionID"]));
 
-    pSession->SetInt("hqID",             (int32)(characterDataMap["corporationHQ"]));
-    pSession->SetInt("baseID",           characterDataMap["baseID"]);
-    pSession->SetInt("corpAccountKey",   characterDataMap["corpAccountKey"]);
+    pSession->set ("hqID",             (int32)(characterDataMap["corporationHQ"]));
+    pSession->set ("baseID",           characterDataMap["baseID"]);
+    pSession->set ("corpAccountKey",   characterDataMap["corpAccountKey"]);
 
     //Only set allianceID if it is not 0
     if (characterDataMap["allianceID"] != 0){
-        pSession->SetInt("allianceid", characterDataMap["allianceID"]);
+        pSession->set ("allianceid", characterDataMap["allianceID"]);
+    } else {
+        pSession->clear ("allianceid");
     }
 
-    pSession->SetInt("warfactionid",     characterDataMap["warFactionID"]);
+    pSession->set ("warfactionid",     characterDataMap["warFactionID"]);
 
-    pSession->SetLong("corprole",        characterDataMap["corpRole"]);
-    pSession->SetLong("rolesAtAll",      characterDataMap["rolesAtAll"]);
-    pSession->SetLong("rolesAtBase",     characterDataMap["rolesAtBase"]);
-    pSession->SetLong("rolesAtHQ",       characterDataMap["rolesAtHQ"]);
-    pSession->SetLong("rolesAtOther",    characterDataMap["rolesAtOther"]);
+    pSession->set ("corprole",        characterDataMap["corpRole"]);
+    pSession->set ("rolesAtAll",      characterDataMap["rolesAtAll"]);
+    pSession->set ("rolesAtBase",     characterDataMap["rolesAtBase"]);
+    pSession->set ("rolesAtHQ",       characterDataMap["rolesAtHQ"]);
+    pSession->set ("rolesAtOther",    characterDataMap["rolesAtOther"]);
 
     /*  solarSystemID != 0  -character in space
      *   also used as current system in following menus:
@@ -1953,20 +1956,20 @@ void Client::InitSession(int32 characterID)
      */
     if (sDataMgr.IsStation(stationID)) {
         m_locationID = stationID;
-        pSession->Clear("solarsystemid");    //must be 0 in station
-        pSession->Clear("shipid");    //must be 0 in station
-        pSession->SetInt("stationid", stationID);
-        pSession->SetInt("stationid2", stationID);
-        pSession->SetInt("locationid", stationID);
-        pSession->SetInt("worldspaceid", stationID);
+        pSession->clear ("solarsystemid");    //must be 0 in station
+        pSession->clear ("shipid");    //must be 0 in station
+        pSession->set ("stationid", stationID);
+        pSession->set ("stationid2", stationID);
+        pSession->set ("locationid", stationID);
+        pSession->set ("worldspaceid", stationID);
     } else {
         m_locationID = solarSystemID;
-        pSession->Clear("stationid");   //must be 0 in space
-        pSession->Clear("stationid2");  //must be 0 in space
-        pSession->Clear("worldspaceid");  //must be 0 in space
-        pSession->SetInt("shipid", m_shipId);
-        pSession->SetInt("solarsystemid", solarSystemID);
-        pSession->SetInt("locationid", solarSystemID);
+        pSession->clear ("stationid");   //must be 0 in space
+        pSession->clear ("stationid2");  //must be 0 in space
+        pSession->clear ("worldspaceid");  //must be 0 in space
+        pSession->set ("shipid", m_shipId);
+        pSession->set ("solarsystemid", solarSystemID);
+        pSession->set ("locationid", solarSystemID);
     }
 
     sDataMgr.GetSystemData(m_locationID, m_systemData);
@@ -1985,53 +1988,52 @@ void Client::UpdateSession()
     uint32 stationID = m_char->stationID();
     uint32 solarsystemID = m_char->solarSystemID();
     if (sDataMgr.IsStation(stationID)) {
-        pSession->Clear("solarsystemid");    //must be 0 in station
-        pSession->Clear("shipid");    //must be 0 in station
+        pSession->clear ("solarsystemid");    //must be 0 in station
+        pSession->clear ("shipid");    //must be 0 in station
         //pSession->Clear("worldspaceid");    //not used here (yet)
 
-        pSession->SetInt("stationid", stationID);
-        pSession->SetInt("stationid2", stationID);   // client uses this for continer location checks
-        pSession->SetInt("worldspaceid", stationID);
-        pSession->SetInt("locationid", stationID);
+        pSession->set ("stationid", stationID);
+        pSession->set ("stationid2", stationID);   // client uses this for continer location checks
+        pSession->set ("worldspaceid", stationID);
+        pSession->set ("locationid", stationID);
     } else {
-        pSession->Clear("stationid");
-        pSession->Clear("stationid2");
-        pSession->Clear("worldspaceid");
-        pSession->SetInt("solarsystemid", solarsystemID); //  used to tell client they are in space
-        pSession->SetInt("locationid", solarsystemID);
-        pSession->SetInt("shipid", m_shipId);
+        pSession->clear ("stationid");
+        pSession->clear ("stationid2");
+        pSession->clear ("worldspaceid");
+        pSession->set ("solarsystemid", solarsystemID); //  used to tell client they are in space
+        pSession->set ("locationid", solarsystemID);
+        pSession->set ("shipid", m_shipId);
     }
 
     // solarsystemid2 is used by client to determine current system.  NOTE:  *MUST* be set to current system.
-    pSession->SetInt("solarsystemid2", solarsystemID);
-    pSession->SetInt("constellationid", m_char->constellationID());
-    pSession->SetInt("regionid", m_char->regionID());
+    pSession->set ("solarsystemid2", solarsystemID);
+    pSession->set ("constellationid", m_char->constellationID());
+    pSession->set ("regionid", m_char->regionID());
 }
 
-void Client::UpdateSessionInt(const char *id, int value)
-{
-    pSession->SetInt(id, value);
+void Client::UpdateSessionInt(const char *id, int value) {
+    pSession->set (id, value);
 }
 
 void Client::UpdateCorpSession(CorpData& data)
 {
     // session.Set* methods only update on change
-    pSession->SetInt("corpid", data.corporationID);
-    pSession->SetInt("baseID", data.baseID);
-    pSession->SetInt("hqID", data.corpHQ);
+    pSession->set ("corpid", data.corporationID);
+    pSession->set ("baseID", data.baseID);
+    pSession->set ("hqID", data.corpHQ);
 
     //Only set allianceID if it is not 0
     if (data.allianceID != 0){
-        pSession->SetInt("allianceid", data.allianceID);
+        pSession->set ("allianceid", data.allianceID);
     }
 
-    pSession->SetInt("warfactionid", data.warFactionID);
-    pSession->SetInt("corpAccountKey", data.corpAccountKey);
-    pSession->SetLong("corprole", data.corpRole);
-    pSession->SetLong("rolesAtAll", data.rolesAtAll);
-    pSession->SetLong("rolesAtBase", data.rolesAtBase);
-    pSession->SetLong("rolesAtHQ", data.rolesAtHQ);
-    pSession->SetLong("rolesAtOther", data.rolesAtOther);
+    pSession->set ("warfactionid", data.warFactionID);
+    pSession->set ("corpAccountKey", data.corpAccountKey);
+    pSession->set ("corprole", data.corpRole);
+    pSession->set ("rolesAtAll", data.rolesAtAll);
+    pSession->set ("rolesAtBase", data.rolesAtBase);
+    pSession->set ("rolesAtHQ", data.rolesAtHQ);
+    pSession->set ("rolesAtOther", data.rolesAtOther);
     SendSessionChange();
 }
 
@@ -2041,58 +2043,67 @@ void Client::UpdateFleetSession(CharFleetData& fleet)
     m_wing = fleet.wingID;
     m_squad = fleet.squadID;
 
-    pSession->SetInt("fleetjob", fleet.job);
-    pSession->SetInt("fleetrole", fleet.role);
-    pSession->SetInt("fleetbooster", fleet.booster);
-    pSession->SetInt("fleetid", m_fleet);
-    pSession->SetInt("wingid", m_wing);
-    pSession->SetInt("squadid", m_squad);
+    pSession->set ("fleetjob", fleet.job);
+    pSession->set ("fleetrole", fleet.role);
+    pSession->set ("fleetbooster", fleet.booster);
+    pSession->set ("fleetid", m_fleet);
+    pSession->set ("wingid", m_wing);
+    pSession->set ("squadid", m_squad);
     SendSessionChange();
 }
 
 void Client::SendInitialSessionStatus ()
 {
-    SessionInitialState scn;
-    scn.initialstate = new PyDict();
+    auto arena = TrackedPythonArena();
 
-    pSession->EncodeInitialState (scn.initialstate);
+    // TODO: EXTRACT THIS TO IT'S OWN TYPE SO THE ALLOCATION IS ALL PERFORMED ON THE RIGHT ARENA
+    SessionInitialState scn;
+    scn.initialstate = arena.Dict();
+
+    pSession->encodeInitialState (scn.initialstate);
 
     if (is_log_enabled(CLIENT__SESSION)) {
         _log(CLIENT__SESSION, "Session initialized.  Sending initial session state");
-        scn.initialstate->Dump(CLIENT__SESSION, "   Changes: ");
+        scn.initialstate->dump(CLIENT__SESSION, "   Changes: ");
     }
 
-    scn.sessionID = pSession->GetSessionID();
+    scn.sessionID = pSession->sessionID();
 
     //build the packet:
-    PyPacket* packet = new PyPacket();
-    packet->type_string = "macho.SessionInitialStateNotification";
-    packet->type = SESSIONINITIALSTATENOTIFICATION;
-
-    packet->source.type = PyAddress::Node;
-    packet->source.objectID = m_services.GetNodeID();
-    packet->source.callID = 0;
-
-    packet->dest.type = PyAddress::Client;
-    packet->dest.objectID = GetClientID();
-    packet->dest.callID = 0;
-
-    packet->userid = GetUserID();
-
-    packet->payload = scn.Encode();
-    packet->named_payload = nullptr;
+    EVEPacket* packet = new EVEPacket {
+        .type_string = "macho.SessionInitialStateNotification",
+        .type = SESSIONINITIALSTATENOTIFICATION,
+        .source = {
+            .type = EVEPacketAddress::Node,
+            .objectID = m_services.GetNodeID(),
+            .callID = 0
+        },
+        .dest = {
+            .type = EVEPacketAddress::Client,
+            .objectID = GetClientID(),
+            .callID = 0
+        },
+        .userid = (uint32_t) GetUserID(),
+        // TODO: THIS CLONE WON'T BE NEEDED ONCE EVERYTHING IS MOVED TO THE PYTHON ARENAS
+        .payload = scn.Encode()->clone(&arena),
+        .named_payload = std::nullopt,
+        .contextKey = std::nullopt
+    };
 
     if (is_log_enabled(CLIENT__SESSION_DUMP)) {
         _log(CLIENT__SESSION_DUMP, "Sending Session packet:");
-        PyLogDumpVisitor dumper(CLIENT__SESSION_DUMP, CLIENT__SESSION_DUMP);
-        packet->Dump(CLIENT__SESSION_DUMP, dumper);
+        // TODO: BRING BACK THIS LOG?
+        //PyLogDumpVisitor dumper(CLIENT__SESSION_DUMP, CLIENT__SESSION_DUMP);
+        //packet->Dump(CLIENT__SESSION_DUMP, dumper);
     }
 
-    QueuePacket(packet);
+    QueuePacket(packet, &arena);
 }
 
 void Client::SendSessionChange()
 {
+    auto arena = TrackedPythonArena();
+
     if (!pSession->isDirty())
         return;
 
@@ -2107,20 +2118,20 @@ void Client::SendSessionChange()
                 m_locationID = m_systemData.systemID;
             }
             /* a `session.locationid` change will trigger a ballpark update (add/delete bp) */
-            pSession->SetInt("locationid", m_locationID);
+            pSession->set ("locationid", m_locationID);
         }
     }
 
     SessionChangeNotification scn;
     scn.changes = new PyDict();
 
-    pSession->EncodeChanges(scn.changes);
+    pSession->encodeChanges(scn.changes);
     if (scn.changes->empty())
         return;
 
     if (is_log_enabled(CLIENT__SESSION)) {
         _log(CLIENT__SESSION, "Session updated.  Sending session change");
-        scn.changes->Dump(CLIENT__SESSION, "   Changes: ");
+        scn.changes->dump(CLIENT__SESSION, "   Changes: ");
     }
 
     scn.sessionID = 0; //pSession->GetSessionID();
@@ -2132,30 +2143,33 @@ void Client::SendSessionChange()
     //scn.nodesOfInterest.push_back(m_services.GetNodeID());
 
     //build the packet:
-    PyPacket* packet = new PyPacket();
-    packet->type_string = "macho.SessionChangeNotification";
-    packet->type = SESSIONCHANGENOTIFICATION;
-
-    packet->source.type = PyAddress::Node;
-    packet->source.objectID = m_services.GetNodeID();
-    packet->source.callID = 0;
-
-    packet->dest.type = PyAddress::Client;
-    packet->dest.objectID = GetClientID();
-    packet->dest.callID = 0;
-
-    packet->userid = GetUserID();
-
-    packet->payload = scn.Encode();
-    packet->named_payload = nullptr;
+    EVEPacket* packet = new EVEPacket {
+        .type_string = "macho.SessionChangeNotification",
+        .type = SESSIONCHANGENOTIFICATION,
+        .source = {
+            .type = EVEPacketAddress::Node,
+            .objectID = m_services.GetNodeID(),
+            .callID = 0,
+        },
+        .dest = {
+            .type = EVEPacketAddress::Client,
+            .objectID = GetClientID(),
+            .callID = 0,
+        },
+        .userid = (uint32_t) GetUserID(),
+        // TODO: THIS CLONE WON'T BE NEEDED ONCE EVERYTHING IS MOVED TO THE PYTHON ARENAS
+        .payload = scn.Encode()->clone (&arena),
+        .named_payload = std::nullopt
+    };
 
     if (is_log_enabled(CLIENT__SESSION_DUMP)) {
         _log(CLIENT__SESSION_DUMP, "Sending Session packet:");
-        PyLogDumpVisitor dumper(CLIENT__SESSION_DUMP, CLIENT__SESSION_DUMP);
-        packet->Dump(CLIENT__SESSION_DUMP, dumper);
+        // TODO: BRING BACK THIS LOG?
+        //PyLogDumpVisitor dumper(CLIENT__SESSION_DUMP, CLIENT__SESSION_DUMP);
+        //packet->Dump(CLIENT__SESSION_DUMP, dumper);
     }
 
-    QueuePacket(packet);
+    QueuePacket(packet, &arena);
 
     // clean up packet after being created by 'new'
     //SafeDelete(packet);
@@ -2170,7 +2184,7 @@ void Client::FlushQueue() {
 void Client::QueueDestinyEvent(PyTuple** event) {
     if ((event == nullptr) or ((*event) == nullptr))
         return;
-    m_destinyEventQueue->AddItem(*event);
+    m_destinyEventQueue->add(*event);
     //PyDecRef(*event);
 }
 
@@ -2189,9 +2203,9 @@ void Client::QueueDestinyUpdate(PyTuple **update, bool DoPackage /*false*/, bool
             // this will package all current updates (and those coming in before next flush) into
             //   a single PackagedAction packet, which is then inserted into the DoDestinyAction packet.
             PyList* paList = new PyList();
-                paList->AddItem(*update);
+                paList->add(*update);
             if (!m_destinyUpdateQueue->empty())
-                paList->AddItem(m_destinyUpdateQueue);
+                paList->add(m_destinyUpdateQueue);
             PackagedAction pa;
                 pa.substream = new PySubStream(paList);
             act.update = pa.Encode();
@@ -2199,17 +2213,17 @@ void Client::QueueDestinyUpdate(PyTuple **update, bool DoPackage /*false*/, bool
         }
         DoDestinyUpdateMain_2 dum;
             dum.updates = new PyList();
-            dum.updates->AddItem(act.Encode());
+            dum.updates->add(act.Encode());
             dum.waitForBubble = m_bubbleWait;
         PyTuple* t = dum.Encode();
         if (is_log_enabled(CLIENT__QUEUE_DUMP))
-            t->Dump(CLIENT__QUEUE_DUMP, "");
+            t->dump(CLIENT__QUEUE_DUMP, "");
         SendNotification("DoDestinyUpdate", "clientID", &t, false);
         PyDecRef(t);
     } else {
         act.update = *update;
         m_packaged = true;
-        m_destinyUpdateQueue->AddItem(act.Encode());
+        m_destinyUpdateQueue->add(act.Encode());
     }
 }
 
@@ -2221,7 +2235,7 @@ void Client::_SendQueuedUpdates() {
                 dum.waitForBubble = m_bubbleWait;
             PyTuple* t = dum.Encode();
             if (is_log_enabled(CLIENT__QUEUE_DUMP))
-                t->Dump(CLIENT__QUEUE_DUMP, "");
+                t->dump(CLIENT__QUEUE_DUMP, "");
             SendNotification("DoDestinyUpdate", "clientID", &t);
         } else {
             DoDestinyUpdateMain dum;
@@ -2230,7 +2244,7 @@ void Client::_SendQueuedUpdates() {
                 dum.waitForBubble = m_bubbleWait;
             PyTuple* t = dum.Encode();
             if (is_log_enabled(CLIENT__QUEUE_DUMP))
-                t->Dump(CLIENT__QUEUE_DUMP, "");
+                t->dump(CLIENT__QUEUE_DUMP, "");
             SendNotification("DoDestinyUpdate", "clientID", &t);
         }
     } else if (!m_destinyEventQueue->empty()) {
@@ -2238,7 +2252,7 @@ void Client::_SendQueuedUpdates() {
             nom.events = m_destinyEventQueue;
         PyTuple* t = nom.Encode();
         if (is_log_enabled(CLIENT__QUEUE_DUMP))
-            t->Dump(CLIENT__QUEUE_DUMP, "");
+            t->dump(CLIENT__QUEUE_DUMP, "");
         SendNotification("OnMultiEvent", "charid", &t);
     } //else nothing to be sent ...
 
@@ -2250,16 +2264,19 @@ void Client::_SendQueuedUpdates() {
 
 void Client::SendNotification(const char *notifyType, const char *idType, PyTuple *payload, bool seq /*true*/) {
     //build a little notification out of it.
-    EVENotificationStream notify;
-    notify.notifyType = notifyType;
-    notify.remoteObject = 1;
-    notify.args = payload;
+    EVENotificationStream notify {
+        .notifyType = notifyType,
+        .remoteObject = 1,
+        .args = payload
+    };
 
-    PyAddress dest;
-    // are all of these 'Broadcast'?
-    dest.type = PyAddress::Broadcast;
-    dest.service = notifyType;
-    dest.bcast_idtype = idType;
+    // are all of these "Broadcast"?
+    EVEPacketAddress dest {
+        .type = EVEPacketAddress::Broadcast,
+        .service = notifyType,
+        .bcast_idtype = idType,
+    };
+
     /*
     if (dest.bcast_idtype.compare("clientID") == 0)
         dest.objectID = GetClientID();*/
@@ -2271,51 +2288,60 @@ void Client::SendNotification(const char *notifyType, const char *idType, PyTupl
 void Client::SendNotification(const char *notifyType, const char *idType, PyTuple **payload, bool seq /*true*/) {
     if ((*payload) == nullptr)
         return;
-    //build a little notification out of it.
-    EVENotificationStream notify;
-        notify.notifyType = notifyType;
-        notify.remoteObject = 1;
-        notify.args = (*payload);
 
-    PyAddress dest;
-    // are all of these 'Broadcast'?
-        dest.type = PyAddress::Broadcast;
-        dest.service = notifyType;
-        dest.bcast_idtype = idType;
-        dest.objectID = GetClientID();
+    // build a little notification out of it
+    EVENotificationStream notify {
+        .notifyType = notifyType,
+        .remoteObject = 1,
+        .args = *payload
+    };
+
+    // are all of these "Broadcast"?
+    EVEPacketAddress dest {
+        .type = EVEPacketAddress::Broadcast,
+        .objectID = GetClientID(),
+        .service = notifyType,
+        .bcast_idtype = idType,
+    };
 
     //now send it to the client
     SendNotification(dest, notify, seq);
 }
 
-void Client::SendNotification(const PyAddress &dest, EVENotificationStream &noti, bool seq/*true*/) {
-    //build the packet:
-    PyPacket *packet = new PyPacket();
-    packet->type_string = "macho.Notification";
-    packet->type = NOTIFICATION;
+void Client::SendNotification(const EVEPacketAddress &dest, EVENotificationStream &noti, bool seq/*true*/) {
+    // TODO: USE A DIFFERENT ARENA FOR THESE?
+    auto arena = TrackedPythonArena();
 
-    // is source type right here?
-    packet->source.type = PyAddress::Node;
-    packet->source.objectID = m_services.GetNodeID();
-
-    packet->dest = dest;
-
-    packet->userid = GetUserID();
-
-    packet->payload = noti.Encode();
+    std::optional <PyDict*> named_payload = std::nullopt;
 
     if (seq) {
-        packet->named_payload = new PyDict();
-        packet->named_payload->SetItemString("sn", new PyInt(++m_nextNotifySequence));
+        named_payload = arena.Dict ({
+            {"sn", arena.Int (++m_nextNotifySequence)}
+        });
     }
+
+    //build the packet:
+    EVEPacket *packet = new EVEPacket {
+        .type_string = "macho.Notification",
+        .type = NOTIFICATION,
+        .source = {
+            .type = EVEPacketAddress::Node,
+            .objectID = m_services.GetNodeID()
+        },
+        .dest = dest,
+        .userid = (uint32_t) GetUserID(),
+        .payload = noti.encode(&arena),
+        .named_payload = named_payload
+    };
 
     if (is_log_enabled(CLIENT__NOTIFY_DUMP)) {
         _log(CLIENT__NOTIFY_REP, "Sending notify of type %s with ID type %s to %s", dest.service.c_str(), dest.bcast_idtype.c_str(), GetName());
-        PyLogDumpVisitor dumper(CLIENT__NOTIFY_DUMP, CLIENT__NOTIFY_REP, "", true, true);
-        packet->Dump(CLIENT__NOTIFY_DUMP, dumper);
+        // TODO: BRING BACK THIS LOG?
+        //PyLogDumpVisitor dumper(CLIENT__NOTIFY_DUMP, CLIENT__NOTIFY_REP, "", true, true);
+        //packet->Dump(CLIENT__NOTIFY_DUMP, dumper);
     }
 
-    QueuePacket(packet);
+    QueuePacket(packet, &arena);
 }
 
 /************************************************************************/
@@ -2342,7 +2368,7 @@ void Client::BanClient()
 /************************************************************************/
 /* EVEClientSession interface                                           */
 /************************************************************************/
-void Client::_GetVersion(VersionExchangeServer& version)
+void Client::_GetVersion(EVELowLevelVersionExchange& version)
 {
     version.birthday = EVEBirthday;
     version.macho_version = MachoNetVersion;
@@ -2357,9 +2383,9 @@ uint32 Client::GetUserCount()
     return sEntityList.GetClientCount();
 }
 
-bool Client::_VerifyVersion(VersionExchangeClient& version)
+bool Client::_VerifyVersion(EVELowLevelVersionExchange& version)
 {
-    version.Dump(NET__PRES_REP, "    ");
+    //version.dump(NET__PRES_REP, "    ");
     if (version.birthday != EVEBirthday)
         sLog.Error("Client","%s: Client's birthday does not match ours!", GetAddress().c_str());
     if (version.macho_version != MachoNetVersion)
@@ -2373,12 +2399,12 @@ bool Client::_VerifyVersion(VersionExchangeClient& version)
     return true;
 }
 
-bool Client::_VerifyCrypto(CryptoRequestPacket& cr)
+bool Client::_VerifyCrypto(const std::string& keyVersion, PyDict* keyParams)
 {
-    if (cr.keyVersion != "placebo") {
+    if (keyVersion != "placebo") {
         //I'm sure cr.keyVersion can specify either CryptoAPI or PyCrypto, but its all binary so im not sure how.
         CryptoAPIRequestParams car;
-        if (!car.Decode(cr.keyParams)) {
+        if (!car.Decode(keyParams)) {
             sLog.Error("Client","%s: Received invalid CryptoAPI request!", GetAddress().c_str());
         } else {
             sLog.Error("Client","%s: Unhandled CryptoAPI request: hashmethod=%s sessionkeylength=%d provider=%s sessionkeymethod=%s", GetAddress().c_str(), car.hashmethod.c_str(), car.sessionkeylength, car.provider.c_str(), car.sessionkeymethod.c_str());
@@ -2390,20 +2416,20 @@ bool Client::_VerifyCrypto(CryptoRequestPacket& cr)
         sLog.Debug("Client","%s: Received Placebo crypto request, accepting.", GetAddress().c_str());
 
         //send out accept response
-        PyRep* rsp = new PyString("OK CC");
+        PyDataType* rsp = new PyString("OK CC");
         mNet->QueueRep(rsp);
     }
 
     return true;
 }
 
-bool Client::_VerifyLogin(CryptoChallengePacket& ccp)
+bool Client::_VerifyLogin(EVESecureClientHandshake& ccp)
 {
     /* send passwordVersion required: 1=plain, 2=hashed */
     // this doesnt work as i want it to.
     //  sending '2' will have client use hashed pass.
     //  sending '1' will have client send hashed pass first, then a second authentication packet using plain pass
-    PyRep* res = new PyInt(2);
+    PyDataType* res = new PyInt(2);
     mNet->QueueRep(res);
 
     std::string failMsg = "Login Authorization Invalid.";
@@ -2469,14 +2495,14 @@ bool Client::_VerifyLogin(CryptoChallengePacket& ccp)
     mNet->QueueRep(res);
 
     // Setup session, but don't send the change yet.
-    pSession->SetString("address", EVEClientSession::GetAddress().c_str());
-    pSession->SetString("languageID", ccp.user_languageid.c_str());
+    pSession->set ("address", EVEClientSession::GetAddress().c_str());
+    pSession->set ("languageID", ccp.user_languageid.c_str());
 
-    pSession->SetInt("userType", Acct::Type::Mammon);     //aData.type  - incomplete (db fields done)
-    pSession->SetInt("userid", aData.id);
-    pSession->SetLong("role", aData.role);
-    pSession->SetLong("clientID", 1000000L * aData.clientID + 888444);  // kinda arbitrary
-    pSession->SetLong("sessionID", 0 /*pSession->GetSessionID()*/);
+    pSession->set ("userType", Acct::Type::Mammon);     //aData.type  - incomplete (db fields done)
+    pSession->set ("userid", aData.id);
+    pSession->set ("role", aData.role);
+    pSession->set ("clientID", (int64) (1000000L * aData.clientID + 888444));  // kinda arbitrary
+    pSession->set ("sessionID", 0 /*pSession->GetSessionID()*/);
 
     sLog.Green("  Client::Login()","Account %u (%s) logging in from %s", aData.id, aData.name.c_str(), EVEClientSession::GetAddress().c_str());
 
@@ -2490,7 +2516,7 @@ bool Client::_LoginFail(std::string fail_msg)
     return false;
 }
 
-bool Client::_VerifyFuncResult(CryptoHandshakeResult& result)
+bool Client::_VerifyFuncResult(const std::string& challenge_responsehash, const std::string& func_output)
 {
     _log(NET__PRES_DEBUG, "%s: Handshake result received.", GetAddress().c_str());
 
@@ -2507,9 +2533,9 @@ bool Client::_VerifyFuncResult(CryptoHandshakeResult& result)
         ack.user_clientid = GetClientID();  //241241000001103
         ack.live_updates = sLiveUpdateDB.GetUpdates();
         ack.sessionID = 0; //pSession->GetSessionID();   //398773966249980114
-    PyRep* res(ack.Encode());
+    PyDataType* res(ack.Encode());
     if (is_log_enabled(CLIENT__CALL_DUMP))
-        res->Dump(CLIENT__CALL_DUMP, "    ");
+        res->dump(CLIENT__CALL_DUMP, "    ");
     mNet->QueueRep(res, false);
 
     // send out the initial session status
@@ -2518,162 +2544,164 @@ bool Client::_VerifyFuncResult(CryptoHandshakeResult& result)
     return true;
 }
 
-void Client::_SendCallReturn(const PyAddress& source, int64 callID, PyResult &rsp)
+void Client::_SendCallReturn (const EVEPacketAddress& source, int64 callID, EVEResult&rsp, PythonArena& arena, bool checkArenaOwnership)
 {
     //build the packet:
-    PyPacket* packet = new PyPacket();
-    packet->type_string = "macho.CallRsp";
-    packet->type = CALL_RSP;
-
-    packet->source = source;     /* address should be 'ship' for warpto response */
-
-    packet->dest.type = PyAddress::Client;
-    packet->dest.objectID = GetClientID();
-    packet->dest.callID = callID;
-
-    packet->userid = GetUserID();
-
-    packet->payload = new PyTuple(1);
-    packet->payload->SetItem(0, new PySubStream(rsp.ssResult));
-    packet->named_payload = rsp.ssNamedResult;
+    EVEPacket* packet = new EVEPacket {
+        .type_string = "macho.CallRsp",
+        .type = CALL_RSP,
+        .source = source,
+        .dest = {
+            .type = EVEPacketAddress::Client,
+            .objectID = GetClientID(),
+            .callID = callID
+        },
+        .userid = (uint32_t) GetUserID(),
+        .payload = arena.Tuple ({
+            arena.SubStream (rsp.result.has_value() ? rsp.result.value() : arena.None(), false, checkArenaOwnership)
+        }),
+        .named_payload = rsp.named_result
+    };
 
     if (is_log_enabled(COLLECT__PACKET_DUMP)) {
         _log(COLLECT__PACKET_DUMP, "_SendCallReturn: Dump()");
-        PyLogDumpVisitor dumper(COLLECT__PACKET_DUMP, COLLECT__PACKET_DUMP, "", true, true);
-        packet->Dump(COLLECT__PACKET_DUMP, dumper);
+        // TODO: BRING BACK THIS LOG?
+        //PyLogDumpVisitor dumper(COLLECT__PACKET_DUMP, COLLECT__PACKET_DUMP, "", true, true);
+        //packet->Dump(COLLECT__PACKET_DUMP, dumper);
     }
 
-    QueuePacket(packet);
+    QueuePacket(packet, &arena);
 }
 
-void Client::_SendException(const PyAddress& source, int64 callID, MACHONETMSG_TYPE msgType, MACHONETERR_TYPE errCode, PyRep** payload)
+void Client::_SendException(const EVEPacketAddress& source, int64 callID, MACHONETMSG_TYPE msgType, MACHONETERR_TYPE errCode, PyDataType** payload)
 {
-    //build the packet:
-    PyPacket* packet = new PyPacket();
-    packet->type_string = "macho.ErrorResponse";
-    packet->type = ERRORRESPONSE;
-
-    packet->source = source;
-
-    packet->dest.type = PyAddress::Client;
-    packet->dest.objectID = GetClientID();
-    packet->dest.callID = callID;
-
-    packet->userid = GetUserID();
+    auto arena = TrackedPythonArena();
 
     ErrorResponse e;
         e.MsgType = msgType;
         e.ErrorCode = errCode;
         e.payload = *payload;
-    payload = nullptr;
 
-    packet->payload = e.Encode();
-    QueuePacket(packet);
+    //build the packet:
+    QueuePacket(
+        new EVEPacket {
+            .type_string = "macho.ErrorResponse",
+            .type = ERRORRESPONSE,
+            .source = source,
+            .dest = {
+                .type = EVEPacketAddress::Client,
+                .objectID = GetClientID(),
+                .callID = callID,
+            },
+            .userid = (uint32_t) GetUserID(),
+            .payload = e.Encode()->clone (&arena)
+        },
+        &arena
+    );
+    payload = nullptr;
 }
 
 void Client::_SendPingRequest()
 {
-    PyPacket *packet = new PyPacket();
+    auto arena = TrackedPythonArena();
 
-    packet->type = PING_REQ;
-    packet->type_string = "macho.PingReq";
-
-    packet->source.type = PyAddress::Node;
-    packet->source.objectID = m_services.GetNodeID();
-    packet->source.service = "ping";
-    packet->source.callID = 0;
-
-    packet->dest.type = PyAddress::Client;
-    packet->dest.objectID = GetClientID();
-    packet->dest.callID = 0;
-
-    packet->userid = GetUserID();
-
-    packet->payload = new_tuple(new PyList()); //times
-    packet->named_payload = new PyDict();
-
-    QueuePacket(packet);
+    QueuePacket(
+        new EVEPacket {
+            .type_string = "macho.PingReq",
+            .type = PING_REQ,
+            .source = {
+                .type = EVEPacketAddress::Node,
+                .objectID = m_services.GetNodeID(),
+                .callID = 0,
+                .service = "ping",
+            },
+            .dest = {
+                .type = EVEPacketAddress::Client,
+                .objectID = GetClientID(),
+                .callID = 0
+            },
+            .userid = (uint32_t) GetUserID(),
+            .payload = arena.Tuple ({ arena.List() }), // times
+            .named_payload = arena.Dict()
+        },
+        &arena
+    );
 }
 
-void Client::_SendPingResponse(const PyAddress& source, int64 callID)
+void Client::_SendPingResponse(const EVEPacketAddress& source, int64 callID)
 {
-    PyPacket* packet = new PyPacket();
-    packet->type = PING_RSP;
-    packet->type_string = "macho.PingRsp";
-
-    packet->source = source;
-
-    packet->dest.type = PyAddress::Client;
-    packet->dest.objectID = GetClientID();
-    packet->dest.callID = callID;
-
-    packet->userid = GetUserID();
+    auto arena = TrackedPythonArena();
 
     /*  Here the hacking begins, the ping packet handles the timestamps of various packet handling steps.
      *        To really simulate/emulate that we need the various packet handlers which in fact we don't have (:P).
      *        So the next piece of code "fake's" it, with a slight delay on the received packet time.
      */
-    PyList* pingList = new PyList();
-    PyTuple* pingTuple(nullptr);
-
-    pingTuple = new PyTuple(3);
-    pingTuple->SetItem(0, new PyLong(Win32TimeNow() - 20));        // this should be the time the packet was received (we cheat here a bit)
-    pingTuple->SetItem(1, new PyLong(Win32TimeNow()));             // this is the time the packet is (handled/written) by the (proxy/server) so we're cheating a bit again.
-    pingTuple->SetItem(2, new PyString("proxy::handle_message"));
-    pingList->AddItem(pingTuple);
-
-    pingTuple = new PyTuple(3);
-    pingTuple->SetItem(0, new PyLong(Win32TimeNow() - 20));
-    pingTuple->SetItem(1, new PyLong(Win32TimeNow()));
-    pingTuple->SetItem(2, new PyString("proxy::writing"));
-    pingList->AddItem(pingTuple);
-
-    pingTuple = new PyTuple(3);
-    pingTuple->SetItem(0, new PyLong(Win32TimeNow() - 20));
-    pingTuple->SetItem(1, new PyLong(Win32TimeNow()));
-    pingTuple->SetItem(2, new PyString("server::handle_message"));
-    pingList->AddItem(pingTuple);
-
-    pingTuple = new PyTuple(3);
-    pingTuple->SetItem(0, new PyLong(Win32TimeNow() - 20));
-    pingTuple->SetItem(1, new PyLong(Win32TimeNow()));
-    pingTuple->SetItem(2, new PyString("server::turnaround"));
-    pingList->AddItem(pingTuple);
-
-    pingTuple = new PyTuple(3);
-    pingTuple->SetItem(0, new PyLong(Win32TimeNow() - 20));
-    pingTuple->SetItem(1, new PyLong(Win32TimeNow()));
-    pingTuple->SetItem(2, new PyString("proxy::handle_message"));
-    pingList->AddItem(pingTuple);
-
-    pingTuple = new PyTuple(3);
-    pingTuple->SetItem(0, new PyLong(Win32TimeNow() - 20));
-    pingTuple->SetItem(1, new PyLong(Win32TimeNow()));
-    pingTuple->SetItem(2, new PyString("proxy::writing"));
-    pingList->AddItem(pingTuple);
-
-    // Set payload
-    packet->payload = new PyTuple(1);
-    packet->payload->SetItem(0, pingList);
-
-    // Don't clone so it eats the ret object upon sending.
-    QueuePacket(packet);
+    QueuePacket(
+        new EVEPacket {
+            .type_string = "macho.PingRsp",
+            .type = PING_RSP,
+            .source = source,
+            .dest = {
+                .type = EVEPacketAddress::Client,
+                .objectID = GetClientID(),
+                .callID = callID
+            },
+            .userid = (uint32_t) GetUserID (),
+            .payload = arena.Tuple ({
+                arena.List ({
+                    arena.Tuple ({
+                        arena.Int (Win32TimeNow() - 20), // this should be the time the packet was received (we cheat here a bit)
+                        arena.Int (Win32TimeNow()), // this is the time the packet is (handled/written) by the (proxy/server) so we're cheating a bit again.
+                        arena.String ("proxy::handle_message")
+                    }),
+                    arena.Tuple ({
+                        arena.Int (Win32TimeNow() - 20),
+                        arena.Int (Win32TimeNow()),
+                        arena.String ("proxy::writing")
+                    }),
+                    arena.Tuple ({
+                        arena.Int (Win32TimeNow() - 20),
+                        arena.Int (Win32TimeNow()),
+                        arena.String ("server::handle_message")
+                    }),
+                    arena.Tuple ({
+                        arena.Int (Win32TimeNow() - 20),
+                        arena.Int (Win32TimeNow()),
+                        arena.String ("server::turnaround")
+                    }),
+                    arena.Tuple ({
+                        arena.Int (Win32TimeNow() - 20),
+                        arena.Int (Win32TimeNow()),
+                        arena.String ("proxy::handle_message")
+                    }),
+                    arena.Tuple ({
+                        arena.Int (Win32TimeNow() - 20),
+                        arena.Int (Win32TimeNow()),
+                        arena.String ("proxy::writing")
+                    }),
+                })
+            })
+        },
+        &arena
+    );
 }
 
 /************************************************************************/
 /* EVEPacketDispatcher interface                                        */
 /************************************************************************/
-bool Client::Handle_CallReq(PyPacket* packet, PyCallStream& req)
+bool Client::Handle_CallReq(EVEPacket& packet, EVECallStream& req)
 {
+    auto arena = TrackedPythonArena();
+
     // build arguments
-    PyCallArgs args(this, req.arg_tuple, req.arg_dict);
-    PyResult result;
+    EVECallArgs args(this, req.arg_tuple, req.arg_dict.has_value() ? req.arg_dict.value() : nullptr, arena);
+    EVEResult result;
     uint32 nodeID = 0, bindID = 0;
 
     // try to handle with the new service handler and fallback to the old version
     try
     {
-        if (packet->dest.service == "") {
+        if (packet.dest.service == "") {
             if (sscanf(req.remoteObjectStr.c_str(), "N=%u:%u", &nodeID, &bindID) != 2) {
                 sLog.Error("Client::CallReq", "Failed to parse bind string '%s'.", req.remoteObjectStr.c_str());
                 return false;
@@ -2689,21 +2717,21 @@ bool Client::Handle_CallReq(PyPacket* packet, PyCallStream& req)
             result = m_services.Dispatch(bindID, req.method, args);
             m_canThrow = false;
         } else {
-            _log(SERVICE__CALLS, "%s::%s()", packet->dest.service.c_str(), req.method.c_str());
+            _log(SERVICE__CALLS, "%s::%s()", packet.dest.service.c_str(), req.method.c_str());
             m_canThrow = true;
-            result = m_services.Dispatch(packet->dest.service, req.method, args);
+            result = m_services.Dispatch(packet.dest.service, req.method, args);
             m_canThrow = false;
         }
     }
     catch (method_not_found ex)
     {
-        sLog.Error("Client::CallReq", "Unable to find method to handle call to: %s::%s", packet->dest.service.c_str(), req.method.c_str());
+        sLog.Error("Client::CallReq", "Unable to find method to handle call to: %s::%s", packet.dest.service.c_str(), req.method.c_str());
 
         if (sConfig.debug.IsTestServer) {
-            if (packet->dest.service == "") {
+            if (packet.dest.service == "") {
                 sLog.Error("Client::CallReq", m_services.DebugDispatch(bindID, req.method, args).c_str());
             } else {
-                sLog.Error("Client::CallReq", m_services.DebugDispatch(packet->dest.service, req.method, args).c_str());
+                sLog.Error("Client::CallReq", m_services.DebugDispatch(packet.dest.service, req.method, args).c_str());
             }
         }
 
@@ -2712,29 +2740,46 @@ bool Client::Handle_CallReq(PyPacket* packet, PyCallStream& req)
     }
     catch (service_not_found)
     {
-        sLog.Error("Client::CallReq", "Unable to find service to handle call to: %s", packet->dest.service.c_str());
-        packet->dest.Dump(CLIENT__CALL_DUMP, "    ");
+        sLog.Error("Client::CallReq", "Unable to find service to handle call to: %s", packet.dest.service.c_str());
+        //packet->dest.dump(CLIENT__CALL_DUMP, "    ");
         throw UserError("ServiceNotFound"); // this message is invalid (message not found)
     }
 
-    SendSessionChange();  //send out the session change before the return.
-    if (is_log_enabled(CLIENT__OUT_ALL)) {
-        if (result.ssResult != nullptr)
-            result.ssResult->Dump(CLIENT__OUT_ALL, "    ");
-        if (result.ssNamedResult != nullptr)
-            result.ssNamedResult->Dump(CLIENT__OUT_ALL, "    ");
+    if (result.check_arena_owner && result.result.has_value()) {
+        if (result.result.value()->arena() != &args.arena) {
+            throw std::runtime_error (
+                "The result data does not belong to the right arena. Make sure to use args.arena to create result objects"
+            );
+        }
     }
 
-    _SendCallReturn(packet->dest, packet->source.callID, result);
+    if (result.check_arena_owner && result.named_result.has_value()) {
+        if (result.named_result.value()->arena() != &args.arena) {
+            throw std::runtime_error (
+                "The result data does not belong to the right arena. Make sure to use args.arena to create result objects"
+            );
+        }
+    }
+
+    SendSessionChange();  //send out the session change before the return.
+
+    if (is_log_enabled(CLIENT__OUT_ALL)) {
+        if (result.result.has_value())
+            result.result.value()->dump(CLIENT__OUT_ALL, "    ");
+        if (result.named_result.has_value())
+            result.named_result.value()->dump(CLIENT__OUT_ALL, "    ");
+    }
+
+    _SendCallReturn (packet.dest, packet.source.callID, result, args.arena, result.check_arena_owner);
 
     return true;
 }
 
-bool Client::Handle_Notify(PyPacket* packet)
+bool Client::Handle_Notify(EVEPacket& packet)
 {
     //turn this thing into a notify stream:
     ServerNotification notify;
-    if (!notify.Decode(packet->payload)) {
+    if (!notify.Decode(packet.payload)) {
         sLog.Error("Client::Notify","Failed to convert rep into a notify stream");
         return false;
     }

@@ -55,35 +55,33 @@ public:
         auto end = headers->end();
 
         for (; cur != end; cur ++) {
-            if ((*cur)->IsString () == false) {
+            if ((*cur)->is<PyString> () == false) {
                 codelog(SERVICE__ERROR, "SparseRowset: One of the header values is not a string");
                 continue;
             }
 
-            this->m_columns.push_back ((*cur)->AsString ()->content ().c_str ());
+            this->m_columns.push_back ((*cur)->as<PyString> ()->content ().c_str ());
         }
 
         // fetch the keys first
         this->InitializeKeys();
 
-        // build the required header
-        PyDict* boundObjectArguments = new PyDict();
-
-        boundObjectArguments->SetItem ("realRowCount", new PyInt (this->m_indexMap.size()));
-
-        PyTuple* boundServiceInformation = new PyTuple(3);
-
-        boundServiceInformation->SetItem (0, new PyString (this->GetIDString ()));
-        boundServiceInformation->SetItem (1, boundObjectArguments);
-        boundServiceInformation->SetItem (2, new PyLong (GetFileTimeNow ()));
-
-        PyTuple* arguments = new PyTuple (3);
-
-        arguments->SetItem (0, headers);
-        arguments->SetItem (1, new PySubStruct (new PySubStream (boundServiceInformation)));
-        arguments->SetItem (2, new PyInt (this->m_indexMap.size()));
-
-        this->m_header = new PyObject ("util.SparseRowset", arguments);
+        this->m_header = new PyObject (
+            "util.SparseRowset",
+            new PyTuple {
+                headers,
+                new PySubStruct (new PySubStream (
+                    new PyTuple {
+                        new PyString (this->GetIDString ()),
+                        new PyDict {
+                            {"realRowCount", new PyInt (this->m_indexMap.size())}
+                        },
+                        new PyInt (GetFileTimeNow ())
+                    }
+                )),
+                new PyInt (this->m_indexMap.size())
+            }
+        );
         this->m_primed = true;
     }
 
@@ -99,12 +97,13 @@ public:
         PyDict* values = new PyDict;
 
         for (int i = 0; i < row.ColumnCount (); i ++) {
-            PyTuple* entry = new PyTuple(2);
-
-            entry->SetItem (0, PyStatic.NewNone());
-            entry->SetItem (1, DBColumnToPyRep (row, i));
-
-            values->SetItem (row.ColumnName (i), entry);
+            values->set (
+                row.ColumnName (i),
+                new PyTuple {
+                    PyStatic.NewNone(),
+                    DBColumnToPyDataType (row, i)
+                }
+            );
         }
 
         OnObjectPublicAttributesUpdated update;
@@ -127,12 +126,13 @@ public:
         PyDict* values = new PyDict;
 
         for (auto cur : this->m_columns) {
-            PyTuple* entry = new PyTuple(2);
-
-            entry->SetItem (0, new PyInt (1));
-            entry->SetItem (1, PyStatic.NewNone());
-
-            values->SetItem (new PyString (cur), entry);
+            values->set (
+                cur,
+                new PyTuple {
+                    new PyInt (1),
+                    PyStatic.NewNone()
+                }
+            );
         }
 
         OnObjectPublicAttributesUpdated update;
@@ -146,7 +146,7 @@ public:
         this->SendNotification (update);
     }
 protected:
-    PyResult Fetch(PyCallArgs& call, PyInt* startPos, PyInt* fetchSize) {
+  EVEResult Fetch(EVECallArgs& call, PyInt* startPos, PyInt* fetchSize) {
         DBQueryResult res;
         DBResultRow row;
 
@@ -158,18 +158,18 @@ protected:
         PyList* result = new PyList();
 
         while (res.GetRow (row)) {
-            PyTuple* value = new PyTuple(2);
-
-            value->SetItem (0, new PyLong (row.GetInt64 (0)));
-            value->SetItem (1, DBRowToRow (row));
-
-            result->AddItem (value);
+            result->add (
+                new PyTuple {
+                    new PyInt (row.GetInt64 (0)),
+                    DBRowToRow (row)
+                }
+            );
         }
 
         return result;
     }
 
-    PyResult FetchByKey(PyCallArgs& call, PyList* keys) {
+    EVEResult FetchByKey(EVECallArgs& call, PyList* keys) {
         DBQueryResult res;
         DBResultRow row;
 
@@ -181,8 +181,6 @@ protected:
         PyList* result = new PyList();
 
         while (res.GetRow (row)) {
-            PyTuple* value = new PyTuple(3);
-
             // search the key value
             int64_t keyValue = row.GetInt64 (0);
             auto indexIt = this->m_indexMap.find (keyValue);
@@ -193,21 +191,23 @@ protected:
                 continue;
             }
 
-            value->SetItem (0, new PyLong (keyValue));
-            value->SetItem (1, new PyInt (indexIt->second));
-            value->SetItem (2, DBRowToRow (row));
-
-            result->AddItem (value);
+            result->add (
+                new PyTuple {
+                    new PyInt (keyValue),
+                    new PyInt (indexIt->second),
+                    DBRowToRow (row)
+                }
+            );
         }
 
         return result;
     }
 
-    PyResult SelectByUniqueColumnValues(PyCallArgs& call, PyRep* columnName, PyList* values) {
+    EVEResult SelectByUniqueColumnValues(EVECallArgs& call, PyDataType* columnName, PyList* values) {
         DBQueryResult res;
         DBResultRow row;
 
-        if (!this->LoadFromDatabase (res, PyRep::StringContent (columnName).c_str (), values))  {
+        if (!this->LoadFromDatabase (res, columnName->string().c_str (), values))  {
             codelog (SERVICE__ERROR, "Cannot fetch data for sparse rowset");
             return nullptr;
         }
@@ -227,11 +227,13 @@ protected:
                 continue;
             }
 
-            value->SetItem (0, new PyLong (keyValue));
-            value->SetItem (1, new PyInt (indexIt->second));
-            value->SetItem (2, DBRowToRow (row));
-
-            result->AddItem (value);
+            result->add (
+                new PyTuple {
+                    new PyInt (keyValue),
+                    new PyInt (indexIt->second),
+                    DBRowToRow (row)
+                }
+            );
         }
 
         return result;

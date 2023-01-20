@@ -61,14 +61,14 @@ PyObjectEx *StandingDB::GetFactionStandings()
     return DBResultToCRowset(res);
 }
 
-PyRep *StandingDB::GetMyStandings(uint32 charID)
+PyDataType *StandingDB::GetMyStandings(uint32 charID)
 {
     DBQueryResult res;
     sDatabase.RunQuery(res, "SELECT fromID, standing AS rank FROM repStandings WHERE toID = %u", charID);
     return DBResultToCRowset(res);
 }
 
-PyRep *StandingDB::GetCharStandings(Client *pClient)
+PyDataType *StandingDB::GetCharStandings(Client *pClient)
 {
     DBQueryResult res;
     sDatabase.RunQuery(res, "SELECT fromID, toID, standing FROM repStandings WHERE toID = %u OR fromID = %u",
@@ -76,14 +76,14 @@ PyRep *StandingDB::GetCharStandings(Client *pClient)
     return DBResultToCRowset(res);
 }
 
-PyRep *StandingDB::GetCorpStandings(Client *pClient)
+PyDataType *StandingDB::GetCorpStandings(Client *pClient)
 {
     DBQueryResult res;
     sDatabase.RunQuery(res, "SELECT fromID, toID, standing FROM repStandings WHERE toID = %u OR fromID = %u", pClient->GetCorporationID(), pClient->GetCorporationID());
     return DBResultToCRowset(res);
 }
 
-PyRep *StandingDB::GetCharNPCStandings(uint32 charID)
+PyDataType *StandingDB::GetCharNPCStandings(uint32 charID)
 {
     DBQueryResult res;
     sDatabase.RunQuery(res, "SELECT fromID, toID, standing FROM chrNPCStandings WHERE toID = %u", charID);
@@ -91,7 +91,7 @@ PyRep *StandingDB::GetCharNPCStandings(uint32 charID)
 }
 
 /** @todo not sure about this yet.... wip   ....not used? */
-PyRep *StandingDB::PrimeCharStandings(uint32 charID)
+PyDataType *StandingDB::PrimeCharStandings(uint32 charID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -109,7 +109,7 @@ PyRep *StandingDB::PrimeCharStandings(uint32 charID)
     return DBResultToRowset(res);
 }
 
-PyRep *StandingDB::GetStandingTransactions(uint32 fromID, uint32 toID)
+PyDataType *StandingDB::GetStandingTransactions(uint32 fromID, uint32 toID)
 {
     //GetStandingTransactions(fromID, toID, direction, eventID, eventType, eventDateTime)
     /** @todo update this for direction */
@@ -181,7 +181,7 @@ void StandingDB::SaveStandingChanges(uint32 fromID, uint32 toID, uint16 eventTyp
                        eventType, GetFileTimeNow(), fromID, toID, amount, msg.c_str());
 }
 
-PyRep *StandingDB::GetStandingCompositions(uint32 fromID, uint32 toID)
+PyDataType *StandingDB::GetStandingCompositions(uint32 fromID, uint32 toID)
 {
     // ownerID, standing ...
 

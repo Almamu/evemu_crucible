@@ -40,35 +40,35 @@ public:
 protected:
     MailDB m_db;
 
-    PyResult SendMail(PyCallArgs& call, PyList* toCharacterIDs, std::optional<PyInt*> listID, std::optional<PyInt*> toCorpOrAllianceID, PyWString* title, PyWString* body, PyBool* isReplyTo, PyBool* isForwardedFrom);
-    PyResult PrimeOwners(PyCallArgs& call, PyList* ownerIDs);
-    PyResult SyncMail(PyCallArgs& call, std::optional<PyInt*> first, std::optional<PyInt*> second);
-    PyResult GetMailHeaders(PyCallArgs& call, PyList* messageIDs);
-    PyResult MoveToTrash(PyCallArgs& call, PyList* messageIDs);
-    PyResult MoveFromTrash(PyCallArgs& call, PyList* messageIDs);
-    PyResult MarkAsUnread(PyCallArgs& call, PyList* messageIDs);
-    PyResult MarkAsRead(PyCallArgs& call, PyList* messageIDs);
-    PyResult MoveAllToTrash(PyCallArgs& call);
-    PyResult MoveToTrashByLabel(PyCallArgs& call, PyInt* labelID);
-    PyResult MoveToTrashByList(PyCallArgs& call, PyInt* listID);
-    PyResult MarkAllAsUnread(PyCallArgs& call);
-    PyResult MarkAsUnreadByLabel(PyCallArgs& call, PyInt* labelID);
-    PyResult MarkAsUnreadByList(PyCallArgs& call, PyList* messageIDs);
-    PyResult MarkAllAsRead(PyCallArgs& call);
-    PyResult MarkAsReadByLabel(PyCallArgs& call, PyInt* labelID);
-    PyResult MarkAsReadByList(PyCallArgs& call, PyInt* listID);
-    PyResult MoveAllFromTrash(PyCallArgs& call);
-    PyResult EmptyTrash(PyCallArgs& call);
-    PyResult DeleteMail(PyCallArgs& call, PyList* messageIDs);
-    PyResult GetBody(PyCallArgs& call, PyInt* messageID, PyBool* isUnread);
-    PyResult AssignLabels(PyCallArgs& call, PyList* messageIDs, PyInt* labelID);
-    PyResult RemoveLabels(PyCallArgs& call, PyList* messageIDs, PyInt* labelID);
+    EVEResult SendMail(EVECallArgs& call, PyList* toCharacterIDs, std::optional<PyInt*> listID, std::optional<PyInt*> toCorpOrAllianceID, PyString* title, PyString* body, PyBool* isReplyTo, PyBool* isForwardedFrom);
+    EVEResult PrimeOwners(EVECallArgs& call, PyList* ownerIDs);
+    EVEResult SyncMail(EVECallArgs& call, std::optional<PyInt*> first, std::optional<PyInt*> second);
+    EVEResult GetMailHeaders(EVECallArgs& call, PyList* messageIDs);
+    EVEResult MoveToTrash(EVECallArgs& call, PyList* messageIDs);
+    EVEResult MoveFromTrash(EVECallArgs& call, PyList* messageIDs);
+    EVEResult MarkAsUnread(EVECallArgs& call, PyList* messageIDs);
+    EVEResult MarkAsRead(EVECallArgs& call, PyList* messageIDs);
+    EVEResult MoveAllToTrash(EVECallArgs& call);
+    EVEResult MoveToTrashByLabel(EVECallArgs& call, PyInt* labelID);
+    EVEResult MoveToTrashByList(EVECallArgs& call, PyInt* listID);
+    EVEResult MarkAllAsUnread(EVECallArgs& call);
+    EVEResult MarkAsUnreadByLabel(EVECallArgs& call, PyInt* labelID);
+    EVEResult MarkAsUnreadByList(EVECallArgs& call, PyList* messageIDs);
+    EVEResult MarkAllAsRead(EVECallArgs& call);
+    EVEResult MarkAsReadByLabel(EVECallArgs& call, PyInt* labelID);
+    EVEResult MarkAsReadByList(EVECallArgs& call, PyInt* listID);
+    EVEResult MoveAllFromTrash(EVECallArgs& call);
+    EVEResult EmptyTrash(EVECallArgs& call);
+    EVEResult DeleteMail(EVECallArgs& call, PyList* messageIDs);
+    EVEResult GetBody(EVECallArgs& call, PyInt* messageID, PyBool* isUnread);
+    EVEResult AssignLabels(EVECallArgs& call, PyList* messageIDs, PyInt* labelID);
+    EVEResult RemoveLabels(EVECallArgs& call, PyList* messageIDs, PyInt* labelID);
 
     // implemented
-    PyResult GetLabels(PyCallArgs& call);
-    PyResult EditLabel(PyCallArgs& call, PyInt* labelID, PyWString* name, std::optional<PyInt*> color);
-    PyResult CreateLabel(PyCallArgs& call, PyWString* name, std::optional<PyInt*> color);
-    PyResult DeleteLabel(PyCallArgs& call, PyInt* labelID);
+    EVEResult GetLabels(EVECallArgs& call);
+    EVEResult EditLabel(EVECallArgs& call, PyInt* labelID, PyString* name, std::optional<PyInt*> color);
+    EVEResult CreateLabel(EVECallArgs& call, PyString* name, std::optional<PyInt*> color);
+    EVEResult DeleteLabel(EVECallArgs& call, PyInt* labelID);
 };
 
 

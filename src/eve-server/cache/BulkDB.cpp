@@ -12,30 +12,19 @@
 #include "cache/BulkDB.h"
 
 
-BulkDB::BulkDB()
-{
-    m_bulkData.clear();
-    m_bulkDataChunks.clear();
-
-    // will need to make this dynamic at some point.
-    //  dunno how yet.
-    m_chunks = 43;
-    m_loaded = false;
+BulkDB::BulkDB() :
+    m_arena(),
+    m_bulkData(),
+    m_bulkDataChunks(),
+    // this might need to be dynamic at some point
+    m_chunks (43),
+    m_loaded (false) {
 }
 
-BulkDB::~BulkDB()
-{
-    //Close();
-}
+BulkDB::~BulkDB() {}
 
 void BulkDB::Close()
 {
-    for (auto cur : m_bulkData)
-        PyDecRef(cur.second);
-
-    for (auto cur : m_bulkDataChunks)
-        PyDecRef(cur.second);
-
     m_bulkData.clear();
     m_bulkDataChunks.clear();
     sLog.Warning("      BulkDataMgr", "Bulk Data Manager has been closed." );
@@ -67,28 +56,28 @@ void BulkDB::Initialize()
 
     double start = GetTimeMSeconds();
 
-    m_bulkData.insert(std::pair<uint8, PyRep*>(0, GetOperands()));
-    m_bulkData.insert(std::pair<uint8, PyRep*>(1, GetDogmaAttribs()));
-    m_bulkData.insert(std::pair<uint8, PyRep*>(2, GetDogmaEffects()));
+    m_bulkData.insert(std::pair<uint8, PyDataType*>(0, GetOperands()));
+    m_bulkData.insert(std::pair<uint8, PyDataType*>(1, GetDogmaAttribs()));
+    m_bulkData.insert(std::pair<uint8, PyDataType*>(2, GetDogmaEffects()));
 
     for (int i = 1; i < m_chunks; ++i) {
         switch (i) {
             case 1:
             case 2: {
-                m_bulkDataChunks.insert(std::pair<uint8, PyRep*>(i, GetExpressions(i+1)));
+                m_bulkDataChunks.insert(std::pair<uint8, PyDataType*>(i, GetExpressions(i+1)));
             } break;
             case 3:
             case 4:
             case 5:
             case 6: {
                 uint8 chunk = i - 2;  // 1 to 4
-                m_bulkDataChunks.insert(std::pair<uint8, PyRep*>(i, GetDogmaTypeEffects(chunk)));
+                m_bulkDataChunks.insert(std::pair<uint8, PyDataType*>(i, GetDogmaTypeEffects(chunk)));
             } break;
             default: {
                 uint8 chunk = i - 6;  // 1 to 36
                 if (chunk > 36)
                     assert(true);  // make error here for wrong chunkID
-                m_bulkDataChunks.insert(std::pair<uint8, PyRep*>(i, GetDogmaTypeAttribs(chunk)));
+                m_bulkDataChunks.insert(std::pair<uint8, PyDataType*>(i, GetDogmaTypeAttribs(chunk)));
             } break;
         }
     }
@@ -160,18 +149,23 @@ int32 BulkDB::GetFileIDfromChunk(uint8 setID, uint8 chunkID)
 }
 
 /** @todo  update this to use setIDs, and consolidate all data and calls */
-PyRep* BulkDB::GetBulkData(uint8 chunkID)
+PyDataType* BulkDB::GetBulkData(uint8 chunkID)
 {
     if (!m_loaded)
         Initialize();
 
-    std::map<uint8, PyRep*>::const_iterator itr = m_bulkData.find(chunkID);
-    if (itr != m_bulkData.end())
-        return itr->second;
-    return nullptr;
+    std::map<uint8, PyDataType*>::const_iterator itr = m_bulkData.find(chunkID);
+
+    if (itr == m_bulkData.end()) {
+        return nullptr;
+    }
+
+    PySafeIncRef (itr->second);
+
+    return itr->second;
 }
 
-PyRep* BulkDB::GetBulkDataChunks(uint8 setID, uint8 chunkID)
+PyDataType* BulkDB::GetBulkDataChunks(uint8 setID, uint8 chunkID)
 {
     if (!m_loaded)
         Initialize();
@@ -179,9 +173,15 @@ PyRep* BulkDB::GetBulkDataChunks(uint8 setID, uint8 chunkID)
     /** @todo  need to fix this for separate chunks vs sets */
     switch (setID) {
         case 0: {
-            std::map<uint8, PyRep*>::const_iterator itr = m_bulkDataChunks.find(chunkID);
-            if (itr != m_bulkDataChunks.end())
-                return itr->second;
+            std::map<uint8, PyDataType*>::const_iterator itr = m_bulkDataChunks.find(chunkID);
+
+            if (itr == m_bulkDataChunks.end()) {
+                return nullptr;
+            }
+
+            PySafeIncRef (itr->second);
+
+            return itr->second;
         } break;
         case 1: {
             return GetExpressions(chunkID);
@@ -198,7 +198,7 @@ PyRep* BulkDB::GetBulkDataChunks(uint8 setID, uint8 chunkID)
     return nullptr;
 }
 
-PyRep* BulkDB::GetOperands()
+PyDataType* BulkDB::GetOperands()
 {   //74
     DBQueryResult res;
     if ( !sDatabase.RunQuery(res,
@@ -207,10 +207,10 @@ PyRep* BulkDB::GetOperands()
         codelog(DATABASE__ERROR, "Error in GetOperands: %s", res.error.c_str());
         return nullptr;
     }
-    return DBResultToCRowset(res);
+    return DBResultToCRowset(res, &m_arena);
 }
 
-PyRep* BulkDB::GetDogmaAttribs()
+PyDataType* BulkDB::GetDogmaAttribs()
 {   //1791
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -220,10 +220,10 @@ PyRep* BulkDB::GetDogmaAttribs()
         _log(DATABASE__ERROR, "Error in GetDogmaAttribs: %s",res.error.c_str());
         return nullptr;
     }
-    return DBResultToCRowset(res);
+    return DBResultToCRowset(res, &m_arena);
 }
 
-PyRep* BulkDB::GetDogmaEffects()
+PyDataType* BulkDB::GetDogmaEffects()
 {   //2854
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -237,60 +237,60 @@ PyRep* BulkDB::GetDogmaEffects()
         return nullptr;
     }
 
-    return DBResultToCRowset(res);
+    return DBResultToCRowset(res, &m_arena);
     /*  this doesnt work right.... AttributeError: EveConfig instance has no attribute 'dgmeffects'
     PyList* list = new PyList();
     DBResultRow row;
     while (res.GetRow(row)) {
         PyDict* dict = new PyDict();
-        dict->SetItemString("effectID",                         new PyInt(row.GetInt(0)));
-        dict->SetItemString("effectName",                       new PyString(row.GetText(1)));
-        dict->SetItemString("displayNameID",                    new PyInt(row.GetInt(2)));
-        dict->SetItemString("descriptionID",                    new PyInt(row.GetInt(3)));
-        dict->SetItemString("dataID",                           new PyInt(row.GetInt(4)));
-        dict->SetItemString("effectCategory",                   new PyInt(row.GetInt(5)));
-        dict->SetItemString("preExpression",                    new PyInt(row.GetInt(6)));
-        dict->SetItemString("postExpression",                   new PyInt(row.GetInt(7)));
-        dict->SetItemString("description",                      new PyString(row.GetText(8)));
-        dict->SetItemString("guid",                             new PyString(row.GetText(9)));
-        dict->SetItemString("isOffensive",                      new PyBool(row.GetBool(10)));
-        dict->SetItemString("isAssistance",                     new PyBool(row.GetBool(11)));
-        dict->SetItemString("disallowAutoRepeat",               new PyBool(row.GetBool(17)));
-        dict->SetItemString("published",                        new PyBool(row.GetBool(18)));
-        dict->SetItemString("displayName",                      new PyString(row.GetText(19)));
-        dict->SetItemString("isWarpSafe",                       new PyBool(row.GetBool(20)));
-        dict->SetItemString("rangeChance",                      new PyBool(row.GetBool(21)));
-        dict->SetItemString("electronicChance",                 new PyBool(row.GetBool(22)));
-        dict->SetItemString("propulsionChance",                 new PyBool(row.GetBool(23)));
-        dict->SetItemString("distribution",                     new PyInt(row.GetInt(24)));
-        dict->SetItemString("sfxName",                          new PyString(row.GetText(25)));
-        dict->SetItemString("npcUsageChanceAttributeID",        new PyInt(row.GetInt(26)));
-        dict->SetItemString("npcActivationChanceAttributeID",   new PyInt(row.GetInt(27)));
-        dict->SetItemString("fittingUsageChanceAttributeID",    new PyInt(row.GetInt(28)));
-        dict->SetItemString("iconID",                           new PyInt(row.GetInt(29)));
-        dict->SetItemString("modifierInfo",                     new PyString(row.GetText(30)));
+        dict->set ("effectID",                         new PyInt(row.GetInt(0)));
+        dict->set ("effectName",                       new PyString(row.GetText(1)));
+        dict->set ("displayNameID",                    new PyInt(row.GetInt(2)));
+        dict->set ("descriptionID",                    new PyInt(row.GetInt(3)));
+        dict->set ("dataID",                           new PyInt(row.GetInt(4)));
+        dict->set ("effectCategory",                   new PyInt(row.GetInt(5)));
+        dict->set ("preExpression",                    new PyInt(row.GetInt(6)));
+        dict->set ("postExpression",                   new PyInt(row.GetInt(7)));
+        dict->set ("description",                      new PyString(row.GetText(8)));
+        dict->set ("guid",                             new PyString(row.GetText(9)));
+        dict->set ("isOffensive",                      new PyBool(row.GetBool(10)));
+        dict->set ("isAssistance",                     new PyBool(row.GetBool(11)));
+        dict->set ("disallowAutoRepeat",               new PyBool(row.GetBool(17)));
+        dict->set ("published",                        new PyBool(row.GetBool(18)));
+        dict->set ("displayName",                      new PyString(row.GetText(19)));
+        dict->set ("isWarpSafe",                       new PyBool(row.GetBool(20)));
+        dict->set ("rangeChance",                      new PyBool(row.GetBool(21)));
+        dict->set ("electronicChance",                 new PyBool(row.GetBool(22)));
+        dict->set ("propulsionChance",                 new PyBool(row.GetBool(23)));
+        dict->set ("distribution",                     new PyInt(row.GetInt(24)));
+        dict->set ("sfxName",                          new PyString(row.GetText(25)));
+        dict->set ("npcUsageChanceAttributeID",        new PyInt(row.GetInt(26)));
+        dict->set ("npcActivationChanceAttributeID",   new PyInt(row.GetInt(27)));
+        dict->set ("fittingUsageChanceAttributeID",    new PyInt(row.GetInt(28)));
+        dict->set ("iconID",                           new PyInt(row.GetInt(29)));
+        dict->set ("modifierInfo",                     new PyString(row.GetText(30)));
 
         // these can be null
         if (row.IsNull(12))
-            dict->SetItemString("durationAttributeID",          PyStatic.NewNone());
+            dict->set ("durationAttributeID",          PyStatic.NewNone());
         else
-            dict->SetItemString("durationAttributeID",          new PyInt(row.GetInt(12)));
+            dict->set ("durationAttributeID",          new PyInt(row.GetInt(12)));
         if (row.IsNull(13))
-            dict->SetItemString("trackingSpeedAttributeID",     PyStatic.NewNone());
+            dict->set ("trackingSpeedAttributeID",     PyStatic.NewNone());
         else
-            dict->SetItemString("trackingSpeedAttributeID",     new PyInt(row.GetInt(13)));
+            dict->set ("trackingSpeedAttributeID",     new PyInt(row.GetInt(13)));
         if (row.IsNull(14))
-            dict->SetItemString("dischargeAttributeID",         PyStatic.NewNone());
+            dict->set ("dischargeAttributeID",         PyStatic.NewNone());
         else
-            dict->SetItemString("dischargeAttributeID",         new PyInt(row.GetInt(14)));
+            dict->set ("dischargeAttributeID",         new PyInt(row.GetInt(14)));
         if (row.IsNull(15))
-            dict->SetItemString("rangeAttributeID",             PyStatic.NewNone());
+            dict->set ("rangeAttributeID",             PyStatic.NewNone());
         else
-            dict->SetItemString("rangeAttributeID",             new PyInt(row.GetInt(15)));
+            dict->set ("rangeAttributeID",             new PyInt(row.GetInt(15)));
         if (row.IsNull(16))
-            dict->SetItemString("falloffAttributeID",           PyStatic.NewNone());
+            dict->set ("falloffAttributeID",           PyStatic.NewNone());
         else
-            dict->SetItemString("falloffAttributeID",           new PyInt(row.GetInt(16)));
+            dict->set ("falloffAttributeID",           new PyInt(row.GetInt(16)));
 
         list->AddItem(new PyObject("util.KeyVal", dict));
     }
@@ -299,7 +299,7 @@ PyRep* BulkDB::GetDogmaEffects()
     */
 }
 
-PyRep* BulkDB::GetExpressions(uint8 chunkID)    // 2 chunks
+PyDataType* BulkDB::GetExpressions(uint8 chunkID)    // 2 chunks
 {   //17758
     DBQueryResult res;
     std::ostringstream q;
@@ -322,7 +322,7 @@ PyRep* BulkDB::GetExpressions(uint8 chunkID)    // 2 chunks
     return DBResultToCRowset(res);
 }
 
-PyRep* BulkDB::GetDogmaTypeEffects(uint8 chunkID)   // 4 chunks
+PyDataType* BulkDB::GetDogmaTypeEffects(uint8 chunkID)   // 4 chunks
 {   //33777
     DBQueryResult res;
     std::ostringstream q;
@@ -350,7 +350,7 @@ PyRep* BulkDB::GetDogmaTypeEffects(uint8 chunkID)   // 4 chunks
     return DBResultToCRowset(res);
 }
 
-PyRep* BulkDB::GetDogmaTypeAttribs(uint8 chunkID)   // 36 chunks
+PyDataType* BulkDB::GetDogmaTypeAttribs(uint8 chunkID)   // 36 chunks
 {   //353290
     DBQueryResult res;
     std::ostringstream q;

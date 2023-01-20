@@ -43,7 +43,7 @@ CommandDispatcher::~CommandDispatcher() {
     m_commands.clear();
 }
 
-PyResult CommandDispatcher::Execute( Client* from, const char* msg )
+EVEResult CommandDispatcher::Execute( Client* from, const char* msg )
 {
      /** @todo  fix this shit...
     if (from->IsInSpace()) {

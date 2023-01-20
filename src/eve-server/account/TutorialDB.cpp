@@ -27,7 +27,7 @@
 
 #include "account/TutorialDB.h"
 
-PyRep *TutorialDB::GetPageCriterias(uint32 tutorialID) {
+PyDataType *TutorialDB::GetPageCriterias(uint32 tutorialID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -43,7 +43,7 @@ PyRep *TutorialDB::GetPageCriterias(uint32 tutorialID) {
     return DBResultToRowset(res);
 }
 
-PyRep *TutorialDB::GetPages(uint32 tutorialID) {
+PyDataType *TutorialDB::GetPages(uint32 tutorialID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -59,7 +59,7 @@ PyRep *TutorialDB::GetPages(uint32 tutorialID) {
     return DBResultToRowset(res);
 }
 
-PyRep *TutorialDB::GetTutorial(uint32 tutorialID) {
+PyDataType *TutorialDB::GetTutorial(uint32 tutorialID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -74,7 +74,7 @@ PyRep *TutorialDB::GetTutorial(uint32 tutorialID) {
     return DBResultToRowset(res);
 }
 
-PyRep *TutorialDB::GetTutorialCriterias(uint32 tutorialID) {
+PyDataType *TutorialDB::GetTutorialCriterias(uint32 tutorialID) {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -89,7 +89,7 @@ PyRep *TutorialDB::GetTutorialCriterias(uint32 tutorialID) {
     return DBResultToRowset(res);
 }
 
-PyRep *TutorialDB::GetAllTutorials() {
+PyDataType *TutorialDB::GetAllTutorials() {
     /*  this is wrong...our db is incomplete */
     DBQueryResult res;
 
@@ -104,7 +104,7 @@ PyRep *TutorialDB::GetAllTutorials() {
     return DBResultToRowset(res);
 }
 
-PyRep *TutorialDB::GetAllCriterias() {
+PyDataType *TutorialDB::GetAllCriterias() {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -118,7 +118,7 @@ PyRep *TutorialDB::GetAllCriterias() {
     return DBResultToRowset(res);
 }
 
-PyRep *TutorialDB::GetCategories() {
+PyDataType *TutorialDB::GetCategories() {
     DBQueryResult res;
 
     if (!sDatabase.RunQuery(res,
@@ -133,7 +133,7 @@ PyRep *TutorialDB::GetCategories() {
     return DBResultToRowset(res);
 }
 
-PyRep *TutorialDB::GetTutorialsAndConnections(uint8 raceID) {
+PyDataType *TutorialDB::GetTutorialsAndConnections(uint8 raceID) {
     DBQueryResult res;
     sDatabase.RunQuery(res, "SELECT tutorialID, %u AS raceID, nextTutorialID FROM tutorials", raceID);
     /*

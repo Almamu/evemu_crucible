@@ -275,7 +275,7 @@ void ReactorSE::Process()
  *
  * A large hangar structure, for easy storage of materials and modules.
  * This hangar is designed for personal storage of moderate volume items, and each individual only has access to their own section of the storage space.
- * As with the Corporate Hangar Array, the Personal Hangar Array uses CPU and therefore will not be accessible if the POS is reinforced.
+ * as with the Corporate Hangar Array, the Personal Hangar Array uses CPU and therefore will not be accessible if the POS is reinforced.
  * If you need more storage, you may wish to use a LSAA instead.
  * Ship Maintenance Array
  * Ship Maintenance Array

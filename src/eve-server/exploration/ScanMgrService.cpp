@@ -59,7 +59,7 @@ void ScanMgrService::BoundReleased (ScanBound* bound) {
     this->m_instances.erase (it);
 }
 
-PyResult ScanMgrService::GetSystemScanMgr(PyCallArgs& call) {
+EVEResult ScanMgrService::GetSystemScanMgr(EVECallArgs& call) {
     DestinyManager* pDestiny = call.client->GetShipSE()->DestinyMgr();
     if (pDestiny == nullptr) {
         codelog(CLIENT__ERROR, "%s: Client has no destiny manager!", call.client->GetName());
@@ -91,11 +91,11 @@ ScanBound::ScanBound(EVEServiceManager& mgr, ScanMgrService& parent, Client* cli
     this->Add("ReconnectToLostProbes", &ScanBound::ReconnectToLostProbes);
 }
 
-PyResult ScanBound::ConeScan( PyCallArgs& call, PyRep* ignored1, PyRep* ignored2, PyRep* ignored3, PyRep* ignored4, PyRep* ignored5) {
+EVEResult ScanBound::ConeScan(EVECallArgs& call, PyDataType* ignored1, PyDataType* ignored2, PyDataType* ignored3, PyDataType* ignored4, PyDataType* ignored5) {
     //result = sm.GetService('scanSvc').ConeScan(self.scanangle, rnge * 1000, vec.x, vec.y, vec.z)
     //return sm.RemoteSvc('scanMgr').GetSystemScanMgr().ConeScan(scanangle, scanRange, x, y, z)
     //_log(SCAN__TRACE, "ScanBound::Handle_ConeScan() - size=%lli", call.tuple->size());
-    //call.Dump(SCAN__DUMP);
+    //call.dump(SCAN__DUMP);
 
     // TODO: for this one we're keeping the old mechanism for now as it requires changes on more than just this service
     Call_ConeScan args;
@@ -125,9 +125,9 @@ PyResult ScanBound::ConeScan( PyCallArgs& call, PyRep* ignored1, PyRep* ignored2
     return m_client->scan()->ConeScan(args);
 }
 
-PyResult ScanBound::RequestScans(PyCallArgs& call, std::optional <PyDict*> probes) {
+EVEResult ScanBound::RequestScans(EVECallArgs& call, std::optional <PyDict*> probes) {
     _log(SCAN__TRACE, "ScanBound::Handle_RequestScans() - size=%lli", call.tuple->size());
-    call.Dump(SCAN__DUMP);
+    call.dump(SCAN__DUMP);
 
     DestinyManager* pDestiny = m_client->GetShipSE()->DestinyMgr();
     if (pDestiny == nullptr) {
@@ -150,7 +150,7 @@ PyResult ScanBound::RequestScans(PyCallArgs& call, std::optional <PyDict*> probe
     return PyStatic.NewNone();
 }
 
-PyResult ScanBound::RecoverProbes(PyCallArgs& call, PyList* probeIDs) {
+EVEResult ScanBound::RecoverProbes(EVECallArgs& call, PyList* probeIDs) {
     //successProbeIDs = sm.RemoteSvc('scanMgr').GetSystemScanMgr().RecoverProbes(probeIDs)
     // list of probes successfully scooped to cargo
     // this is tested and added in Probe::RecoverProbe()
@@ -160,12 +160,12 @@ PyResult ScanBound::RecoverProbes(PyCallArgs& call, PyList* probeIDs) {
 
     PyList::const_iterator list_2_cur = probeIDs->begin();
     for (size_t list_2_index(0); list_2_cur != probeIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
@@ -181,11 +181,11 @@ PyResult ScanBound::RecoverProbes(PyCallArgs& call, PyList* probeIDs) {
     return list;
 }
 
-PyResult ScanBound::DestroyProbe(PyCallArgs& call, PyInt* probeID) {
+EVEResult ScanBound::DestroyProbe(EVECallArgs& call, PyInt* probeID) {
     //scanMan = sm.RemoteSvc('scanMgr').GetSystemScanMgr()
     //scanMan.DestroyProbe(probeID)
     _log(SCAN__TRACE, "ScanBound::Handle_DestroyProbe() - size=%lli", call.tuple->size());
-    call.Dump(SCAN__DUMP);
+    call.dump(SCAN__DUMP);
 
     SystemEntity* pSE(m_client->SystemMgr()->GetSE(probeID->value()));
     if (pSE != nullptr)
@@ -195,7 +195,7 @@ PyResult ScanBound::DestroyProbe(PyCallArgs& call, PyInt* probeID) {
     return nullptr;
 }
 
-PyResult ScanBound::ReconnectToLostProbes(PyCallArgs& call) {
+EVEResult ScanBound::ReconnectToLostProbes(EVECallArgs& call) {
     // no args
     //  will have to test against client launcher vs probe m_moduleID
     // will have to write *something* to loop thru active probes in system for this....

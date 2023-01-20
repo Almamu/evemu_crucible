@@ -26,7 +26,7 @@
 
 #include "eve-common.h"
 
-#include "python/PyRep.h"
+#include "python/Types.h"
 #include "utils/EvilNumber.h"
 
 EvilNumber EvilZero = EvilNumber();
@@ -106,20 +106,20 @@ EvilNumber::EvilNumber( double val ) : mType(evil_number_float)
 
 // PUBLIC FUNCTIONS:
 
-PyRep* EvilNumber::GetPyObject()
+PyDataType* EvilNumber::GetPyObject(PythonArena* arena)
 {
     if (mType == evil_number_int) {
         if ( iVal > INT_MAX || iVal < INT_MIN)
-            return (PyRep*)new PyLong(iVal);
+            return arena->Int(iVal);
         else
-            return (PyRep*)new PyInt((int32)(iVal));
+            return arena->Int((int32)(iVal));
     } else if (mType == evil_number_float) {
-        return (PyRep*)new PyFloat(fVal);
+        return arena->Float(fVal);
     } else {
         sLog.Error("EvilNumber::GetPyObject()", "EvilNumber is neither integer nor float.  Returning None");
         EvE::traceStack();
         assert(false);
-        return PyStatic.NewNone();
+        return arena->None();
     }
 }
 

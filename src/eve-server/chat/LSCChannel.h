@@ -48,7 +48,7 @@ public:
       m_mode(mode) { }
 
     ~LSCChannelChar() { }
-    PyRep *Encode() const;
+    PyDataType *Encode() const;
 
 protected:
     LSCChannel *m_parent;
@@ -74,7 +74,7 @@ public:
       m_reason(reason) { }
 
     ~LSCChannelMod() { }
-    PyRep * Encode();
+    PyDataType * Encode();
 
 protected:
     LSCChannel * m_parent;    // we do not own this
@@ -94,12 +94,12 @@ public:
         );
     ~LSCChannel();
 
-    PyRep *EncodeID();
-    PyRep *EncodeStaticChannel(uint32 charID);
-    PyRep *EncodeDynamicChannel(uint32 charID);
-    PyRep *EncodeChannelMods();
-    PyRep *EncodeChannelChars();
-    PyRep *EncodeEmptyChannelChars();
+    PyDataType *EncodeID();
+    PyDataType *EncodeStaticChannel(uint32 charID);
+    PyDataType *EncodeDynamicChannel(uint32 charID);
+    PyDataType *EncodeChannelMods();
+    PyDataType *EncodeChannelChars();
+    PyDataType *EncodeEmptyChannelChars();
 
     const char *GetTypeString();
     bool JoinChannel(Client *pClient);

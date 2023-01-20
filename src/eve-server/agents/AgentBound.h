@@ -30,20 +30,20 @@ public:
 protected:
     Agent* m_agent;    //we do not own this.
 
-    PyResult GetAgentLocationWrap(PyCallArgs& call);
-    PyResult GetInfoServiceDetails(PyCallArgs& call);
-    PyResult DoAction(PyCallArgs& call, std::optional <PyInt*> actionID);
-    PyResult GetMissionBriefingInfo(PyCallArgs& call);
-    PyResult GetMissionKeywords(PyCallArgs& call, PyInt* contentID);
-    PyResult GetMissionObjectiveInfo(PyCallArgs& call, std::optional <PyInt*> characterID, std::optional <PyInt*> contentID);
-    PyResult GetMyJournalDetails(PyCallArgs& call);
-    PyResult GetMissionJournalInfo(PyCallArgs &call, std::optional <PyInt*> characterID, std::optional <PyInt*> contentID);
-    PyResult GetDungeonShipRestrictions(PyCallArgs& call, PyInt* dungeonID);
-    PyResult RemoveOfferFromJournal(PyCallArgs& call);
-    PyResult GetOfferJournalInfo(PyCallArgs& call);
-    PyResult GetEntryPoint(PyCallArgs& call);
-    PyResult GotoLocation(PyCallArgs& call, PyInt* locationType, PyInt* locationNumber, PyInt* referringAgentID);
-    PyResult WarpToLocation(PyCallArgs& call, PyInt* locationType, PyInt* locationNumber, PyFloat* warpRange, PyBool* fleet, PyInt* referringAgentID);
+    EVEResult GetAgentLocationWrap(EVECallArgs& call);
+    EVEResult GetInfoServiceDetails(EVECallArgs& call);
+    EVEResult DoAction(EVECallArgs& call, std::optional <PyInt*> actionID);
+    EVEResult GetMissionBriefingInfo(EVECallArgs& call);
+    EVEResult GetMissionKeywords(EVECallArgs& call, PyInt* contentID);
+    EVEResult GetMissionObjectiveInfo(EVECallArgs& call, std::optional <PyInt*> characterID, std::optional <PyInt*> contentID);
+    EVEResult GetMyJournalDetails(EVECallArgs& call);
+    EVEResult GetMissionJournalInfo(EVECallArgs&call, std::optional <PyInt*> characterID, std::optional <PyInt*> contentID);
+    EVEResult GetDungeonShipRestrictions(EVECallArgs& call, PyInt* dungeonID);
+    EVEResult RemoveOfferFromJournal(EVECallArgs& call);
+    EVEResult GetOfferJournalInfo(EVECallArgs& call);
+    EVEResult GetEntryPoint(EVECallArgs& call);
+    EVEResult GotoLocation(EVECallArgs& call, PyInt* locationType, PyInt* locationNumber, PyInt* referringAgentID);
+    EVEResult WarpToLocation(EVECallArgs& call, PyInt* locationType, PyInt* locationNumber, PyFloat* warpRange, PyBool* fleet, PyInt* referringAgentID);
 
 private:
     PyTuple* GetMissionObjectives(Client* pClient, MissionOffer& offer);

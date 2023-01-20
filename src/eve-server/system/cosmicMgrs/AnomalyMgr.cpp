@@ -12,7 +12,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 
 #include "StaticDataMgr.h"
 #include "map/MapData.h"

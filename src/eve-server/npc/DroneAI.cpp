@@ -221,7 +221,7 @@ void DroneAIMgr::Target(SystemEntity* pTarget) {
     CheckDistance(pTarget);
 
     /*
-    std::map<std::string, PyRep *> arg;
+    std::map<std::string, PyDataType *> arg;
     arg["target"] = new PyInt(args.arg);
     throw PyException(MakeUserError("DeniedDroneTargetForceField", arg));
     */

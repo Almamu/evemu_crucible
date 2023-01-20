@@ -41,8 +41,6 @@
 // marshal
 #include "marshal/EVEMarshal.h"
 #include "marshal/EVEUnmarshal.h"
-// python/classes
-#include "python/classes/PyDatabase.h"
 // utils
 #include "utils/EvilNumber.h"
 

@@ -1,8 +1,8 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
-#include "Profiler.h"
+#include "config/EVEServerConfig.h"
+#include "log/Profiler.h"
 #include "StaticDataMgr.h"
 #include "account/AccountService.h"
 #include "character/Character.h"
@@ -620,7 +620,7 @@ void ShipItem::LoadCharge(InventoryItemRef cRef, EVEItemFlags flag)
     if (pMod->IsActive()) {
         throw CustomError ("You cannot load active modules.");
         /*
-        std::map<std::string, PyRep *> args;
+        std::map<std::string, PyDataType *> args;
         args["chargeType"] = new PyInt(iRef->typeID());
         throw PyException( MakeUserError("LoadingChargeSlotAlready", args));  */
         /*LoadingChargeSlotAlreadyBody'}(u'You cannot load the {[item]chargeType.name} because the module is already involved in another loading operation.'
@@ -639,7 +639,7 @@ void ShipItem::LoadCharge(InventoryItemRef cRef, EVEItemFlags flag)
 
     VerifyHoldType(flag, cRef, m_pilot);
         /*  this doesnt work right....comment for now.
-        std::map<std::string, PyRep *> args;
+        std::map<std::string, PyDataType *> args;
         args["charge"] = new PyInt(iRef->itemID());
         throw UserError ("ChargeLoadingFailedWithRefund");
         */
@@ -1542,14 +1542,13 @@ uint32 ShipItem::UnlinkWeapon(uint32 moduleID)
     UnlinkGroup(moduleID);
     LinkWeapon(moduleID, slaveID);
     // make packet for master and first slave (slaveID)
-    PyList* slaves = new PyList();
-        slaves->AddItem(new PyInt(slaveID));
-    PyDict* result = new PyDict();
-        result->SetItem(new PyInt(moduleID), slaves);
-    PyTuple* tuple = new PyTuple(3);
-        tuple->SetItem(0, new PyString("OnWeaponBanksChanged"));
-        tuple->SetItem(1, new PyInt(m_itemID));
-        tuple->SetItem(2, result);      //GetLinkedWeapons()
+    PyTuple* tuple = new PyTuple {
+        new PyString ("OnWeaponBanksChanged"),
+        new PyInt (m_itemID),
+        new PyDict { // GetLinkedWeapons ()
+            {new PyInt (moduleID), new PyList { new PyInt (slaveID) }}
+        }
+    };
     // send 'new' group data to client
     m_pilot->QueueDestinyEvent(&tuple);
     // send immediately (otherwise it will wait until after this call returns, which negates this hack
@@ -1620,10 +1619,12 @@ void ShipItem::UnlinkGroup(uint32 memberID, bool update/*false*/)
                 m_linkedWeapons.erase(itr);
                 SaveWeaponGroups();
                 if (update) {
-                    PyTuple* tuple = new PyTuple(3);
-                        tuple->SetItem(0, new PyString("OnWeaponGroupDestroyed"));
-                        tuple->SetItem(1, new PyInt(m_itemID));
-                        tuple->SetItem(2, new PyInt(memberID));
+                    PyTuple* tuple = new PyTuple {
+                        new PyString ("OnWeaponGroupDestroyed"),
+                        new PyInt (m_itemID),
+                        new PyInt (memberID)
+                    };
+
                     m_pilot->QueueDestinyEvent(&tuple);
                 }
                 return;
@@ -1685,22 +1686,22 @@ uint8 ShipItem::GetLoadedLinkedCount(GenericModule* pMod)
     return count;
 }
 
-PyRep* ShipItem::GetLinkedWeapons()
+PyDataType* ShipItem::GetLinkedWeapons(PythonArena* arena)
 {
     if (m_linkedWeapons.empty())
-        return PyStatic.NewNone();
+        return arena->None();
 
-    PyDict* result = new PyDict();
+    PyDict* result = arena->Dict();
     for (auto cur : m_linkedWeapons) {
-        PyList* slaves = new PyList();
+        PyList* slaves = arena->List();
         for (auto slave : cur.second)
-            slaves->AddItem(new PyInt(slave->itemID()));
-        result->SetItem(new PyInt(cur.first->itemID()), slaves);
+            slaves->add(arena->Int(slave->itemID()));
+        result->set(arena->Int(cur.first->itemID()), slaves);
     }
 
     if (is_log_enabled(MODULE__MESSAGE)) {
         _log(MODULE__MESSAGE, "GetLinkedWeapons()");
-        result->Dump(MODULE__MESSAGE, "    ");
+        result->dump(MODULE__MESSAGE, "    ");
     }
     return result;
 }
@@ -2148,7 +2149,7 @@ void ShipItem::VerifyHoldType(EVEItemFlags flag, InventoryItemRef iRef, Client* 
 }
 
 // this one is called from GetAllInfo
-PyDict* ShipItem::GetShipInfo()
+PyDict* ShipItem::GetShipInfo(PythonArena* arena)
 {
     if (!pInventory->LoadContents())  {
         _log( INV__ERROR, "%s(%u): Failed to load contents for ShipGetInfo", name(), itemID());
@@ -2157,11 +2158,13 @@ PyDict* ShipItem::GetShipInfo()
 
     //first populate the ship...
     Rsp_CommonGetInfo_Entry entry;
-    if (!Populate( entry))
+    if (!Populate (entry, arena))
         return nullptr;
 
-    PyDict* result = new PyDict();
-    result->SetItem(new PyInt( itemID()), new PyObject("util.KeyVal", entry.Encode()));
+    // TODO: REMOVE THIS CLONE ONCE THE COMMONGETINFO IS MIGRATED TO THE NEW WAY TOO
+    PyDict* result = arena->Dict({
+        {arena->Int (itemID()), arena->Object("util.KeyVal", entry.Encode()->clone (arena))}
+    });
 
     //get modules and charges
     std::vector<InventoryItemRef> equipped;
@@ -2171,15 +2174,17 @@ PyDict* ShipItem::GetShipInfo()
     //encode each one...
     for (auto cur : equipped) {
         Rsp_CommonGetInfo_Entry entry2;
-        if (cur->Populate(entry2)) {
+        if (cur->Populate(entry2, arena)) {
             if (cur->categoryID() == EVEDB::invCategories::Charge) {
-                PyTuple* tuple = new PyTuple(3);
-                    tuple->SetItem(0, new PyInt(cur->locationID()));
-                    tuple->SetItem(1, new PyInt(cur->flag()));
-                    tuple->SetItem(2, new PyInt(cur->typeID()));
-                result->SetItem(tuple, new PyObject("util.KeyVal", entry2.Encode()));
+                result->set(arena->Tuple({
+                    arena->Int (cur->locationID()),
+                    arena->Int (cur->flag()),
+                    arena->Int (cur->typeID())
+                // TODO: REMOVE THIS CLONE ONCE THE COMMONGETINFO IS MIGRATED TO THE NEW WAY TOO
+                }), arena->Object("util.KeyVal", entry2.Encode()->clone (arena)));
             } else {
-                result->SetItem(new PyInt(cur->itemID()), new PyObject("util.KeyVal", entry2.Encode()));
+                // TODO: REMOVE THIS CLONE ONCE THE COMMONGETINFO IS MIGRATED TO THE NEW WAY TOO
+                result->set(arena->Int(cur->itemID()), arena->Object("util.KeyVal", entry2.Encode()->clone (arena)));
             }
         } else {
             _log( SHIP__ERROR, "%s(%u): Failed to Populate() %s(%u) for ShipGetInfo", \
@@ -2189,12 +2194,12 @@ PyDict* ShipItem::GetShipInfo()
 
     if (is_log_enabled(SHIP__INFO)) {
         _log(SHIP__INFO, "ShipItem::GetShipInfo() decoded:");
-        result->Dump(SHIP__INFO, "    ");
+        result->dump(SHIP__INFO, "    ");
     }
     return result;
 }
 
-PyDict* ShipItem::GetShipState() {
+PyDict* ShipItem::GetShipState(PythonArena* arena) {
     if (!pInventory->ContentsLoaded()) {
         if (!pInventory->LoadContents()) {
             _log(INV__ERROR, "%s(%u): Failed to load contents for GetShipState", name(), itemID());
@@ -2202,24 +2207,24 @@ PyDict* ShipItem::GetShipState() {
         }
     }
     // Create new dictionary for shipState:
-    PyDict *result = new PyDict();
+    PyDict *result = arena->Dict();
     // Create entry for ShipItem itself:
-    result->SetItem(new PyInt(itemID()), GetItemStatusRow());
+    result->set(arena->Int(itemID()), GetItemStatusRow(arena));
     // Check for and Create entry for pilot:
     InventoryItemRef iRefPilot(nullptr);
     if (pInventory->GetSingleItemByFlag(flagPilot, iRefPilot))
-        result->SetItem(new PyInt(iRefPilot->itemID()), iRefPilot->GetItemStatusRow());
+        result->set(arena->Int(iRefPilot->itemID()), iRefPilot->GetItemStatusRow(arena));
 
     // Create entries for ALL modules, rigs, and subsystems present on ship:
     std::vector<InventoryItemRef> moduleList;
     m_ModuleManager->GetModuleListOfRefsAsc(moduleList);
     for (auto cur : moduleList)
-        result->SetItem(new PyInt(cur->itemID()), cur->GetItemStatusRow());
+        result->set(arena->Int(cur->itemID()), cur->GetItemStatusRow(arena));
 
     return result;
 }
 
-PyDict* ShipItem::GetChargeState() {
+PyDict* ShipItem::GetChargeState(PythonArena* arena) {
     if (!pInventory->ContentsLoaded()) {
         if (!pInventory->LoadContents()) {
             _log(INV__ERROR, "%s(%u): Failed to load contents for GetShipState", name(), itemID());
@@ -2231,13 +2236,13 @@ PyDict* ShipItem::GetChargeState() {
     std::map< EVEItemFlags, InventoryItemRef > charges;
     m_ModuleManager->GetLoadedCharges(charges);
 
-    PyDict *result = new PyDict();
+    PyDict *result = arena->Dict();
     if (charges.empty())
         return result;
 
     // Create entries in "shipState" dictionary for loaded charges on ship:
     for (auto cur : charges)
-        result->SetItem(new PyInt((uint16)cur.first), cur.second->GetChargeStatusRow(itemID()));
+        result->set(arena->Int((uint16)cur.first), cur.second->GetChargeStatusRow(itemID(), arena));
 
     return result;
 }
@@ -2253,10 +2258,10 @@ PyList* ShipItem::ShipGetModuleList() {
     std::vector<InventoryItemRef> moduleList;
     m_ModuleManager->GetModuleListOfRefsAsc(moduleList);
     for (auto cur : moduleList) {
-        PyTuple* module = new PyTuple(2);
-        module->SetItem(0, new PyInt(cur->typeID()));
-        module->SetItem(1, new PyInt(cur->itemID()));
-        result->AddItem(module);
+        result->add(new PyTuple {
+            new PyInt (cur->typeID()),
+            new PyInt (cur->itemID())
+        });
     }
 
     return result;
@@ -2695,22 +2700,22 @@ void ShipSE::MakeDamageState(DoDestinyDamageState &into) {
 PyDict* ShipSE::MakeSlimItem() {
     _log(SE__SLIMITEM, "MakeSlimItem for Ship %s(%u)", m_self->name(), m_self->itemID());
     PyDict *slim = new PyDict();
-        slim->SetItemString("itemID",               new PyLong(m_self->itemID()));
-        slim->SetItemString("typeID",               new PyInt(m_self->typeID()));
-        slim->SetItemString("name",                 new PyString(m_self->itemName()));
-        slim->SetItemString("ownerID",              new PyInt(m_ownerID));
-        slim->SetItemString("charID",               new PyInt(m_self->GetPilot() ? m_self->GetPilot()->GetCharacterID() : 0));
-        slim->SetItemString("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
-        slim->SetItemString("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
-        slim->SetItemString("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
-        slim->SetItemString("bounty",               new PyFloat(m_self->GetPilot() ? m_self->GetPilot()->GetBounty() : 0));
-        slim->SetItemString("securityStatus",       new PyFloat(m_self->GetPilot() ? m_self->GetPilot()->GetSecurityRating() : 0.0));
+        slim->set ("itemID",               new PyInt(m_self->itemID()));
+        slim->set ("typeID",               new PyInt(m_self->typeID()));
+        slim->set ("name",                 new PyString(m_self->itemName()));
+        slim->set ("ownerID",              new PyInt(m_ownerID));
+        slim->set ("charID",               new PyInt(m_self->GetPilot() ? m_self->GetPilot()->GetCharacterID() : 0));
+        slim->set ("corpID",           IsCorp(m_corpID) ? new PyInt(m_corpID) : PyStatic.NewNone());
+        slim->set ("allianceID",       IsAlliance(m_allyID) ? new PyInt(m_allyID) : PyStatic.NewNone());
+        slim->set ("warFactionID",     IsFaction(m_warID) ? new PyInt(m_warID) : PyStatic.NewNone());
+        slim->set ("bounty",               new PyFloat(m_self->GetPilot() ? m_self->GetPilot()->GetBounty() : 0));
+        slim->set ("securityStatus",       new PyFloat(m_self->GetPilot() ? m_self->GetPilot()->GetSecurityRating() : 0.0));
     if (m_self->typeID() == itemTypeCapsule) {
-        slim->SetItemString("launcherID",           new PyInt(m_podShipID));
+        slim->set ("launcherID",           new PyInt(m_podShipID));
         return slim;
     } else {
-        slim->SetItemString("categoryID",           new PyInt(m_self->categoryID()));
-        slim->SetItemString("groupID",              new PyInt(m_self->groupID()));
+        slim->set ("categoryID",           new PyInt(m_self->categoryID()));
+        slim->set ("groupID",              new PyInt(m_self->groupID()));
     }
 
     //encode the hiSlot and Subsystem modules list ONLY
@@ -2720,14 +2725,14 @@ PyDict* ShipSE::MakeSlimItem() {
     if (!items.empty()) {
         PyList *list = new PyList();
         for (auto cur : items)
-            list->AddItem(new_tuple(cur->itemID(), cur->typeID()));
+            list->add(new PyTuple {new PyInt (cur->itemID()), new PyInt(cur->typeID())});
 
-        slim->SetItemString("modules", list );
+        slim->set ("modules", list );
     }
 
     if (is_log_enabled(DESTINY__DEBUG)) {
         _log( DESTINY__DEBUG, "ShipSE::MakeSlimItem() - %s(%u)", GetName(), GetID());
-        slim->Dump(DESTINY__DEBUG, "     ");
+        slim->dump(DESTINY__DEBUG, "     ");
     }
 
     return slim;

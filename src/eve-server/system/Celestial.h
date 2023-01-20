@@ -26,7 +26,7 @@
 #ifndef __CELESTIAL__H__INCL__
 #define __CELESTIAL__H__INCL__
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "inventory/InventoryItem.h"
 #include "system/SystemEntity.h"

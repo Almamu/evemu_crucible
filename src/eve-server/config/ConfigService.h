@@ -39,23 +39,23 @@ public:
 protected:
     ConfigDB m_db;
 
-    PyResult GetUnits(PyCallArgs& call);
-    PyResult GetMapLandmarks(PyCallArgs& call);
-    PyResult GetMultiOwnersEx(PyCallArgs& call, PyList* ownerIDs);
-    PyResult GetMultiAllianceShortNamesEx(PyCallArgs& call, PyList* allianceIDs);
-    PyResult GetMultiLocationsEx(PyCallArgs& call, PyList* locationIDs);
-    PyResult GetMultiStationEx(PyCallArgs& call, PyList* stationIDs);
-    PyResult GetMultiCorpTickerNamesEx(PyCallArgs& call, PyList* corporationIDs);
-    PyResult GetMultiGraphicsEx(PyCallArgs& call, PyList* graphicIDs);
-    PyResult GetMap(PyCallArgs& call, PyInt* solarSystemID);
-    PyResult GetMapOffices(PyCallArgs& call, PyInt* solarSystemID);
-    PyResult GetMapObjects(PyCallArgs& call, PyInt* systemID, PyInt* region, PyInt* constellation, PyInt* system, PyInt* station, PyInt* unknown);
-    PyResult GetMultiInvTypesEx(PyCallArgs& call, PyList* typeIDs);
-    PyResult GetMapConnections(PyCallArgs& call, PyInt* itemID, PyInt* reg, PyInt* con, PyInt* sol, PyInt* cel, PyInt* _c);
-    PyResult GetStationSolarSystemsByOwner(PyCallArgs& call, PyInt* ownerID);
-    PyResult GetCelestialStatistic(PyCallArgs& call, PyInt* celestialID);
-    PyResult GetDynamicCelestials(PyCallArgs& call, PyInt* locationID);
-    PyResult SetMapLandmarks(PyCallArgs& call, PyList* landmarkData);
+    EVEResult GetUnits(EVECallArgs& call);
+    EVEResult GetMapLandmarks(EVECallArgs& call);
+    EVEResult GetMultiOwnersEx(EVECallArgs& call, PyList* ownerIDs);
+    EVEResult GetMultiAllianceShortNamesEx(EVECallArgs& call, PyList* allianceIDs);
+    EVEResult GetMultiLocationsEx(EVECallArgs& call, PyList* locationIDs);
+    EVEResult GetMultiStationEx(EVECallArgs& call, PyList* stationIDs);
+    EVEResult GetMultiCorpTickerNamesEx(EVECallArgs& call, PyList* corporationIDs);
+    EVEResult GetMultiGraphicsEx(EVECallArgs& call, PyList* graphicIDs);
+    EVEResult GetMap(EVECallArgs& call, PyInt* solarSystemID);
+    EVEResult GetMapOffices(EVECallArgs& call, PyInt* solarSystemID);
+    EVEResult GetMapObjects(EVECallArgs& call, PyInt* systemID, PyInt* region, PyInt* constellation, PyInt* system, PyInt* station, PyInt* unknown);
+    EVEResult GetMultiInvTypesEx(EVECallArgs& call, PyList* typeIDs);
+    EVEResult GetMapConnections(EVECallArgs& call, PyInt* itemID, PyInt* reg, PyInt* con, PyInt* sol, PyInt* cel, PyInt* _c);
+    EVEResult GetStationSolarSystemsByOwner(EVECallArgs& call, PyInt* ownerID);
+    EVEResult GetCelestialStatistic(EVECallArgs& call, PyInt* celestialID);
+    EVEResult GetDynamicCelestials(EVECallArgs& call, PyInt* locationID);
+    EVEResult SetMapLandmarks(EVECallArgs& call, PyList* landmarkData);
 };
 
 #endif

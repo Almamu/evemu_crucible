@@ -29,7 +29,7 @@
 
 #include "character/PaperDollDB.h"
 
-PyRep* PaperDollDB::GetPaperDollAvatar(uint32 charID) const {
+PyDataType* PaperDollDB::GetPaperDollAvatar(uint32 charID) const {
 
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -45,7 +45,7 @@ PyRep* PaperDollDB::GetPaperDollAvatar(uint32 charID) const {
 	return DBRowToRow(row, "util.Row");
 }
 
-PyRep* PaperDollDB::GetPaperDollAvatarColors(uint32 charID) const {
+PyDataType* PaperDollDB::GetPaperDollAvatarColors(uint32 charID) const {
 
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -58,7 +58,7 @@ PyRep* PaperDollDB::GetPaperDollAvatarColors(uint32 charID) const {
     return DBResultToCRowset(res);
 }
 
-PyRep* PaperDollDB::GetPaperDollAvatarModifiers(uint32 charID) const {
+PyDataType* PaperDollDB::GetPaperDollAvatarModifiers(uint32 charID) const {
 
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -71,7 +71,7 @@ PyRep* PaperDollDB::GetPaperDollAvatarModifiers(uint32 charID) const {
     return DBResultToCRowset(res);
 }
 
-PyRep* PaperDollDB::GetPaperDollAvatarSculpts(uint32 charID) const {
+PyDataType* PaperDollDB::GetPaperDollAvatarSculpts(uint32 charID) const {
 
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -84,7 +84,7 @@ PyRep* PaperDollDB::GetPaperDollAvatarSculpts(uint32 charID) const {
     return DBResultToCRowset(res);
 }
 
-PyRep* PaperDollDB::GetPaperDollPortraitData(uint32 charID) const
+PyDataType* PaperDollDB::GetPaperDollPortraitData(uint32 charID) const
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT * FROM chrPortraitData WHERE charID = %u", charID)) {

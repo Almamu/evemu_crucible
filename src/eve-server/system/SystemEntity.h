@@ -433,7 +433,7 @@ public:
     void SetSBU(StructureSE* pSE)                       { m_sbuSE = pSE; }
 
 protected:
-    PyRep*                      m_jumps;
+    PyDataType*                      m_jumps;
     StructureSE*                m_sbuSE;
 };
 

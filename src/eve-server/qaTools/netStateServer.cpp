@@ -36,7 +36,7 @@ netStateServer::netStateServer()
  * {
  *    //
  *    _log(QATOOLS__CALL,  "encounterSpawnServer::Handle_ size: %lli", call.tuple->size());
- *    call.Dump(QATOOLS__DUMP);
+ *    call.dump(QATOOLS__DUMP);
  *
  *    return nullptr;
  * }

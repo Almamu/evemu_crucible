@@ -92,7 +92,7 @@ public:
     // this specific cache method is designed to use either a stationID or a systemID to determine system data wanted.
     bool                GetSystemData(uint32 locationID, SystemData& data);      //  allan 3Aug16
 
-    PyRep*              GetStationCount();
+    PyDataType*              GetStationCount();
     // return regionID for given stationID
     uint32              GetStationRegion(uint32 stationID);
     // return constellationID for given stationID
@@ -154,7 +154,7 @@ public:
 
     // common place for *FULL* DBRowDescriptor Header creation.
     //  this way all users are using the exact same data
-    DBRowDescriptor*    CreateHeader();
+    DBRowDescriptor*    CreateHeader(PythonArena* arena = HeapPythonArena::instance);
 
     void                AddOutpost(StationData &stData);
 

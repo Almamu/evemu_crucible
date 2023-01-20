@@ -21,14 +21,14 @@ public:
     BulkMgrService();
 
 protected:
-    PyResult UpdateBulk(PyCallArgs& call, PyInt* changeID, std::optional<PyString*> hashValue, PyInt* branch);
-    PyResult GetFullFiles(PyCallArgs& call, std::optional<PyList*> toGet);
-    PyResult GetFullFilesChunk(PyCallArgs& call, PyInt* chunkSetID, PyInt* chunkNumber);
-    PyResult GetVersion(PyCallArgs& call);
-    PyResult GetAllBulkIDs(PyCallArgs& call);
-    PyResult GetChunk(PyCallArgs& call, PyInt* changeID, PyInt* chunkNumber);
-    PyResult GetUnsubmittedChunk(PyCallArgs& call, PyInt* chunkNumber);
-    PyResult GetUnsubmittedChanges(PyCallArgs& call);
+  EVEResult UpdateBulk(EVECallArgs& call, PyInt* changeID, std::optional<PyString*> hashValue, PyInt* branch);
+  EVEResult GetFullFiles(EVECallArgs& call, std::optional<PyList*> toGet);
+  EVEResult GetFullFilesChunk(EVECallArgs& call, PyInt* chunkSetID, PyInt* chunkNumber);
+  EVEResult GetVersion(EVECallArgs& call);
+  EVEResult GetAllBulkIDs(EVECallArgs& call);
+  EVEResult GetChunk(EVECallArgs& call, PyInt* changeID, PyInt* chunkNumber);
+  EVEResult GetUnsubmittedChunk(EVECallArgs& call, PyInt* chunkNumber);
+  EVEResult GetUnsubmittedChanges(EVECallArgs& call);
 
 private:
 

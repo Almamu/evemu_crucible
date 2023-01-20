@@ -31,7 +31,7 @@
 #include "EVE_Mail.h"
 
 
-PyRep* MailDB::GetMailStatus(int charId)
+PyDataType* MailDB::GetMailStatus(int charId)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -44,7 +44,7 @@ PyRep* MailDB::GetMailStatus(int charId)
     return DBResultToCRowset(res);
 }
 
-PyRep* MailDB::GetNewMail(int charId)
+PyDataType* MailDB::GetNewMail(int charId)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -279,7 +279,7 @@ void MailDB::ApplyLabels(std::vector<int32> messageIDs, int labelID)
     ApplyLabelMasks(messageIDs, (1 << bit));
 }
 
-PyRep* MailDB::GetLabels(int characterID) const
+PyDataType* MailDB::GetLabels(int characterID) const
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, " SELECT bit, name, color FROM mailLabel WHERE ownerID = %u" , characterID))
@@ -295,7 +295,7 @@ PyRep* MailDB::GetLabels(int characterID) const
         label.name = row.GetText(1);
         label.color = row.GetInt(2);
 
-        ret->SetItem(new PyInt(label.id), label.Encode());
+        ret->set(new PyInt(label.id), label.Encode());
     }
 
     return ret;
@@ -613,29 +613,29 @@ PyDict *MailDB::GetJoinedMailingLists(uint32 characterID)
     {
         PyDict *dict = new PyDict();
 
-        dict->SetItemString(" displayName" , new PyString(row.GetText(1)));
+        dict->set (" displayName" , new PyString(row.GetText(1)));
 
         int32 role = row.GetInt(7);
         switch (role)
         {
         case mailingListMemberMuted: {
-            dict->SetItemString(" isMuted" , new PyBool(true));
-            dict->SetItemString(" isOwner" , new PyBool(false));
-            dict->SetItemString(" isOperator" , new PyBool(false));
+            dict->set (" isMuted" , new PyBool(true));
+            dict->set (" isOwner" , new PyBool(false));
+            dict->set (" isOperator" , new PyBool(false));
         } break;
         case mailingListMemberOperator: {
-            dict->SetItemString(" isMuted" , new PyBool(false));
-            dict->SetItemString(" isOwner" , new PyBool(false));
-            dict->SetItemString(" isOperator" , new PyBool(true));
+            dict->set (" isMuted" , new PyBool(false));
+            dict->set (" isOwner" , new PyBool(false));
+            dict->set (" isOperator" , new PyBool(true));
         } break;
         case mailingListMemberOwner: {
-            dict->SetItemString(" isMuted" , new PyBool(false));
-            dict->SetItemString(" isOwner" , new PyBool(true));
-            dict->SetItemString(" isOperator" , new PyBool(false));
+            dict->set (" isMuted" , new PyBool(false));
+            dict->set (" isOwner" , new PyBool(true));
+            dict->set (" isOperator" , new PyBool(false));
         } break;
         }
 
-        ret->SetItem(new PyInt(row.GetInt(0)), new PyObject(" util.KeyVal" , dict));
+        ret->set(new PyInt(row.GetInt(0)), new PyObject(" util.KeyVal" , dict));
     }
 
     return ret;
@@ -687,7 +687,7 @@ PyDict *MailDB::GetMailingListMembers(int32 listID)
 
     while (res.GetRow(row))
     {
-        dict->SetItem(new PyInt(row.GetInt(1)), new PyInt(row.GetInt(2)));
+        dict->set(new PyInt(row.GetInt(1)), new PyInt(row.GetInt(2)));
     }
     return dict;
 }
@@ -716,8 +716,8 @@ PyObject *MailDB::MailingListGetSettings(int32 listID)
     }
 
 
-    ret->SetItemString(" defaultAccess" , new PyInt(row.GetInt(2)));
-    ret->SetItemString(" defaultMemberAccess" , new PyInt(row.GetInt(3)));
+    ret->set (" defaultAccess" , new PyInt(row.GetInt(2)));
+    ret->set (" defaultMemberAccess" , new PyInt(row.GetInt(3)));
 
     DBQueryResult res2;
 
@@ -731,11 +731,11 @@ PyObject *MailDB::MailingListGetSettings(int32 listID)
 
     PyDict *dict = new PyDict();
 
-    ret->SetItemString(" access" , dict);
+    ret->set (" access" , dict);
 
 
     while (res.GetRow(row)) {
-        dict->SetItem(new PyInt(row.GetInt(1)), new PyInt(row.GetInt(3)));
+        dict->set(new PyInt(row.GetInt(1)), new PyInt(row.GetInt(3)));
     }
 
     return new PyObject(" util.KeyVal" , ret);

@@ -26,7 +26,7 @@
 #include "eve-server.h"
 
 #include "Client.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "account/AccountService.h"
 #include "chat/LSCService.h"
 #include "exploration/Probes.h"
@@ -1129,13 +1129,13 @@ void SystemManager::AddMarker(SystemEntity* pSE, bool sendBall/*false*/, bool ad
     destinyBuffer->Append( head );
 
     AddBalls2 addballs2;
-        addballs2.stateStamp = sEntityList.GetStamp();
-        addballs2.extraBallData = new PyList();
-
-    PyTuple* balls = new PyTuple(2);
-        balls->SetItem(0, pSE->MakeSlimItem());
-        balls->SetItem(1, pSE->MakeDamageState());
-    addballs2.extraBallData->AddItem(balls);
+    addballs2.stateStamp = sEntityList.GetStamp();
+    addballs2.extraBallData = new PyList {
+        new PyTuple {
+            pSE->MakeSlimItem(),
+            pSE->MakeDamageState()
+        }
+    };
 
     pSE->EncodeDestiny(*destinyBuffer);
 
@@ -1344,7 +1344,7 @@ void SystemManager::MakeSetState(const SystemBubble* pBubble,  SetState& into) c
         if (!cur.second->IsMissileSE() or !cur.second->IsFieldSE())
             into.damageState[ cur.first ] = cur.second->MakeDamageState();
 
-        into.slims->AddItem( new PyObject( "foo.SlimItem", cur.second->MakeSlimItem()));
+        into.slims->add( new PyObject( "foo.SlimItem", cur.second->MakeSlimItem()));
 
         //append the destiny binary data...
         cur.second->EncodeDestiny( *stateBuffer );
@@ -1370,15 +1370,15 @@ void SystemManager::MakeSetState(const SystemBubble* pBubble,  SetState& into) c
 
     /* SolarSystem info.  this avoids the old way of a DB hit for every call.  */
     PyPackedRow* row = new PyPackedRow(sDataMgr.CreateHeader());
-        row->SetField("itemID",        new PyLong(m_data.systemID));
-        row->SetField("typeID",        new PyInt(5));
-        row->SetField("ownerID",       PyStatic.NewOne());  // should this be owning factionID?  yes
-        row->SetField("locationID",    new PyInt(m_data.constellationID));
-        row->SetField("flagID",        PyStatic.NewZero());
-        row->SetField("quantity",      PyStatic.NewNegOne());
-        row->SetField("groupID",       new PyInt(5));
-        row->SetField("categoryID",    new PyInt(2));
-        row->SetField("customInfo",    new PyString(""));
+        row->set("itemID",        new PyInt(m_data.systemID));
+        row->set("typeID",        new PyInt(5));
+        row->set("ownerID",       PyStatic.NewOne());  // should this be owning factionID?  yes
+        row->set("locationID",    new PyInt(m_data.constellationID));
+        row->set("flagID",        PyStatic.NewZero());
+        row->set("quantity",      PyStatic.NewNegOne());
+        row->set("groupID",       new PyInt(5));
+        row->set("categoryID",    new PyInt(2));
+        row->set("customInfo",    new PyString(""));
     into.solItem = row;
 
     if (is_log_enabled(DESTINY__SETSTATE)) {
@@ -1417,12 +1417,12 @@ void SystemManager::SendStaticBall(SystemEntity* pSE)
     addballs2.extraBallData = new PyList();
 
     if (pSE->IsContainerSE()) {
-        addballs2.extraBallData->AddItem(pSE->MakeSlimItem());
+        addballs2.extraBallData->add(pSE->MakeSlimItem());
     } else {
-        PyTuple* balls = new PyTuple(2);
-        balls->SetItem(0, pSE->MakeSlimItem());
-        balls->SetItem(1, pSE->MakeDamageState());
-        addballs2.extraBallData->AddItem(balls);
+        addballs2.extraBallData->add(new PyTuple {
+            pSE->MakeSlimItem(),
+            pSE->MakeDamageState()
+        });
     }
 
     if (addballs2.extraBallData->size() < 1) {
@@ -1603,7 +1603,7 @@ void SystemManager::DScan(int64 range, const GPoint& pos, std::vector<SystemEnti
     }
 }
 
-PyRep* SystemManager::GetCurrentEntities()
+PyDataType* SystemManager::GetCurrentEntities()
 {
     /*  return list of dict
      * itemID, typeID, catID, name, pos[x,y,z]
@@ -1614,15 +1614,15 @@ PyRep* SystemManager::GetCurrentEntities()
     PyList* list = new PyList();
     for (auto cur : m_ticEntities) {
         PyDict* dict = new PyDict();
-            dict->SetItemString("itemID", new PyInt(cur.first));
-            dict->SetItemString("ownerName", new PyString(sDataMgr.GetOwnerName(cur.second->GetOwnerID())));
-            dict->SetItemString("typeID", new PyInt(cur.second->GetTypeID()));
-            dict->SetItemString("catID", new PyInt(cur.second->GetCategoryID()));
-            dict->SetItemString("name", new PyString(cur.second->GetName()));
-            dict->SetItemString("x", new PyLong(cur.second->x()));
-            dict->SetItemString("y", new PyLong(cur.second->y()));
-            dict->SetItemString("z", new PyLong(cur.second->z()));
-        list->AddItem(dict);
+            dict->set ("itemID", new PyInt(cur.first));
+            dict->set ("ownerName", new PyString(sDataMgr.GetOwnerName(cur.second->GetOwnerID())));
+            dict->set ("typeID", new PyInt(cur.second->GetTypeID()));
+            dict->set ("catID", new PyInt(cur.second->GetCategoryID()));
+            dict->set ("name", new PyString(cur.second->GetName()));
+            dict->set ("x", new PyInt(cur.second->x()));
+            dict->set ("y", new PyInt(cur.second->y()));
+            dict->set ("z", new PyInt(cur.second->z()));
+        list->add(dict);
     }
     return list;
 }

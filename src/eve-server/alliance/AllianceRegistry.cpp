@@ -50,15 +50,15 @@ AllianceRegistry::AllianceRegistry(EVEServiceManager& mgr) :
     this->Add("GetAllianceMembers", &AllianceRegistry::GetAllianceMembers);
 }
 
-BoundDispatcher* AllianceRegistry::BindObject(Client* client, PyRep* bindParameters)
+BoundDispatcher* AllianceRegistry::BindObject(Client* client, PyDataType* bindParameters)
 {
-    if (!bindParameters->IsTuple()){
+    if (!bindParameters->is<PyTuple>()){
         sLog.Error( "AllianceRegistry::CreateBoundObject", "%s: bind_args is not tuple: '%s'. ", client->GetName(), bindParameters->TypeString() );
         client->SendErrorMsg("Could not bind object for Ally Registry.  Ref: ServerError 02808.");
         return nullptr;
     }
 
-    uint32 allianceID = PyRep::IntegerValue(bindParameters->AsTuple()->GetItem(0));
+    uint32 allianceID = bindParameters->as<PyTuple>()->at (0)->i64();
     auto it = this->m_instances.find (allianceID);
 
     if (it != this->m_instances.end ())
@@ -81,7 +81,7 @@ void AllianceRegistry::BoundReleased (AllianceBound* bound) {
 }
 
 // this is the bind call.  do it like fleet
-PyResult AllianceRegistry::GetAlliance(PyCallArgs &call, PyInt* allianceID) {
+EVEResult AllianceRegistry::GetAlliance(EVECallArgs&call, PyInt* allianceID) {
     //alliance = sm.RemoteSvc('allianceRegistry').GetAlliance(allianceID)
     /*
      * 01:22:07 [SvcCall] Service allianceRegistry::MachoResolveObject()
@@ -93,20 +93,20 @@ PyResult AllianceRegistry::GetAlliance(PyCallArgs &call, PyInt* allianceID) {
      */
 
     _log(ALLY__CALL, "AllianceRegistry::Handle_GetAlliance() size=%lli", call.tuple->size());
-    call.Dump(ALLY__CALL_DUMP);
+    call.dump(ALLY__CALL_DUMP);
 
     return m_db.GetAlliance(allianceID->value());
 }
 
-PyResult AllianceRegistry::GetAllianceMembers(PyCallArgs &call, PyInt* allianceID) {
+EVEResult AllianceRegistry::GetAllianceMembers(EVECallArgs&call, PyInt* allianceID) {
     // members = sm.RemoteSvc('allianceRegistry').GetAllianceMembers(itemID)  <-- returns dict of corpIDs
     _log(ALLY__CALL, "AllianceRegistry::Handle_GetAllianceMembers() size=%lli", call.tuple->size());
-    call.Dump(ALLY__CALL_DUMP);
+    call.dump(ALLY__CALL_DUMP);
 
     return m_db.GetAllianceMembers(allianceID->value());
 }
 
-PyResult AllianceRegistry::GetRankedAlliances(PyCallArgs &call, PyInt* maxLen) {
+EVEResult AllianceRegistry::GetRankedAlliances(EVECallArgs&call, PyInt* maxLen) {
     /*
      *           self.rankedAlliances.alliances = sm.RemoteSvc('allianceRegistry').GetRankedAlliances(maxLen)
      *           self.rankedAlliances.standings = {}
@@ -116,16 +116,16 @@ PyResult AllianceRegistry::GetRankedAlliances(PyCallArgs &call, PyInt* maxLen) {
      */
 
     _log(ALLY__CALL, "AllianceRegistry::Handle_GetRankedAlliances() size=%lli", call.tuple->size());
-    call.Dump(ALLY__CALL_DUMP);
+    call.dump(ALLY__CALL_DUMP);
 
     return m_db.GetRankedAlliances();
 }
 
 //Not sure why this doesn't work
-PyResult AllianceRegistry::GetEmploymentRecord(PyCallArgs &call, PyInt* corporationID) {
+EVEResult AllianceRegistry::GetEmploymentRecord(EVECallArgs&call, PyInt* corporationID) {
     //  allianceHistory = sm.RemoteSvc('allianceRegistry').GetEmploymentRecord(itemID)
     _log(ALLY__CALL, "AllianceRegistry::Handle_GetEmploymentRecord() size=%lli", call.tuple->size());
-    call.Dump(ALLY__CALL_DUMP);
+    call.dump(ALLY__CALL_DUMP);
 
     return m_db.GetEmploymentRecord(corporationID->value());
 }

@@ -27,7 +27,7 @@
 #ifndef __UTILS__REF_PTR_H__INCL__
 #define __UTILS__REF_PTR_H__INCL__
 
-
+#include <exception>
 #include <cassert>
 #include <cstdio>
 #include <iostream>
@@ -70,9 +70,14 @@ public:
      */
     virtual ~RefObject()
     {
+        // TODO: DO NOT THROW EXCEPTIONS HERE, MAYBE PUT AN ASSERTION INSTEAD?
+        // TODO: STILL NEED TO DECIDE HOW TO HANDLE THESE ERRORS AND HOW CRITICAL THEY ARE AFTER THE CHANGE TO MEMORY ARENAS
+        if (GetCount() > 0) {
+            throw std::runtime_error ("Destroying a refcounted object wihtout being properly dereferenced");
+        }
+
         if (mDeleted) {
-            _log(REFPTR__ERROR, "~RefObject() - mDeleted: true");
-            EvE::traceStack();
+            throw std::bad_alloc ();
         }
 
         mDeleted = true;
@@ -88,10 +93,9 @@ protected:
     void IncRef() const
     {
         if (mDeleted) {
-            _log(REFPTR__ERROR, "IncRef() - mDeleted = true.  Count is %u", mRefCount);
-            EvE::traceStack();
-            //return;
+            throw std::bad_alloc();
         }
+
         assert(mDeleted == false);
         ++mRefCount;
     }
@@ -103,9 +107,7 @@ protected:
     void DecRef() const
     {
         if (mDeleted) {
-            _log(REFPTR__ERROR, "DecRef() - mDeleted = true.  Count is %u", mRefCount);
-            EvE::traceStack();
-            return;
+            throw std::bad_alloc();
         }
 
         assert(mDeleted == false);

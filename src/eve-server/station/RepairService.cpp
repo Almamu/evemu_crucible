@@ -44,8 +44,8 @@ RepairService::RepairService(EVEServiceManager& mgr) :
     this->Add("UnasembleItems", &RepairService::UnasembleItems);
 }
 
-BoundDispatcher* RepairService::BindObject(Client* client, PyRep* bindParameters) {
-    uint32 locationID = bindParameters->AsInt ()->value ();
+BoundDispatcher* RepairService::BindObject(Client* client, PyDataType* bindParameters) {
+    uint32 locationID = bindParameters->as<PyInt> ()->value ();
     auto it = this->m_instances.find (locationID);
 
     if (it != this->m_instances.end ())
@@ -104,11 +104,11 @@ void RepairService::GetDamageReports(uint32 itemID, Inventory* pInv, PyList* lis
             rid.costToRepairOneUnitOfDamage = (cur->type().basePrice() * sConfig.rates.ModuleRepairModifier);
         }
 
-        list->AddItem(rid.Encode());
+        list->add(rid.Encode());
     }
 }
 
-PyResult RepairService::UnasembleItems(PyCallArgs& call, PyDict* validIDsByStationID, PyList* skipChecks) {
+EVEResult RepairService::UnasembleItems(EVECallArgs& call, PyDict* validIDsByStationID, PyList* skipChecks) {
     // sm.RemoteSvc('repairSvc').UnasembleItems(dict(validIDsByStationID), skipChecks)
 
     /*
@@ -146,17 +146,17 @@ PyResult RepairService::UnasembleItems(PyCallArgs& call, PyDict* validIDsByStati
     /** @todo  may have to switch to station inventory to get item to check if this is container, and remove items BEFORE repacking!!  */
     for (PyDict::const_iterator dictItr = validIDsByStationID->begin(); dictItr != validIDsByStationID->end(); ++dictItr) {
         // Dictionary key is LocationID, value is tuple of itemID/item locationID
-        //locationID = dictItr->first->AsInt()->value();
-        pList = dictItr->second->AsList();
+        //locationID = dictItr->first->as<PyInt>()->value();
+        pList = dictItr->second->as<PyList>();
         if (pList != nullptr) {
             // Iterate through list.
             for (PyList::const_iterator listItr = pList->begin(); listItr != pList->end(); ++listItr) {
                 // List is tuples of itemID, LocationID pairs.
-                tuple = (*listItr)->AsTuple();
+                tuple = (*listItr)->as<PyTuple>();
                 if (tuple != nullptr) {
                     // Get the itemID.
-                    itemID = PyRep::IntegerValue(tuple->GetItem(0));
-                    //itemLoc = PyRep::IntegerValue(tuple->GetItem(1));
+                    itemID = tuple->at (0)->i64();
+                    //itemLoc = PyRep::IntegerValue(tuple->at (1));
                     iRef = sItemFactory.GetItemRef(itemID);
                     if (iRef.get() != nullptr) {
                         // Add type exceptions here.
@@ -196,18 +196,18 @@ RepairServiceBound::RepairServiceBound(EVEServiceManager& mgr, RepairService& pa
     this->Add("GetDamageReports", &RepairServiceBound::GetDamageReports);
 }
 
-PyResult RepairServiceBound::DamageModules(PyCallArgs &call, PyList* itemIDAndAmountOfDamage) {
+EVEResult RepairServiceBound::DamageModules(EVECallArgs&call, PyList* itemIDAndAmountOfDamage) {
     /*    itemIDAndAmountOfDamageList.append((item.itemID, amount)) <-- amount is % of damage
      *    self.repairSvc.DamageModules(itemIDAndAmountOfDamageList)
      */
 
     _log(PHYSICS__INFO, "RepairSvcBound::Handle_DamageModules() size=%lli", call.tuple->size());
-    call.Dump(PHYSICS__INFO);
+    call.dump(PHYSICS__INFO);
 
     return PyStatic.NewNone();
 }
 
-PyResult RepairServiceBound::RepairItems(PyCallArgs &call, PyList* itemIDs, PyFloat* iskAmount) {
+EVEResult RepairServiceBound::RepairItems(EVECallArgs&call, PyList* itemIDs, PyFloat* iskAmount) {
     //  self.repairSvc.RepairItems(itemIDs, amount['qty'])
     /*
      * 00:18:28 W RepairSvcBound::Handle_RepairItems(): size= 2
@@ -231,7 +231,7 @@ PyResult RepairServiceBound::RepairItems(PyCallArgs &call, PyList* itemIDs, PyFl
     std::vector<InventoryItemRef> itemRefVec;
     PyList::const_iterator itr = itemIDs->begin(), end = itemIDs->end();
     for (; itr != end; ++itr) {
-        iRef = sItemFactory.GetItemRef(PyRep::IntegerValueU32(*itr));
+        iRef = sItemFactory.GetItemRef((*itr)->u32());
         if (iRef.get() == nullptr)
             continue;
 
@@ -315,7 +315,7 @@ PyResult RepairServiceBound::RepairItems(PyCallArgs &call, PyList* itemIDs, PyFl
     return PyStatic.NewNone();
 }
 
-PyResult RepairServiceBound::GetDamageReports(PyCallArgs &call, PyList* itemIDs) {
+EVEResult RepairServiceBound::GetDamageReports(EVECallArgs&call, PyList* itemIDs) {
     /*
      * 20:39:30 W RepairSvcBound::Handle_GetDamageReports(): size= 1
      * 20:39:30 [SvcCallDump]   Call Arguments:
@@ -328,12 +328,12 @@ PyResult RepairServiceBound::GetDamageReports(PyCallArgs &call, PyList* itemIDs)
     // TODO: update this when the type changes are in place so these things are easier to work with
     PyList::const_iterator list_2_cur = itemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
@@ -356,7 +356,7 @@ PyResult RepairServiceBound::GetDamageReports(PyCallArgs &call, PyList* itemIDs)
             rlr.playerStanding = standing;
             rlr.lines = new PyList();
             RepairService::GetDamageReports(cur, pInv, rlr.lines);
-        dict->SetItem(new PyInt(cur), rlr.Encode());
+        dict->set(new PyInt(cur), rlr.Encode());
     }
 
     return dict;

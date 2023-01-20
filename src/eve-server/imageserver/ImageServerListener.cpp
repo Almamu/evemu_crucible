@@ -25,7 +25,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "imageserver/ImageServerListener.h"
 
 ImageServerListener::ImageServerListener(boost::asio::io_context& io)

@@ -49,145 +49,145 @@ ScenarioService::ScenarioService() :
     this->Add("RefreshSelection", &ScenarioService::RefreshSelection);
 }
 
-PyResult ScenarioService::ResetD(PyCallArgs& call)
+EVEResult ScenarioService::ResetD(EVECallArgs& call)
 {
     _log(DUNG__CALL, "ScenarioService::ResetD()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::PlayDungeon(PyCallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom)
+EVEResult ScenarioService::PlayDungeon(EVECallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom)
 {
 //PlayDungeon(dungeonVID, selectedRoom)
     _log(DUNG__CALL, "ScenarioService::PlayDungeon()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::EditRoom(PyCallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom)
+EVEResult ScenarioService::EditRoom(EVECallArgs& call, PyInt* dungeonVID, PyInt* selectedRoom)
 {
     //EditRoom(dungeonVID, selectedRoom)
     _log(DUNG__CALL, "ScenarioService::EditRoom()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::GotoRoom(PyCallArgs& call, PyInt* selectedRoom)
+EVEResult ScenarioService::GotoRoom(EVECallArgs& call, PyInt* selectedRoom)
 {
 //GotoRoom(selectedRoom)
     _log(DUNG__CALL, "ScenarioService::GotoRoom()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::GetDunObjects(PyCallArgs& call)
+EVEResult ScenarioService::GetDunObjects(EVECallArgs& call)
 {
 //GetDunObjects() (returns list of slim items)
     _log(DUNG__CALL, "ScenarioService::GetDunObjects()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::GetSelObjects(PyCallArgs& call)
+EVEResult ScenarioService::GetSelObjects(EVECallArgs& call)
 {
 //GetSelObjects() (returns list of slim items)
     _log(DUNG__CALL, "ScenarioService::GetSelObjects()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::IsSelectedByObjID(PyCallArgs& call, PyInt* dunObjectID)
+EVEResult ScenarioService::IsSelectedByObjID(EVECallArgs& call, PyInt* dunObjectID)
 {
 //IsSelectedByObjID(dunObjectID)
     _log(DUNG__CALL, "ScenarioService::IsSelectedByObjID()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::DuplicateSelection(PyCallArgs& call, PyInt* amount, PyFloat* x, PyFloat* y, PyFloat* z)
+EVEResult ScenarioService::DuplicateSelection(EVECallArgs& call, PyInt* amount, PyFloat* x, PyFloat* y, PyFloat* z)
 {
 //DuplicateSelection(amount, X, Y, Z)
     _log(DUNG__CALL, "ScenarioService::DuplicateSelection()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::SetSelectionByID(PyCallArgs& call, PyList* ids)
+EVEResult ScenarioService::SetSelectionByID(EVECallArgs& call, PyList* ids)
 {
 //SetSelectionByID(ids)
     _log(DUNG__CALL, "ScenarioService::SetSelectionByID()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::SetSelectedRadius(PyCallArgs& call, PyFloat* minRadius, PyFloat* maxRadius)
+EVEResult ScenarioService::SetSelectedRadius(EVECallArgs& call, PyFloat* minRadius, PyFloat* maxRadius)
 {
 //SetSelectedRadius(minRadius, maxRadius)
     _log(DUNG__CALL, "ScenarioService::SetSelectedRadius()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::SetRotate(PyCallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll)
+EVEResult ScenarioService::SetRotate(EVECallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll)
 {
 //SetRotate(y, p, r)
     _log(DUNG__CALL, "ScenarioService::SetRotate()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::RotateSelected(PyCallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll)
+EVEResult ScenarioService::RotateSelected(EVECallArgs& call, PyFloat* yaw, PyFloat* pitch, PyFloat* roll)
 {
 //RotateSelected(yaw, pitch, roll)
     _log(DUNG__CALL, "ScenarioService::RotateSelected()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::JitterSelection(PyCallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z)
+EVEResult ScenarioService::JitterSelection(EVECallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z)
 {
 //JitterSelection(X, Y, Z)
     _log(DUNG__CALL, "ScenarioService::JitterSelection()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::ArrangeSelection(PyCallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z)
+EVEResult ScenarioService::ArrangeSelection(EVECallArgs& call, PyFloat* x, PyFloat* y, PyFloat* z)
 {
 //ArrangeSelection(X, Y, Z)
     _log(DUNG__CALL, "ScenarioService::ArrangeSelection()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::DeleteSelected(PyCallArgs& call)
+EVEResult ScenarioService::DeleteSelected(EVECallArgs& call)
 {
 //DeleteSelected()
     _log(DUNG__CALL, "ScenarioService::DeleteSelected()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult ScenarioService::RefreshSelection(PyCallArgs& call)
+EVEResult ScenarioService::RefreshSelection(EVECallArgs& call)
 {
     //RefreshSelection()
     _log(DUNG__CALL, "ScenarioService::RefreshSelection()" );
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }

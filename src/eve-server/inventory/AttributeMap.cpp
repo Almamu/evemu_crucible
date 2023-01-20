@@ -362,11 +362,11 @@ bool AttributeMap::Change(uint16 attrID, EvilNumber& old_val, EvilNumber& new_va
 
     if (IsFittingSlot(mItem.flag()) and (mItem.categoryID() == EVEDB::invCategories::Charge)) {
         // locationID, flag, typeID = itemKey
-        PyTuple* itemKey = new PyTuple(3);
-            itemKey->SetItem(0, new PyInt(mItem.locationID()));
-            itemKey->SetItem(1, new PyInt(mItem.flag()));
-            itemKey->SetItem(2, new PyInt(mItem.typeID()));
-        modChange.itemKey = itemKey;
+        modChange.itemKey = new PyTuple {
+            new PyInt (mItem.locationID()),
+            new PyInt (mItem.flag()),
+            new PyInt (mItem.typeID())
+        };
     } else {
         modChange.itemKey = new PyInt(mItem.itemID());
     }
@@ -412,11 +412,11 @@ bool AttributeMap::Add(uint16 attrID, EvilNumber& num) {
         modChange.ownerID = mItem.ownerID();
     if (IsFittingSlot(mItem.flag()) and (mItem.categoryID() == EVEDB::invCategories::Charge)) {
         // locationID, flag, typeID = itemKey
-        PyTuple* itemKey = new PyTuple(3);
-            itemKey->SetItem(0, new PyInt(mItem.locationID()));
-            itemKey->SetItem(1, new PyInt(mItem.flag()));
-            itemKey->SetItem(2, new PyInt(mItem.typeID()));
-        modChange.itemKey = itemKey;
+        modChange.itemKey = new PyTuple {
+            new PyInt (mItem.locationID()),
+            new PyInt (mItem.flag()),
+            new PyInt (mItem.typeID())
+        };
     } else {
         modChange.itemKey = new PyInt(mItem.itemID());
     }
@@ -466,7 +466,7 @@ bool AttributeMap::SendChanges(PyTuple* attrChange) {
 
     if (is_log_enabled(ATTRIBUTE__CHANGE)) {
         _log(ATTRIBUTE__CHANGE, "Sending Attribute changes for %s(%u)", mItem.name(), mItem.itemID());
-        attrChange->Dump(ATTRIBUTE__CHANGE, "");
+        attrChange->dump(ATTRIBUTE__CHANGE, "");
     }
 
     pClient->QueueDestinyEvent(&attrChange);

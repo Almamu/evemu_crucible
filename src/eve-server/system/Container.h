@@ -28,7 +28,7 @@
 #define __CONTAINER__H__INCL__
 
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "inventory/Inventory.h"
 #include "inventory/InventoryItem.h"
@@ -123,7 +123,7 @@ protected:
 
     static uint32 CreateItemID( ItemData &data);
 
-    virtual PyRep* GetItem() const                      { return GetItemRow(); }
+    virtual PyDataType* GetItem() const                      { return GetItemRow(); }
 
 private:
     SystemEntity* mySE;

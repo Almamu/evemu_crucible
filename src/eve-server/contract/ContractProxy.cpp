@@ -42,12 +42,12 @@ ContractProxy::ContractProxy () :
     Service("contractProxy")
 {
     this->Add("GetContract", &ContractProxy::GetContract);
-    this->Add("CreateContract", static_cast <PyResult(ContractProxy::*)(PyCallArgs &,PyInt*, PyBool*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, std::optional<PyNone*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
-    this->Add("CreateContract", static_cast <PyResult(ContractProxy::*)(PyCallArgs &,PyInt*, PyBool*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyNone*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
-    this->Add("CreateContract", static_cast <PyResult(ContractProxy::*)(PyCallArgs &,PyInt*, PyBool*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyNone*>, PyInt*, PyInt*, PyInt*, PyWString*, PyString*)> (&ContractProxy::CreateContract));
-    this->Add("CreateContract", static_cast <PyResult(ContractProxy::*)(PyCallArgs &,PyInt*, PyBool*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, std::optional<PyInt*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
-    this->Add("CreateContract", static_cast <PyResult(ContractProxy::*)(PyCallArgs &,PyInt*, PyBool*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, PyWString*,PyString*)> (&ContractProxy::CreateContract));
-    this->Add("CreateContract", static_cast <PyResult(ContractProxy::*)(PyCallArgs&, PyInt*, PyInt*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyInt*>, PyInt*, PyInt*, PyInt*, PyWString*, PyWString*)> (&ContractProxy::CreateContract));
+    this->Add("CreateContract", static_cast <EVEResult (ContractProxy::*)(EVECallArgs&,PyInt*, PyBool*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, std::optional<PyNone*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
+    this->Add("CreateContract", static_cast <EVEResult (ContractProxy::*)(EVECallArgs&,PyInt*, PyBool*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyNone*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
+    this->Add("CreateContract", static_cast <EVEResult (ContractProxy::*)(EVECallArgs&,PyInt*, PyBool*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyNone*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
+    this->Add("CreateContract", static_cast <EVEResult (ContractProxy::*)(EVECallArgs&,PyInt*, PyBool*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, std::optional<PyInt*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
+    this->Add("CreateContract", static_cast <EVEResult (ContractProxy::*)(EVECallArgs&,PyInt*, PyBool*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, std::optional <PyNone*>, PyInt*, PyInt*, PyInt*, PyString*,PyString*)> (&ContractProxy::CreateContract));
+    this->Add("CreateContract", static_cast <EVEResult (ContractProxy::*)(EVECallArgs&, PyInt*, PyInt*, std::optional <PyInt*>, PyInt*, PyInt*, PyInt*, std::optional<PyInt*>, PyInt*, PyInt*, PyInt*, PyString*, PyString*)> (&ContractProxy::CreateContract));
     this->Add("DeleteContract", &ContractProxy::DeleteContract);
     this->Add("AcceptContract", &ContractProxy::AcceptContract);
     this->Add("CompleteContract", &ContractProxy::CompleteContract);
@@ -72,10 +72,10 @@ ContractProxy::ContractProxy () :
      */
 }
 
-PyResult ContractProxy::SearchContracts(PyCallArgs &call) {
+EVEResult ContractProxy::SearchContracts(EVECallArgs&call) {
     // We will not proceed, if contractType is not specified
-    if (!call.byname.find("contractType")->second->IsNone()) {
-        int contractType = call.byname.find("contractType")->second->AsInt()->value();
+    if (!call.byname.find("contractType")->second->is<PyNone>()) {
+        int contractType = call.byname.find("contractType")->second->as<PyInt>()->value();
 
         /**
          * We're using sort of query constructor here - if request have certain value specified, we add it as another AND block.
@@ -90,11 +90,11 @@ PyResult ContractProxy::SearchContracts(PyCallArgs &call) {
                             "WHERE cC.contractType IN " + std::string(contractType == 10 ? "(1,2)" : "(" + std::to_string(contractType) + ")");
                                                          // Type 10 is "All" and "Exclude WTB", for some reason. We'll assume it's "All", lol
 
-        if (!call.byname.find("itemTypes")->second->IsNone()) {
-            PyList* itemTypes = call.byname.find("itemTypes")->second->AsObjectEx()->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+        if (!call.byname.find("itemTypes")->second->is<PyNone>()) {
+            PyList* itemTypes = call.byname.find("itemTypes")->second->as<PyObjectEx>()->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
             std::string types;
             for (auto index = 0; index < itemTypes->size(); index++) {
-                types.append(std::to_string(itemTypes->GetItem(index)->AsInt()->value()));
+                types.append(std::to_string(itemTypes->at (index)->as<PyInt>()->value()));
                 if (index != itemTypes->size() - 1) {
                     types.append(",");
                 }
@@ -105,26 +105,26 @@ PyResult ContractProxy::SearchContracts(PyCallArgs &call) {
             }
         }
 
-        if (!call.byname.find("itemGroupID")->second->IsNone()) {
-            query.append(" AND iG.groupID = " + std::to_string(call.byname.find("itemGroupID")->second->AsInt()->value()));
+        if (!call.byname.find("itemGroupID")->second->is<PyNone>()) {
+            query.append(" AND iG.groupID = " + std::to_string(call.byname.find("itemGroupID")->second->as<PyInt>()->value()));
         }
-        if (!call.byname.find("itemCategoryID")->second->IsNone()) {
-            query.append(" AND iC.categoryID = " + std::to_string(call.byname.find("itemCategoryID")->second->AsInt()->value()));
+        if (!call.byname.find("itemCategoryID")->second->is<PyNone>()) {
+            query.append(" AND iC.categoryID = " + std::to_string(call.byname.find("itemCategoryID")->second->as<PyInt>()->value()));
         }
-        if (!call.byname.find("minPrice")->second->IsNone()) {
-            query.append(" AND cC.price >= " + std::to_string(call.byname.find("minPrice")->second->AsInt()->value()));
+        if (!call.byname.find("minPrice")->second->is<PyNone>()) {
+            query.append(" AND cC.price >= " + std::to_string(call.byname.find("minPrice")->second->as<PyInt>()->value()));
         }
-        if (!call.byname.find("maxPrice")->second->IsNone()) {
-            query.append(" AND cC.price <= " + std::to_string(call.byname.find("maxPrice")->second->AsInt()->value()));
+        if (!call.byname.find("maxPrice")->second->is<PyNone>()) {
+            query.append(" AND cC.price <= " + std::to_string(call.byname.find("maxPrice")->second->as<PyInt>()->value()));
         }
-        if (!call.byname.find("minReward")->second->IsNone()) {
-            query.append(" AND cC.reward >= " + std::to_string(call.byname.find("minReward")->second->AsInt()->value()));
+        if (!call.byname.find("minReward")->second->is<PyNone>()) {
+            query.append(" AND cC.reward >= " + std::to_string(call.byname.find("minReward")->second->as<PyInt>()->value()));
         }
-        if (!call.byname.find("maxReward")->second->IsNone()) {
-            query.append(" AND cC.reward <= " + std::to_string(call.byname.find("maxReward")->second->AsInt()->value()));
+        if (!call.byname.find("maxReward")->second->is<PyNone>()) {
+            query.append(" AND cC.reward <= " + std::to_string(call.byname.find("maxReward")->second->as<PyInt>()->value()));
         }
-        if (!call.byname.find("availability")->second->IsNone()) {
-            int availability = call.byname.find("availability")->second->AsInt()->value();
+        if (!call.byname.find("availability")->second->is<PyNone>()) {
+            int availability = call.byname.find("availability")->second->as<PyInt>()->value();
             if (availability == 0) {
                 // Public contracts
                 query.append(" AND cC.isPrivate = 0");
@@ -137,8 +137,8 @@ PyResult ContractProxy::SearchContracts(PyCallArgs &call) {
             }
         }
         // According to what i had during testing, locationID can only be system, constellation or region. Given that we only store system and region ID, we use OR clause for these
-        if (!call.byname.find("locationID")->second->IsNone()) {
-            int locationId = call.byname.find("locationID")->second->AsInt()->value();
+        if (!call.byname.find("locationID")->second->is<PyNone>()) {
+            int locationId = call.byname.find("locationID")->second->as<PyInt>()->value();
             if (IsSolarSystemID(locationId)) {
                 // Solar system range
                 query.append(" AND cC.startSolarSystemID = " + std::to_string(locationId));
@@ -148,8 +148,8 @@ PyResult ContractProxy::SearchContracts(PyCallArgs &call) {
             }
         }
         // Same applies to endLocationID - it uses the same search::QuickQuery() call to get it
-        if (!call.byname.find("endLocationID")->second->IsNone()) {
-            int locationId = call.byname.find("endLocationID")->second->AsInt()->value();
+        if (!call.byname.find("endLocationID")->second->is<PyNone>()) {
+            int locationId = call.byname.find("endLocationID")->second->as<PyInt>()->value();
             if (IsSolarSystemID(locationId)) {
                 // Solar system range
                 query.append(" AND cC.endSolarSystemID = " + std::to_string(locationId));
@@ -159,8 +159,8 @@ PyResult ContractProxy::SearchContracts(PyCallArgs &call) {
             }
         }
         // Once again, issuer can be either a character or a corporation. We use separate filters depending on value
-        if (!call.byname.find("issuerID")->second->IsNone()) {
-            int issuerId = call.byname.find("issuerID")->second->AsInt()->value();
+        if (!call.byname.find("issuerID")->second->is<PyNone>()) {
+            int issuerId = call.byname.find("issuerID")->second->as<PyInt>()->value();
             if (IsCorp(issuerId)) {
                 // Corporation case
                 query.append(" AND cC.issuerCorpID = " + std::to_string(issuerId) + " AND cC.forCorp = true");
@@ -193,66 +193,53 @@ PyResult ContractProxy::SearchContracts(PyCallArgs &call) {
 
         PyDict* response = new PyDict;
         PyList* contracts = ContractUtils::GetContractEntries(contractIDs);
-        response->SetItemString("contracts", contracts ? contracts : new PyList);
-        response->SetItemString("numFound", contracts ? new PyInt(contracts->size()) : new PyInt(0));
-        response->SetItemString("searchTime", new PyInt(153));  // Since search time is of no relevance to the client, we simply hard-code it
-        response->SetItemString("maxResults", new PyInt(1000)); // Same here - we do not limit the list of contracts queried, so we leave this value hard-coded
+        response->set ("contracts", contracts ? contracts : new PyList);
+        response->set ("numFound", contracts ? new PyInt(contracts->size()) : new PyInt(0));
+        response->set ("searchTime", new PyInt(153));  // Since search time is of no relevance to the client, we simply hard-code it
+        response->set ("maxResults", new PyInt(1000)); // Same here - we do not limit the list of contracts queried, so we leave this value hard-coded
 
         return new PyObject("util.KeyVal", response);
     } else {
-        codelog(SERVICE__ERROR, "%s: ContractType was not specified. Aborting search", GetName());
+        codelog(SERVICE__ERROR, "%s: ContractType was not specified. Aborting search", GetName().c_str());
         return nullptr;
     }
 }
 
-PyResult ContractProxy::CreateContract(PyCallArgs &call,
+EVEResult ContractProxy::CreateContract(EVECallArgs&call,
     PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID,
     PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description) {
-    return CreateContract(call, contractType, new PyInt(isPrivate->value()), std::nullopt, expireTime, duration, startStationID, std::nullopt, price, reward, collateral, new PyWString(title->content()), new PyWString(description->content()));
+    return CreateContract(call, contractType, new PyInt(isPrivate->value()), std::nullopt, expireTime, duration, startStationID, std::nullopt, price, reward, collateral, new PyString(title->content()), new PyString(description->content()));
 }
 
-PyResult ContractProxy::CreateContract(PyCallArgs &call,
+EVEResult ContractProxy::CreateContract(EVECallArgs&call,
     PyInt* contractType, PyBool* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID,
     PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description) {
-    return CreateContract(call, contractType, new PyInt(isPrivate->value()), assigneeID, expireTime, duration, startStationID, std::nullopt, price, reward, collateral, new PyWString(title->content()), new PyWString(description->content()));
+    return CreateContract(call, contractType, new PyInt(isPrivate->value()), assigneeID, expireTime, duration, startStationID, std::nullopt, price, reward, collateral, new PyString(title->content()), new PyString(description->content()));
 }
 
-PyResult ContractProxy::CreateContract(PyCallArgs &call,
-    PyInt* contractType, PyBool* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID,
-    PyInt* price, PyInt* reward, PyInt* collateral, PyWString* title, PyString* description) {
-    return CreateContract(call, contractType, new PyInt(isPrivate->value()), assigneeID, expireTime, duration, startStationID, std::nullopt, price, reward, collateral, title, new PyWString(description->content()));
-}
-
-PyResult ContractProxy::CreateContract(PyCallArgs &call,
+EVEResult ContractProxy::CreateContract(EVECallArgs&call,
     PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyInt*> endStationID,
     PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description) {
-    return CreateContract(call, contractType, new PyInt(isPrivate->value()), std::nullopt, expireTime, duration, startStationID, endStationID, price, reward, collateral, new PyWString(title->content()), new PyWString(description->content()));
+    return CreateContract(call, contractType, new PyInt(isPrivate->value()), std::nullopt, expireTime, duration, startStationID, endStationID, price, reward, collateral, new PyString(title->content()), new PyString(description->content()));
 }
 
-PyResult ContractProxy::CreateContract(PyCallArgs &call,
-    PyInt* contractType, PyBool* isPrivate, std::optional <PyNone*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyNone*> endStationID,
-    PyInt* price, PyInt* reward, PyInt* collateral, PyWString* title, PyString* description) {
-    return CreateContract(call, contractType, new PyInt(isPrivate->value()), std::nullopt, expireTime, duration, startStationID, std::nullopt, price, reward, collateral, title, new PyWString(description->content()));
-}
-
-
-PyResult ContractProxy::CreateContract(PyCallArgs &call, 
+EVEResult ContractProxy::CreateContract(EVECallArgs&call,
     PyInt* contractType, PyInt* isPrivate, std::optional <PyInt*> assigneeID, PyInt* expireTime, PyInt* duration, PyInt* startStationID, std::optional<PyInt*> endStationID,
-    PyInt* price, PyInt* reward, PyInt* collateral, PyWString* title, PyWString* description) {
+    PyInt* price, PyInt* reward, PyInt* collateral, PyString* title, PyString* description) {
     int startStationDivision, startSystemId, startRegionId, endSystemId, endRegionId;
     bool forCorp;
 
     /**
      * Since named args (byname) aren't included in packet, we process them separately.
      */
-    if (call.byname.find("flag")->second->IsInt()) {
-        startStationDivision = call.byname.find("flag")->second->AsInt()->value();
+    if (call.byname.find("flag")->second->is<PyInt>()) {
+        startStationDivision = call.byname.find("flag")->second->as<PyInt>()->value();
     } else {
         codelog(SERVICE__ERROR, "startStationDivision value is of invalid type");
         return nullptr;
     }
-    if (call.byname.find("forCorp")->second->IsBool()) {
-        forCorp = call.byname.find("forCorp")->second->AsBool()->value();
+    if (call.byname.find("forCorp")->second->is<PyBool>()) {
+        forCorp = call.byname.find("forCorp")->second->as<PyBool>()->value();
     } else {
         codelog(SERVICE__ERROR, "forCorp value is of invalid type");
         return nullptr;
@@ -320,8 +307,8 @@ PyResult ContractProxy::CreateContract(PyCallArgs &call,
      */
     std::string itemsToInsert;
     float totalVolume = 0.00;
-    if (call.byname.find("itemList")->second->IsList()) {
-        PyList *tradedItems = call.byname.find("itemList")->second->AsList();
+    if (call.byname.find("itemList")->second->is<PyList>()) {
+        PyList *tradedItems = call.byname.find("itemList")->second->as<PyList>();
         if (!tradedItems->empty()) {
             //TODO: We need to account for items that can be packed in a container/ship/container inside the ship
             std::string query = "SELECT entity.itemID, entity.ownerID, entity.typeID, entity.quantity, entity.locationID, iB.pLevel, "
@@ -333,9 +320,9 @@ PyResult ContractProxy::CreateContract(PyCallArgs &call,
             std::string queryIds;
             std::map<int, int> expectedQuantities;              // Key is itemID, value is quantity. We use map to save time on list iteration
             for (int index = 0; index < tradedItems->size(); index++) {
-                PyList *tradedItem = tradedItems->GetItem(index)->AsList();
-                int itemID = tradedItem->GetItem(0)->AsInt()->value();
-                int quantity = tradedItem->GetItem(1)->AsInt()->value();
+                PyList *tradedItem = tradedItems->at (index)->as<PyList>();
+                int itemID = tradedItem->at (0)->as<PyInt>()->value();
+                int quantity = tradedItem->at (1)->as<PyInt>()->value();
 
                 queryIds.append(std::to_string(itemID));
                 expectedQuantities[itemID] = quantity;
@@ -398,15 +385,15 @@ PyResult ContractProxy::CreateContract(PyCallArgs &call,
     }
 
 
-    if (call.byname.find("requestItemTypeList")->second->IsList()) {
-        PyList *requestedItems = call.byname.find("requestItemTypeList")->second->AsList();
+    if (call.byname.find("requestItemTypeList")->second->is<PyList>()) {
+        PyList *requestedItems = call.byname.find("requestItemTypeList")->second->as<PyList>();
         if (!requestedItems->empty()) {
             for (int index = 0; index < requestedItems->size(); index++) {
-                PyList *requestedItem = requestedItems->GetItem(index)->AsList();
+                PyList *requestedItem = requestedItems->at (index)->as<PyList>();
                 itemsToInsert.append("(" + std::to_string(contractId) + ", " +
                                      "0, " +
-                                     std::to_string(requestedItem->GetItem(1)->AsInt()->value()) + ", " +
-                                     std::to_string(requestedItem->GetItem(0)->AsInt()->value()) + ", " +
+                                     std::to_string(requestedItem->at (1)->as<PyInt>()->value()) + ", " +
+                                     std::to_string(requestedItem->at (0)->as<PyInt>()->value()) + ", " +
                                      "0, 0, 0, 0, 0, 0, 0, 0),");
             }
         }
@@ -442,9 +429,9 @@ PyResult ContractProxy::CreateContract(PyCallArgs &call,
     return new PyInt((int) contractId);
 }
 
-PyResult ContractProxy::DeleteContract(PyCallArgs &call, PyInt* contractID) {
+EVEResult ContractProxy::DeleteContract(EVECallArgs&call, PyInt* contractID) {
     sLog.White( "ContractProxy::Handle_DeleteContract()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     // In order to return items back to the owner, we need a full list of entityID's to return. We gather them using utils function
     std::vector<int> entityIds;
@@ -472,11 +459,11 @@ PyResult ContractProxy::DeleteContract(PyCallArgs &call, PyInt* contractID) {
     return new PyBool(true);
 }
 
-PyResult ContractProxy::GetContract(PyCallArgs &call, PyInt* contractID) {
+EVEResult ContractProxy::GetContract(EVECallArgs&call, PyInt* contractID) {
     return ContractUtils::GetContractEntry(contractID->value());
 }
 
-PyResult ContractProxy::AcceptContract(PyCallArgs &call, PyInt* contractID) {
+EVEResult ContractProxy::AcceptContract(EVECallArgs&call, PyInt* contractID) {
     // For the time being - we ignore the second value in tuple (forCorp), since it's not yet functional.
 
     DBQueryResult res;
@@ -664,22 +651,21 @@ PyResult ContractProxy::AcceptContract(PyCallArgs &call, PyInt* contractID) {
         // DBResultToCRowset return doesn't work, for some reason (fails at unmarshalling on client's side), so making it a KeyVal dict
         res.GetRow(row);
         PyDict* ret = new PyDict;
-        ret->SetItemString("contractID", new PyInt(row.GetInt(0)));
-        ret->SetItemString("type", new PyInt(row.GetInt(1)));
-        ret->SetItemString("startStationID", new PyInt(row.GetInt(2)));
-        ret->SetItemString("endStationID", new PyInt(row.GetInt(3)));
-        ret->SetItemString("dateAccepted", new PyLong(row.GetInt64(4)));
-        ret->SetItemString("numDays", new PyInt(row.GetInt(5)));
+        ret->set ("contractID", new PyInt(row.GetInt(0)));
+        ret->set ("type", new PyInt(row.GetInt(1)));
+        ret->set ("startStationID", new PyInt(row.GetInt(2)));
+        ret->set ("endStationID", new PyInt(row.GetInt(3)));
+        ret->set ("dateAccepted", new PyInt(row.GetInt64(4)));
+        ret->set ("numDays", new PyInt(row.GetInt(5)));
         return new PyObject("util.KeyVal", ret);
     } else {
         return nullptr;
     }
 }
 
-
-PyResult ContractProxy::CompleteContract(PyCallArgs &call, PyInt* contractID, PyInt* completionStatus) {
+EVEResult ContractProxy::CompleteContract(EVECallArgs&call, PyInt* contractID, PyInt* completionStatus) {
     sLog.White( "ContractProxy::Handle_CompleteContract()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT contractType, status, price, reward, collateral, volume, startStationID, endStationID, issuerID, forCorp, crateID FROM ctrContracts WHERE contractId = %u", contractID))
@@ -782,10 +768,9 @@ PyResult ContractProxy::CompleteContract(PyCallArgs &call, PyInt* contractID, Py
     return new PyBool(true);
 }
 
-
-PyResult ContractProxy::GetMyExpiredContractList(PyCallArgs &call) {
+EVEResult ContractProxy::GetMyExpiredContractList(EVECallArgs&call) {
   sLog.White( "ContractProxy::Handle_GetMyExpiredContractList()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 /*
       [PySubStream 530 bytes]
         [PyObjectData Name: util.KeyVal]
@@ -894,9 +879,9 @@ PyResult ContractProxy::GetMyExpiredContractList(PyCallArgs &call) {
     return nullptr;
 }
 
-PyResult ContractProxy::NumOutstandingContracts(PyCallArgs &call) {
+EVEResult ContractProxy::NumOutstandingContracts(EVECallArgs&call) {
     sLog.White( "ContractProxy::Handle_NumOutstandingContracts()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
     /*
       [PySubStream 87 bytes]
         [PyObjectData Name: util.KeyVal]
@@ -913,8 +898,8 @@ PyResult ContractProxy::NumOutstandingContracts(PyCallArgs &call) {
     return nullptr;
 }
 
-PyResult ContractProxy::GetItemsInStation(PyCallArgs &call, PyInt* stationID, std::optional<PyInt*> forCorp) {
-    uint32 station = call.tuple->GetItem(0)->AsInt()->value();
+EVEResult ContractProxy::GetItemsInStation(EVECallArgs&call, PyInt* stationID, std::optional<PyInt*> forCorp) {
+    uint32 station = call.tuple->at (0)->as<PyInt>()->value();
 
     if (sDataMgr.IsStation(stationID->value()) == false)
         return nullptr;
@@ -922,9 +907,9 @@ PyResult ContractProxy::GetItemsInStation(PyCallArgs &call, PyInt* stationID, st
     return sItemFactory.GetStationRef(station)->GetMyInventory()->List(flagHangar);
 }
 
-PyResult ContractProxy::CollectMyPageInfo(PyCallArgs &call) {
+EVEResult ContractProxy::CollectMyPageInfo(EVECallArgs&call) {
     sLog.White( "ContractProxy::Handle_CollectMyPageInfo()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
     std::string mainQuery = "SELECT "
                             "IFNULL(SUM(CASE WHEN (cC.issuerID = {CHAR_ID} AND cC.status = 0) THEN 1 ELSE 0 END), 0) AS numOutstandingContracts, "
                             "IFNULL(SUM(CASE WHEN (cC.issuerID = {CHAR_ID} AND cC.status = 0 AND cC.forCorp = false) THEN 1 ELSE 0 END), 0) AS numOutstandingContractsNonCorp, "
@@ -954,13 +939,14 @@ PyResult ContractProxy::CollectMyPageInfo(PyCallArgs &call) {
     DBResultRow row;
     PyList* oustandingContractsList = new PyList;
     while (res.GetRow(row)) {
-        PyList* list = new PyList(4);
-        list->SetItem(0, new PyInt(row.GetInt(0)));
-        list->SetItem(1, new PyInt(row.GetInt(1)));
-        list->SetItem(2, new PyInt(row.GetInt(2)));
-        list->SetItem(3, new PyInt(row.GetInt(3)));
-
-        oustandingContractsList->AddItem(list);
+        oustandingContractsList->add(
+            new PyList {
+                new PyInt (row.GetInt (0)),
+                new PyInt (row.GetInt (1)),
+                new PyInt (row.GetInt (2)),
+                new PyInt (row.GetInt (3))
+            }
+        );
     }
 
     // Then, we go for main message body data
@@ -971,24 +957,27 @@ PyResult ContractProxy::CollectMyPageInfo(PyCallArgs &call) {
     }
     // Because of outstandingContracts list in this response, we can't return DBResultToCRowset directly - so, we'll have to compose the dict manually.
     res.GetRow(row);
-    PyDict* vals = new PyDict;
-    vals->SetItemString("numOutstandingContracts", new PyInt(row.GetInt(0)));
-    vals->SetItemString("numOutstandingContractsNonCorp", new PyInt(row.GetInt(1)));
-    vals->SetItemString("numOutstandingContractsForCorp", new PyInt(row.GetInt(2)));
-    vals->SetItemString("numInProgress", new PyInt(row.GetInt(3)));
-    vals->SetItemString("numInProgressCorp", new PyInt(row.GetInt(4)));
-    vals->SetItemString("outstandingContracts", oustandingContractsList);
-    vals->SetItemString("numRequiresAttention", new PyInt(row.GetInt(5)));
-    vals->SetItemString("numRequiresAttentionCorp", new PyInt(row.GetInt(6)));
-    vals->SetItemString("numBiddingOn", new PyInt(0));      // Left hard-coded until bidding is implemented
-    vals->SetItemString("numBiddingOnCorp", new PyInt(0));  // Left hard-coded until bidding is implemented
 
-    return new PyObject("util.KeyVal", vals);
+    return new PyObject(
+        "util.KeyVal",
+        new PyDict {
+            {"numOutstandingContracts", new PyInt (row.GetInt (0))},
+            {"numOutstandingContractsNonCorp", new PyInt (row.GetInt (1))},
+            {"numOutstandingContractsForCorp", new PyInt (row.GetInt (2))},
+            {"numInProgress", new PyInt (row.GetInt (3))},
+            {"numInProgressCorp", new PyInt (row.GetInt (4))},
+            {"outstandingContracts", oustandingContractsList},
+            {"numRequiresAttention", new PyInt (row.GetInt (5))},
+            {"numRequiresAttentionCorp", new PyInt (row.GetInt (6))},
+            {"numBiddingOn", new PyInt (0)},     // Left hard-coded until bidding is implemented
+            {"numBiddingOnCorp", new PyInt (0)}, // Left hard-coded until bidding is implemented
+        }
+    );
 }
 
-PyResult ContractProxy::GetContractListForOwner(PyCallArgs &call, PyInt* ownerID, PyInt* contractStatus, std::optional <PyInt*> contractType, std::optional <PyBool*> issuedToBy) {
+EVEResult ContractProxy::GetContractListForOwner(EVECallArgs&call, PyInt* ownerID, PyInt* contractStatus, std::optional <PyInt*> contractType, std::optional <PyBool*> issuedToBy) {
     sLog.White( "ContractProxy::Handle_GetContractListForOwner()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return ContractUtils::GetContractListForOwner(ownerID, contractStatus, contractType, issuedToBy);
     /*
@@ -1171,37 +1160,35 @@ PyResult ContractProxy::GetContractListForOwner(PyCallArgs &call, PyInt* ownerID
     return nullptr;
 }
 
-PyResult ContractProxy::GetLoginInfo(PyCallArgs &call)
+EVEResult ContractProxy::GetLoginInfo(EVECallArgs&call)
 {
     // currently a stub as I need to redesign or change some sub systems for this.
 
     /* create needsAttention row descriptor */
-    DBRowDescriptor *needsAttentionHeader = new DBRowDescriptor();
-        needsAttentionHeader->AddColumn( "contractID",   DBTYPE_I4);
-        needsAttentionHeader->AddColumn( "",             DBTYPE_I4);
+    DBRowDescriptor *needsAttentionHeader = new(&call.arena) DBRowDescriptor();
+        needsAttentionHeader->add( "contractID",   DBTYPE_I4);
+        needsAttentionHeader->add( "",             DBTYPE_I4);
 
     /* create inProgress row descriptor */
-    DBRowDescriptor *inProgressHeader = new DBRowDescriptor();
-        inProgressHeader->AddColumn( "contractID",      DBTYPE_I4 );
-        inProgressHeader->AddColumn( "startStationID",  DBTYPE_I4 );
-        inProgressHeader->AddColumn( "endStationID",    DBTYPE_I4 );
-        inProgressHeader->AddColumn( "expires",         DBTYPE_FILETIME );
+    DBRowDescriptor *inProgressHeader = new(&call.arena) DBRowDescriptor();
+        inProgressHeader->add( "contractID",      DBTYPE_I4 );
+        inProgressHeader->add( "startStationID",  DBTYPE_I4 );
+        inProgressHeader->add( "endStationID",    DBTYPE_I4 );
+        inProgressHeader->add( "expires",         DBTYPE_FILETIME );
 
     /* create assignedToMe row descriptor */
-    DBRowDescriptor *assignedToMeHeader = new DBRowDescriptor();
-        assignedToMeHeader->AddColumn( "contractID",    DBTYPE_I4);
-        assignedToMeHeader->AddColumn( "issuerID",      DBTYPE_I4);
-
-    CRowSet *needsAttention_rowset = new CRowSet( &needsAttentionHeader );
-    CRowSet *inProgress_rowset = new CRowSet( &inProgressHeader );
-    CRowSet *assignedToMe_rowset = new CRowSet( &assignedToMeHeader );
-
-    PyDict* args = new PyDict;
-        args->SetItemString( "needsAttention",          needsAttention_rowset );
-        args->SetItemString( "inProgress",              inProgress_rowset );
-        args->SetItemString( "assignedToMe",            assignedToMe_rowset );
-
-    return new PyObject( "util.KeyVal", args );
+    DBRowDescriptor *assignedToMeHeader = new(&call.arena) DBRowDescriptor();
+        assignedToMeHeader->add( "contractID",    DBTYPE_I4);
+        assignedToMeHeader->add( "issuerID",      DBTYPE_I4);
+        
+    return call.arena.Object(
+        "util.KeyVal",
+        call.arena.Dict ({
+            {"needsAttention", new(&call.arena) CRowset (needsAttentionHeader)},
+            {"inProgress", new(&call.arena) CRowset (inProgressHeader)},
+            {"assignedToMe", new(&call.arena) CRowset (assignedToMeHeader)}
+        })
+    );
 }
 
      /**

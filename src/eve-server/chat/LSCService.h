@@ -54,7 +54,7 @@ public:
 
     void Init(CommandDispatcher *cd);
 
-    PyResult ExecuteCommand(Client *from, const char *msg);
+    EVEResult ExecuteCommand(Client *from, const char *msg);
 
     void CharacterLogin(Client *pClient);
     void SendServerMOTD(Client* pClient);
@@ -75,26 +75,26 @@ protected:
 
     std::map<int32, LSCChannel*> m_channels;  //we own these pointers
 
-    PyResult GetChannels(PyCallArgs& call);
-    PyResult GetRookieHelpChannel(PyCallArgs& call);
-    PyResult JoinChannels(PyCallArgs& call, PyList* channelIDs, PyLong* role);
-    PyResult LeaveChannels(PyCallArgs& call, PyList* channels, PyInt* usubscribe, PyLong* role);
-    PyResult LeaveChannels(PyCallArgs& call, PyList* channels, PyBool* usubscribe, PyLong* role);
-    PyResult LeaveChannel(PyCallArgs& call, PyRep* channelInfo, PyInt* unsubscribe);
-    PyResult CreateChannel(PyCallArgs& call, PyRep* channelName);
-    PyResult Configure(PyCallArgs& call, PyInt* channelID);
-    PyResult DestroyChannel(PyCallArgs& call, PyInt* channelID);
-    PyResult GetMembers(PyCallArgs& call, PyRep* channelInfo);
-    PyResult GetMember(PyCallArgs& call);
-    PyResult SendMessage(PyCallArgs& call, PyRep* channelInfo, PyWString* cMessage);
-    PyResult Invite(PyCallArgs& call, PyInt* characterID, PyInt* channelID);
-    PyResult AccessControl(PyCallArgs& call, PyRep* channelInfo, PyInt* characterID, PyInt* role);
+    EVEResult GetChannels(EVECallArgs& call);
+    EVEResult GetRookieHelpChannel(EVECallArgs& call);
+    EVEResult JoinChannels(EVECallArgs& call, PyList* channelIDs, PyInt* role);
+    EVEResult LeaveChannels(EVECallArgs& call, PyList* channels, PyInt* usubscribe, PyInt* role);
+    EVEResult LeaveChannels(EVECallArgs& call, PyList* channels, PyBool* usubscribe, PyInt* role);
+    EVEResult LeaveChannel(EVECallArgs& call, PyDataType* channelInfo, PyInt* unsubscribe);
+    EVEResult CreateChannel(EVECallArgs& call, PyDataType* channelName);
+    EVEResult Configure(EVECallArgs& call, PyInt* channelID);
+    EVEResult DestroyChannel(EVECallArgs& call, PyInt* channelID);
+    EVEResult GetMembers(EVECallArgs& call, PyDataType* channelInfo);
+    EVEResult GetMember(EVECallArgs& call);
+    EVEResult SendMessage(EVECallArgs& call, PyDataType* channelInfo, PyString* cMessage);
+    EVEResult Invite(EVECallArgs& call, PyInt* characterID, PyInt* channelID);
+    EVEResult AccessControl(EVECallArgs& call, PyDataType* channelInfo, PyInt* characterID, PyInt* role);
 
-    PyResult GetMyMessages(PyCallArgs& call);
-    PyResult GetMessageDetails(PyCallArgs& call, PyInt* readerID, PyInt* messageID);
-    PyResult Page(PyCallArgs& call, PyList* recipientIDs, PyRep* subject, PyRep* body);
-    PyResult MarkMessagesRead(PyCallArgs& call, PyList* messageIDs);
-    PyResult DeleteMessages(PyCallArgs& call, PyInt* channelID, PyList* messageIDs);
+    EVEResult GetMyMessages(EVECallArgs& call);
+    EVEResult GetMessageDetails(EVECallArgs& call, PyInt* readerID, PyInt* messageID);
+    EVEResult Page(EVECallArgs& call, PyList* recipientIDs, PyDataType* subject, PyDataType* body);
+    EVEResult MarkMessagesRead(EVECallArgs& call, PyList* messageIDs);
+    EVEResult DeleteMessages(EVECallArgs& call, PyInt* channelID, PyList* messageIDs);
 
 private:
     SlashService* m_slash;

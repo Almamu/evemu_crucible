@@ -27,18 +27,18 @@
 #define EVE_MARSHAL_H
 
 #include "marshal/EVEMarshalOpcodes.h"
-#include "python/PyVisitor.h"
+#include "python/Types.h"
 
 /*
  * @brief Marshal Stream builder.
  *
- * @param[in]  rep  Python object to marshal.
- * @param[out] into Buffer which receives marshaled stream.
+ * @param[in]  rep   Python object to marshal.
+ * @param[out] into  Buffer which receives marshaled stream.
  *
  * @retval true  Marshaling ran successfully.
  * @retval false Error occured during marshaling.
  */
-extern bool Marshal( const PyRep* rep, Buffer& into );
+extern bool Marshal (const PyDataType* rep, Buffer& into);
 /*
  * @brief Deflated Marshal Stream builder.
  *
@@ -49,45 +49,44 @@ extern bool Marshal( const PyRep* rep, Buffer& into );
  * @retval true  Marshaling ran successfully.
  * @retval false Error occured during marshaling.
  */
-extern bool MarshalDeflate( const PyRep* rep, Buffer& into, const uint32 deflationLimit = 0x2000 );
+extern bool MarshalDeflate (const PyDataType* rep, Buffer& into, const uint32 deflationLimit = 0x2000);
 
 /**
  * @brief Turns Python objects into marshal bytecode.
  *
  * @author Captnoord, Bloody.Rabbit
  */
-class MarshalStream
-: protected PyVisitor
+class MarshalStream : protected PyVisitor
 {
 public:
     /** initializes object */
-    MarshalStream();
+    MarshalStream ();
 
     /** saves given rep to given buffer */
-    bool Save( const PyRep* rep, Buffer& into );
+    bool Save (const PyDataType* rep, Buffer& into);
 
 protected:
     /** saves new stream with given rep. */
-    bool SaveStream( const PyRep* rep );
+    bool SaveStream (const PyDataType* rep);
 
     /** adds given value to the data stream */
     template<typename T>
-    void Put( const T& value ) { mBuffer->Append<T>( value ); }
+    void Put (const T& value) { mBuffer->Append<T> (value); }
     /** adds given bytes to the data stream */
     template<typename Iter>
-    void Put( Iter first, Iter last ) { mBuffer->AppendSeq<Iter>( first, last ); }
+    void Put (Iter first, Iter last) { mBuffer->AppendSeq<Iter> (first, last); }
 
     /** utility for extended size. */
-    void PutSizeEx( uint32 size )
+    void PutSizeEx (uint32 size)
     {
-        if( size < 0xFF )
+        if (size < 0xFF)
         {
-            Put<uint8>( size );
+            Put<uint8> (size);
         }
         else
         {
-            Put<uint8>( 0xFF );
-            Put<uint32>( size );
+            Put<uint8> (0xFF);
+            Put<uint32> (size);
         }
     }
 
@@ -97,51 +96,45 @@ protected:
      * @note assuming the value is unsigned
      *       research shows that Op_PyByte can be negative
      */
-    bool VisitInteger( const PyInt* rep );
-    //! Adds a long to the stream
-    bool VisitLong( const PyLong* rep );
+    bool VisitInteger (const PyInt* rep);
     //! Adds a boolean to the stream
-    bool VisitBoolean( const PyBool* rep );
+    bool VisitBoolean (const PyBool* rep);
     //! Adds a double to the stream
-    bool VisitReal( const PyFloat* rep );
+    bool VisitReal (const PyFloat* rep);
     //! Adds a None object to the stream
-    bool VisitNone( const PyNone* rep );
+    bool VisitNone (const PyNone* rep);
     //! Adds a buffer to the stream
-    bool VisitBuffer( const PyBuffer* rep );
+    bool VisitBuffer (const PyBuffer* rep);
     //! add a string object to the data stream
-    bool VisitString( const PyString* rep );
-    //! add a wide string object to the data stream
-    bool VisitWString( const PyWString* rep );
+    bool VisitString (const PyString* rep);
     //! add a token object to the data stream
-    bool VisitToken( const PyToken* rep );
+    bool VisitToken (const PyToken* rep);
 
     /** Add a tuple object to the stream */
-    bool VisitTuple( const PyTuple* rep );
+    bool VisitTuple (const PyTuple* rep);
     /** Add a list object to the stream */
-    bool VisitList( const PyList* rep );
+    bool VisitList (const PyList* rep);
     /** Add a dict object to the stream */
-    bool VisitDict( const PyDict* rep );
+    bool VisitDict (const PyDict* rep);
 
     //! Adds an object to the stream
-    bool VisitObject( const PyObject* rep );
+    bool VisitObject (const PyObject* rep);
     //! Adds a New object to the stream
-    bool VisitObjectEx( const PyObjectEx* rep );
+    bool VisitObjectEx (const PyObjectEx* rep);
 
     //! Adds a packed row to the stream
-    bool VisitPackedRow( const PyPackedRow* pyPackedRow );
+    bool VisitPackedRow (const PyPackedRow* pyPackedRow);
 
     //! Adds a sub structure to the stream
-    bool VisitSubStruct( const PySubStruct* rep );
+    bool VisitSubStruct (const PySubStruct* rep);
     //! Adds a sub stream to the stream
-    bool VisitSubStream( const PySubStream* rep );
-    //! Adds a checksumed stream to the stream
-    bool VisitChecksumedStream( const PyChecksumedStream* rep );
+    bool VisitSubStream (const PySubStream* rep);
 
 private:
     // utility to handle Op_PyVarInteger (a bit hacky......)
-    void SaveVarInteger( const PyLong* v );
+    void SaveVarInteger (const PyInt* v);
     // zero-compresses given buffer and adds it to the stream
-    bool SaveRLE(const Buffer& in );
+    bool SaveRLE (const Buffer& in);
 
     Buffer* mBuffer;
 };

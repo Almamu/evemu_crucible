@@ -36,40 +36,40 @@ CalendarProxy::CalendarProxy() :
     this->Add("GetEventDetails", &CalendarProxy::GetEventDetails);
 }
 
-PyResult CalendarProxy::GetEventList(PyCallArgs& call, PyInt* month, PyInt* year)
+EVEResult CalendarProxy::GetEventList(EVECallArgs& call, PyInt* month, PyInt* year)
 {
     PyList *list = new PyList();
-    PyRep* res(nullptr);
+    PyDataType* res(nullptr);
 
     // get system events
     res = CalendarDB::GetEventList(ownerSystem, month->value(), year->value());
     if (res != nullptr)
-        list->AddItem(res);
+        list->add(res);
 
     // get personal events
     res = CalendarDB::GetEventList(call.client->GetCharacterID(), month->value(), year->value());
     if (res != nullptr)
-        list->AddItem(res);
+        list->add(res);
 
     // get corp events
     res = CalendarDB::GetEventList(call.client->GetCorporationID(), month->value(), year->value());
     if (res != nullptr)
-        list->AddItem(res);
+        list->add(res);
 
     // get alliance events
     if (IsAlliance(call.client->GetAllianceID())) {
         res = CalendarDB::GetEventList(call.client->GetAllianceID(), month->value(), year->value());
         if (res != nullptr)
-            list->AddItem(res);
+            list->add(res);
     }
 
     if (list->empty())
-        list->AddItem(PyStatic.NewNone());
+        list->add(PyStatic.NewNone());
 
     return list;
 }
 
-PyResult CalendarProxy::GetEventDetails(PyCallArgs& call, PyInt* eventID, PyInt* ownerID)
+EVEResult CalendarProxy::GetEventDetails(EVECallArgs& call, PyInt* eventID, PyInt* ownerID)
 {
     // self.eventDetails[eventID] = self.GetCalendarProxy().GetEventDetails(eventID, ownerID)
     return CalendarDB::GetEventDetails(eventID->value());

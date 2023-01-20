@@ -55,7 +55,7 @@ BoundID EVEServiceManager::RegisterBoundService(BoundDispatcher* service) {
     return newBoundId;
 }
 
-PyResult EVEServiceManager::Dispatch(const std::string& service, const std::string& method, PyCallArgs& args) {
+EVEResult EVEServiceManager::Dispatch(const std::string& service, const std::string& method, EVECallArgs& args) {
     auto it = this->mServices.find(service);
 
     if (it == this->mServices.end())
@@ -65,19 +65,19 @@ PyResult EVEServiceManager::Dispatch(const std::string& service, const std::stri
     ClientSession* session = args.client->GetSession();
 
     if (
-            (it->second->GetAccessLevel() == eAccessLevel_Location && session->HasValue ("locationid") == false) ||
-            (it->second->GetAccessLevel() == eAccessLevel_SolarSystem && session->HasValue ("solarsystemid") == false) ||
-            (it->second->GetAccessLevel() == eAccessLevel_SolarSystem2 && session->HasValue ("solarsystemid2") == false) ||
-            (it->second->GetAccessLevel() == eAccessLevel_Character && session->HasValue ("charid") == false) ||
-            (it->second->GetAccessLevel() == eAccessLevel_Corporation && session->HasValue ("corpid") == false) ||
-            (it->second->GetAccessLevel() == eAccessLevel_User && session->HasValue ("userid") == false)
+            (it->second->GetAccessLevel() == eAccessLevel_Location && session->has ("locationid") == false) ||
+            (it->second->GetAccessLevel() == eAccessLevel_SolarSystem && session->has ("solarsystemid") == false) ||
+            (it->second->GetAccessLevel() == eAccessLevel_SolarSystem2 && session->has ("solarsystemid2") == false) ||
+            (it->second->GetAccessLevel() == eAccessLevel_Character && session->has ("charid") == false) ||
+            (it->second->GetAccessLevel() == eAccessLevel_Corporation && session->has ("corpid") == false) ||
+            (it->second->GetAccessLevel() == eAccessLevel_User && session->has ("userid") == false)
         )
         throw CustomError ("You're not allowed to access this service");
 
     return it->second->Dispatch(method, args);
 }
 
-PyResult EVEServiceManager::Dispatch(const BoundID& service, const std::string& method, PyCallArgs& args) {
+EVEResult EVEServiceManager::Dispatch(const BoundID& service, const std::string& method, EVECallArgs& args) {
     auto it = this->mBound.find(service);
 
     if (it == this->mBound.end())
@@ -86,48 +86,45 @@ PyResult EVEServiceManager::Dispatch(const BoundID& service, const std::string& 
     return it->second->Dispatch(method, args);
 }
 
-std::string pyRepToString (PyRep* v) {
-    if (v->IsBool () == true)
+std::string pyRepToString (PyDataType* v) {
+    if (v->is<PyBool> () == true)
         return "PyBool*";
-    if (v->IsInt () == true)
+    if (v->is<PyInt> () == true)
         return "PyInt*";
-    if (v->IsLong () == true)
-        return "PyLong*";
-    if (v->IsFloat () == true)
+    if (v->is<PyFloat> () == true)
         return "PyFloat*";
-    if (v->IsBuffer () == true)
+    if (v->is<PyBuffer> () == true)
         return "PyBuffer*";
-    if (v->IsString () == true)
+    if (v->is<PyString> () == true)
         return "PyString*";
-    if (v->IsWString () == true)
-        return "PyWString*";
-    if (v->IsToken () == true)
+    if (v->is<PyString> () == true)
+        return "PyString*";
+    if (v->is<PyToken> () == true)
         return "PyToken*";
-    if (v->IsTuple () == true)
+    if (v->is<PyTuple> () == true)
         return "PyTuple*";
-    if (v->IsList () == true)
+    if (v->is<PyList> () == true)
         return "PyList*";
-    if (v->IsDict () == true)
+    if (v->is<PyDict> () == true)
         return "PyDict*";
-    if (v->IsNone () == true)
+    if (v->is<PyNone> () == true)
         return "PyNone*";
-    if (v->IsSubStruct () == true)
+    if (v->is<PySubStruct> () == true)
         return "PySubStruct*";
-    if (v->IsSubStream () == true)
+    if (v->is<PySubStream> () == true)
         return "PySubStream*";
-    if (v->IsChecksumedStream () == true)
-        return "PyChecksumedStream*";
-    if (v->IsObject () == true)
+    if (v->is<PyObject> () == true)
         return "PyObject*";
-    if (v->IsObjectEx () == true)
+    if (v->is<PyObjectEx> () == true)
         return "PyObjectEx*";
-    if (v->IsPackedRow () == true)
+    if (v->is<PyPackedRow> () == true)
         return "PyPackedRow*";
 
     return "Unknown";
 }
 
-std::string EVEServiceManager::DebugDispatch (const std::string& service, const std::string& method, PyCallArgs& args) {
+std::string EVEServiceManager::DebugDispatch (const std::string& service, const std::string& method,
+                                              EVECallArgs& args) {
     auto it = this->mServices.find (service);
 
     if (it == this->mServices.end ())
@@ -138,7 +135,7 @@ std::string EVEServiceManager::DebugDispatch (const std::string& service, const 
     result += "\n\nDoes not match parameters: \n\t(";
 
     for (int i = 0; i < args.tuple->size(); i ++) {
-        result += pyRepToString(args.tuple->GetItem(i));
+        result += pyRepToString(args.tuple->at (i));
 
         if (i < (args.tuple->size () - 1)) {
             result += ",";
@@ -150,7 +147,7 @@ std::string EVEServiceManager::DebugDispatch (const std::string& service, const 
     return result;
 }
 
-std::string EVEServiceManager::DebugDispatch (const BoundID& service, const std::string& method, PyCallArgs& args) {
+std::string EVEServiceManager::DebugDispatch (const BoundID& service, const std::string& method, EVECallArgs& args) {
     auto it = this->mBound.find (service);
 
     if (it == this->mBound.end ())
@@ -161,7 +158,7 @@ std::string EVEServiceManager::DebugDispatch (const BoundID& service, const std:
     result += "\n\nDoes not match parameters: \n\t(";
 
     for (int i = 0; i < args.tuple->size(); i ++) {
-        result += pyRepToString(args.tuple->GetItem(i));
+        result += pyRepToString(args.tuple->at (i));
 
         if (i < (args.tuple->size () - 1)) {
             result += ",";

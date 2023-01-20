@@ -35,11 +35,11 @@ public:
     FactoryService();
 
 protected:
-    PyResult GetMaterialCompositionOfItemType(PyCallArgs& call, PyInt* typeID);
-    PyResult GetBlueprintAttributes(PyCallArgs& call, PyInt* blueprintID);
-    PyResult GetMaterialsForTypeWithActivity(PyCallArgs& call, PyInt* typeID);
-    PyResult GetBlueprintInformationAtLocation(PyCallArgs& call, PyInt* hangarID, PyInt* one);
-    PyResult GetBlueprintInformationAtLocationWithFlag(PyCallArgs& call, PyInt* locationID, PyInt* flag, PyInt* one);
+  EVEResult GetMaterialCompositionOfItemType(EVECallArgs& call, PyInt* typeID);
+  EVEResult GetBlueprintAttributes(EVECallArgs& call, PyInt* blueprintID);
+  EVEResult GetMaterialsForTypeWithActivity(EVECallArgs& call, PyInt* typeID);
+  EVEResult GetBlueprintInformationAtLocation(EVECallArgs& call, PyInt* hangarID, PyInt* one);
+  EVEResult GetBlueprintInformationAtLocationWithFlag(EVECallArgs& call, PyInt* locationID, PyInt* flag, PyInt* one);
 };
 
 #endif

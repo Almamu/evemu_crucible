@@ -26,8 +26,7 @@
 #ifndef EVE_UNMARSHAL_H
 #define EVE_UNMARSHAL_H
 
-#include "python/PyRep.h"
-
+#include "python/Types.h"
 
 /**
  * @brief Turns marshal stream into Python object.
@@ -36,7 +35,7 @@
  *
  * @return Ownership of Python object.
  */
-extern PyRep* Unmarshal( const Buffer& data );
+extern PyDataType* Unmarshal (const Buffer& data, PythonArena* arena);
 /**
  * @brief Turns possibly inflated marshal stream into Python object.
  *
@@ -44,7 +43,7 @@ extern PyRep* Unmarshal( const Buffer& data );
  *
  * @return Ownership of Python object.
 */
-extern PyRep* InflateUnmarshal( const Buffer& data );
+extern PyDataType* InflateUnmarshal (const Buffer& data, PythonArena* arena);
 
 /**
  * @brief Class which turns marshal bytecode into Python object.
@@ -54,12 +53,12 @@ extern PyRep* InflateUnmarshal( const Buffer& data );
 class UnmarshalStream
 {
 public:
-    UnmarshalStream()
-    : mStoredObjects( nullptr )
+    UnmarshalStream (PythonArena* arena) :
+        mStoredObjects(), mArena (arena)
     {
     }
 
-    ~UnmarshalStream();
+    ~UnmarshalStream ();
 
     /**
      * @brief Loads Python object from given bytecode.
@@ -68,43 +67,43 @@ public:
      *
      * @return Loaded Python object.
      */
-    PyRep* Load( const Buffer& data );
+    PyDataType* Load (const Buffer& data);
 
 protected:
     /** Peeks element from stream. */
-    template<typename T>
-    const T& Peek() const { return *Peek<T>( 1 ); }
+    template <typename T>
+    const T& Peek () const { return *Peek <T> (1); }
     /** Peeks elements from stream. */
-    template<typename T>
-    Buffer::const_iterator<T> Peek( size_t count ) const { return mInItr.As<T>(); }
+    template <typename T>
+    Buffer::const_iterator <T> Peek (size_t count) const { return mInItr.As <T> (); }
 
     /** Reads element from stream. */
-    template<typename T>
-    const T& Read() { return *Read<T>( 1 ); }
+    template <typename T>
+    const T& Read () { return *Read <T> (1); }
     /** Reads elements from stream. */
-    template<typename T>
-    Buffer::const_iterator<T> Read( size_t count )
+    template <typename T>
+    Buffer::const_iterator <T> Read (size_t count)
     {
-        Buffer::const_iterator<T> res = Peek<T>( count );
-        mInItr = ( res + count ).template As<uint8>();
+        Buffer::const_iterator <T> res = Peek <T> (count);
+        mInItr = (res + count).template As <uint8>();
         return res;
     }
 
     /** Reads extended size from stream. */
-    uint32 ReadSizeEx()
+    uint32 ReadSizeEx ()
     {
-        uint32 size = Read<uint8>();
-        if( 0xFF == size )
-            size = Read<uint32>();
+        uint32 size = Read <uint8> ();
+        if (0xFF == size)
+            size = Read <uint32> ();
 
         return size;
     }
 
     /** Initializes loading and loads rep from stream. */
-    PyRep* LoadStream( size_t streamLength );
+    PyDataType* LoadStream (size_t streamLength);
 
     /** Loads rep from stream. */
-    PyRep* LoadRep();
+    PyDataType*LoadDataType();
 
     /**
      * @brief Initializes object store.
@@ -112,18 +111,18 @@ protected:
      * @param[in] streamLength Length of stream.
      * @param[in] saveCount    Number of saved objects within the stream.
      */
-    void CreateObjectStore( size_t streamLength, uint32 saveCount );
+    void CreateObjectStore (size_t streamLength, uint32 saveCount);
     /**
      * @brief Destroys object store.
      */
-    void DestroyObjectStore();
+    void DestroyObjectStore ();
 
     /**
      * @brief Obtains storage index for StoreObject.
      *
      * @return Storage index.
      */
-    uint32 GetStorageIndex() { return *mStoreIndexItr++; }
+    uint32 GetStorageIndex () { return *mStoreIndexItr++; }
     /**
      * @brief Obtains previously stored object.
      *
@@ -131,128 +130,130 @@ protected:
      *
      * @return The stored object.
      */
-    PyRep* GetStoredObject( uint32 index );
+    PyDataType* GetStoredObject (uint32 index);
     /**
      * @brief Stores object.
      *
      * @param[in] index  Index of object.
      * @param[in] object The object to be stored.
      */
-    void StoreObject( uint32 index, PyRep* object );
+    void StoreObject (uint32 index, PyDataType* object);
 
 private:
     /** Loads none from stream. */
-    PyRep* LoadNone() { return PyStatic.NewNone(); }
+    PyDataType* LoadNone () { return new(mArena) PyNone(); }
 
     /** Loads true boolean from stream. */
-    PyRep* LoadBoolTrue() { return PyStatic.NewTrue(); }
+    PyDataType* LoadBoolTrue () { return new(mArena) PyBool(true); }
     /** Loads false boolean from stream. */
-    PyRep* LoadBoolFalse() { return PyStatic.NewFalse(); }
+    PyDataType* LoadBoolFalse () { return new(mArena) PyBool(false); }
 
     /** Loads long long integer from stream. */
-    PyRep* LoadIntegerLongLong() { return new PyLong( Read<int64>() ); }
+    PyDataType* LoadIntegerLongLong () { return new(mArena) PyInt (Read <int64> ()); }
     /** Loads long integer from stream. */
-    PyRep* LoadIntegerLong() { return new PyInt( Read<int32>() ); }
+    PyDataType* LoadIntegerLong () { return new(mArena) PyInt (Read <int32> ()); }
     /** Loads signed short from stream. */
-    PyRep* LoadIntegerSignedShort() { return new PyInt( Read<int16>() ); }
+    PyDataType* LoadIntegerSignedShort () { return new(mArena) PyInt (Read <int16> ()); }
     /** Loads byte integer from stream. */
-    PyRep* LoadIntegerByte() { return new PyInt( Read<int8>() ); }
+    PyDataType* LoadIntegerByte () { return new(mArena) PyInt (Read <int8> ()); }
     /** Loads variable length integer from stream. */
-    PyRep* LoadIntegerVar();
+    PyDataType* LoadIntegerVar ();
     /** Loads minus one integer from stream. */
-    PyRep* LoadIntegerMinusOne() { return new PyInt( -1 ); }
+    PyDataType* LoadIntegerMinusOne () { return new(mArena) PyInt (-1); }
     /** Loads zero integer from stream. */
-    PyRep* LoadIntegerZero() { return new PyInt( 0 ); }
+    PyDataType* LoadIntegerZero () { return new(mArena) PyInt (0); }
     /** Loads one integer from stream. */
-    PyRep* LoadIntegerOne() { return new PyInt( 1 ); }
+    PyDataType* LoadIntegerOne () { return new(mArena) PyInt (1); }
 
     /** Loads real from stream. */
-    PyRep* LoadReal() { return new PyFloat( Read<double>() ); }
+    PyDataType* LoadReal () { return new(mArena) PyFloat (Read <double> ()); }
     /** Loads zero real from stream. */
-    PyRep* LoadRealZero() { return new PyFloat( 0.0 ); }
+    PyDataType* LoadRealZero () { return new(mArena) PyFloat (0.0); }
 
     /** Loads empty string from stream. */
-    PyRep* LoadStringEmpty() { return new PyString( "" ); }
+    PyDataType* LoadStringEmpty () { return new(mArena) PyString (""); }
     /** Loads single character string from stream. */
-    PyRep* LoadStringChar();
+    PyDataType* LoadStringChar ();
     /** Loads short (up to 255 chars) string from stream. */
-    PyRep* LoadStringShort();
+    PyDataType* LoadStringShort ();
     /** Loads long (no limit) string from stream. */
-    PyRep* LoadStringLong();
+    PyDataType* LoadStringLong ();
     /** Loads table string from stream. */
-    PyRep* LoadStringTable();
+    PyDataType* LoadStringTable ();
 
     /** Loads empty wide string from stream. */
-    PyRep* LoadWStringEmpty() { return new PyWString( "", 0 ); }
+    PyDataType* LoadWStringEmpty () { return new(mArena) PyString (std::string (""), true); }
     /** Loads single UCS-2 character string from stream. */
-    PyRep* LoadWStringUCS2Char();
+    PyDataType* LoadWStringUCS2Char ();
     /** Loads UCS-2 string from stream. */
-    PyRep* LoadWStringUCS2();
+    PyDataType* LoadWStringUCS2 ();
     /** Loads UTF-8 string from stream. */
-    PyRep* LoadWStringUTF8();
+    PyDataType* LoadWStringUTF8 ();
 
     /** Loads token from stream. */
-    PyRep* LoadToken();
+    PyDataType* LoadToken ();
 
     /** Loads buffer from stream. */
-    PyRep* LoadBuffer();
+    PyDataType* LoadBuffer ();
 
     /** Loads empty tuple from stream. */
-    PyRep* LoadTupleEmpty() { return new PyTuple( 0 ); }
+    PyDataType* LoadTupleEmpty () { return new(mArena) PyTuple (); }
     /** Loads tuple from stream. */
-    PyRep* LoadTuple();
+    PyDataType* LoadTuple ();
     /** Loads one-element tuple from stream. */
-    PyRep* LoadTupleOne();
+    PyDataType* LoadTupleOne ();
     /** Loads two-element tuple from stream. */
-    PyRep* LoadTupleTwo();
+    PyDataType* LoadTupleTwo ();
 
     /** Loads empty list from stream. */
-    PyRep* LoadListEmpty() { return new PyList( 0 ); }
+    PyDataType* LoadListEmpty () { return new(mArena) PyList (0); }
     /** Loads list from stream. */
-    PyRep* LoadList();
+    PyDataType* LoadList ();
     /** Loads one-element list from stream. */
-    PyRep* LoadListOne();
+    PyDataType* LoadListOne ();
 
     /** Loads dict from stream. */
-    PyRep* LoadDict();
+    PyDataType* LoadDict ();
 
     /** Loads object from stream. */
-    PyRep* LoadObject();
+    PyDataType* LoadObject ();
     /** Loads extended object of type 1 from stream. */
-    PyRep* LoadObjectEx1();
+    PyDataType* LoadObjectEx1 ();
     /** Loads extended object of type 2 from stream. */
-    PyRep* LoadObjectEx2();
+    PyDataType* LoadObjectEx2 ();
 
     /** Loads sub stream from stream. */
-    PyRep* LoadSubStream();
+    PyDataType* LoadSubStream ();
     /** Loads sub struct from stream. */
-    PyRep* LoadSubStruct();
+    PyDataType* LoadSubStruct ();
     /** Loads checksumed stream from stream. */
-    PyRep* LoadChecksumedStream();
+    PyDataType* LoadChecksumedStream ();
 
     /** Loads packed row from stream. */
-    PyRep* LoadPackedRow();
+    PyDataType* LoadPackedRow ();
 
     /** Prints error and returns NULL. */
-    PyRep* LoadError();
+    PyDataType* LoadError ();
     /** Loads saved stream element from stream. */
-    PyRep* LoadSavedStreamElement();
+    PyDataType* LoadSavedStreamElement ();
 
     /** Helper; loads extended object from stream. */
-    PyObjectEx* LoadObjectEx( bool is_type_2 );
+    PyObjectEx* LoadObjectEx (bool is_type_2);
     /** Helper; loads zero-compressed buffer from stream. */
-    bool LoadRLE(Buffer& out );
+    bool LoadRLE (Buffer& out);
 
     /** Buffer iterator we are processing. */
-    Buffer::const_iterator<uint8> mInItr;
+    Buffer::const_iterator <uint8> mInItr;
 
     /** Next store index for referencing in the buffer. */
-    Buffer::const_iterator<uint32> mStoreIndexItr;
+    Buffer::const_iterator <uint32> mStoreIndexItr;
     /** Referenced objects within the buffer. */
-    PyList* mStoredObjects;
+    std::vector<PyDataType*> mStoredObjects;
+    /** Python arena used to allocate objets into */
+    PythonArena* mArena;
 
     /** Load function map. */
-    static PyRep* ( UnmarshalStream::* const s_mLoadMap[] )();
+    static PyDataType* (UnmarshalStream::* const s_mLoadMap [])();
 };
 
 #endif

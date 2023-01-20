@@ -40,11 +40,11 @@ NetService::NetService(EVEServiceManager& mgr) :
     this->m_cache = this->m_manager.Lookup <ObjCacheService>("objectCaching");
 }
 
-PyResult NetService::GetTime(PyCallArgs &call) {
-    return new PyLong(GetFileTimeNow());
+EVEResult NetService::GetTime(EVECallArgs&call) {
+    return call.arena.Int(GetFileTimeNow());
 }
 
-PyResult NetService::GetClusterSessionStatistics(PyCallArgs &call)
+EVEResult NetService::GetClusterSessionStatistics(EVECallArgs&call)
 {
     // got this shit working once i understood what the client wanted....only took 4 years
     DBQueryResult res;
@@ -54,35 +54,32 @@ PyResult NetService::GetClusterSessionStatistics(PyCallArgs &call)
      */
 
     uint16 system(0);
-    PyDict* sol = new PyDict();
-    PyDict* sta = new PyDict();
+    PyDict* sol = call.arena.Dict();
+    PyDict* sta = call.arena.Dict();
 
     DBResultRow row;
     while (res.GetRow(row)) {
         system = row.GetUInt(0) - 30000000;
-        sol->SetItem(new PyInt(system), new PyInt(row.GetUInt(1) + row.GetUInt(2)));    // inspace + docked = total
-        sta->SetItem(new PyInt(system), new PyInt(row.GetUInt(2)));                     // total - docked
+        sol->set(call.arena.Int(system), call.arena.Int(row.GetUInt(1) + row.GetUInt(2)));    // inspace + docked = total
+        sta->set(call.arena.Int(system), call.arena.Int(row.GetUInt(2)));                     // total - docked
     }
 
-    PyTuple *result = new PyTuple(3);
-    result->SetItem(0, sol);
-    result->SetItem(1, sta);
-    result->SetItem(2, new PyFloat(1)); //statDivisor
-
-    return result;
+    return call.arena.Tuple({
+        sol, sta, call.arena.Float (1)
+    });
 }
 
 /** @note:  wtf is this used for???  */
-PyResult NetService::GetInitVals(PyCallArgs &call) {
-    PyString* str(new PyString("machoNet.serviceInfo"));
-
+EVEResult NetService::GetInitVals(EVECallArgs&call) {
+    auto str = call.arena.String("machoNet.serviceInfo");
     //  look into this.  what's it for?  are we using it right?  missing anything?
     // client calls this, then loads cached data upon return.  not sure how this is used yet
     if (!this->m_cache->IsCacheLoaded(str)) {
-        PyDict* dict = new PyDict();
+        // TODO: WRITE THIS TO A SPECIFIC ARENA USED FOR CACHED OBJECT DATA INSTEAD OF BEING GLOBALLY ALLOCATED
+        auto dict = new PyDict;
         // build the service info for the client to know where to direct calls
         for (auto svc : this->m_manager.GetServices()) {
-            PyRep* value = nullptr;
+            PyDataType* value = nullptr;
 
             switch (svc.second->GetAccessLevel()) {
                 case eAccessLevel_None:
@@ -114,7 +111,7 @@ PyResult NetService::GetInitVals(PyCallArgs &call) {
                     break;
             }
 
-            dict->SetItemString(svc.second->GetName().c_str(), value);
+            dict->set (svc.second->GetName().c_str(), value);
         }
         /* ServiceCallGPCS.py:197
          *        where = self.machoNet.serviceInfo[service]
@@ -126,15 +123,11 @@ PyResult NetService::GetInitVals(PyCallArgs &call) {
          */
 
         //register it
-        this->m_cache->GiveCache(str, (PyRep**)&dict);
+        // TODO: ALONG WITH THE ARENA CHANGE MENTIONED BEFORE, THE CACHE SHOULD BE HANDLED DIFFERENTLY TOO
+        this->m_cache->GiveCache(str, (PyDataType**)&dict);
     }
 
-    PyRep* serverinfo(this->m_cache->GetCacheHint(str));
-    PyDecRef( str );
-
-    PyDict* initvals = new PyDict();
-    PyTuple* result = new PyTuple( 2 );
-        result->SetItem( 0, serverinfo );
-        result->SetItem( 1, initvals );
-    return result;
+    return call.arena.Tuple ({
+        m_cache->GetCacheHint(str)->clone(&call.arena), call.arena.Dict()
+    });
 }

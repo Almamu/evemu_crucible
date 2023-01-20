@@ -37,7 +37,7 @@ HoloscreenMgrService::HoloscreenMgrService() :
 
 //those objects should be cached
 
-PyResult HoloscreenMgrService::GetRecentEpicArcCompletions(PyCallArgs& call)
+EVEResult HoloscreenMgrService::GetRecentEpicArcCompletions(EVECallArgs& call)
 {       //  this is cached object!!!
     sLog.Debug("HoloscreenMgrService", "Called GetRecentEpicArcCompletions stub.");
 
@@ -49,27 +49,27 @@ PyResult HoloscreenMgrService::GetRecentEpicArcCompletions(PyCallArgs& call)
     return nullptr;
 }
 
-PyResult HoloscreenMgrService::GetTwoHourCache(PyCallArgs& call)
+EVEResult HoloscreenMgrService::GetTwoHourCache(EVECallArgs& call)
 {
     PyDict* agents = new PyDict();
-        agents->SetItemString("Agent_DUMMY", new PyDict());
+        agents->set ("Agent_DUMMY", new PyDict());
     PyDict* args = new PyDict();
-        args->SetItemString("careerAgents", agents);
-        args->SetItemString("incursionReport", new PyList());
-        args->SetItemString("epicArcAgents", new PyDict());
-        args->SetItemString("sovChangesReport", new PyList());
+        args->set ("careerAgents", agents);
+        args->set ("incursionReport", new PyList());
+        args->set ("epicArcAgents", new PyDict());
+        args->set ("sovChangesReport", new PyList());
     return new PyObject("util.KeyVal", args);
 }
 
-PyResult HoloscreenMgrService::GetRuntimeCache(PyCallArgs& call)
+EVEResult HoloscreenMgrService::GetRuntimeCache(EVECallArgs& call)
 {
     PyDict* agents = new PyDict();
-        agents->SetItemString("Agent_DUMMY", new PyDict());
+        agents->set ("Agent_DUMMY", new PyDict());
     PyDict* args = new PyDict();
-        args->SetItemString("careerAgents", agents);
-        args->SetItemString("incursionReport", new PyList());
-        args->SetItemString("epicArcAgents", new PyDict());
-        args->SetItemString("sovChangesReport", new PyList());
+        args->set ("careerAgents", agents);
+        args->set ("incursionReport", new PyList());
+        args->set ("epicArcAgents", new PyDict());
+        args->set ("sovChangesReport", new PyList());
     return new PyObject("util.KeyVal", args);
 }
 

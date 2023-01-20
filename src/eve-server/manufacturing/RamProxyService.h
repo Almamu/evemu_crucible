@@ -35,17 +35,17 @@ public:
     RamProxyService();
 
 private:
-    PyResult GetJobs2(PyCallArgs& call, PyInt* ownerID, PyBool* completed);
-    PyResult InstallJob(PyCallArgs& call, PyRep* locationData, PyRep* itemLocationData, PyRep* bomLocationData, PyRep* flagOutput, PyRep* buildRuns, PyRep* activityID, PyRep* licensedProductionRuns, PyRep* ownerFlag, PyRep* blah);
-    PyResult CompleteJob(PyCallArgs& call, PyRep* info, PyRep* jobID, PyRep* cancel);
-    PyResult AssemblyLinesGet(PyCallArgs& call, PyInt* stationID);
-    PyResult AssemblyLinesSelect(PyCallArgs& call, PyString* filter);
-    PyResult GetRelevantCharSkills(PyCallArgs& call);
-    PyResult AssemblyLinesSelectCorp(PyCallArgs& call);
-    PyResult AssemblyLinesSelectPublic(PyCallArgs& call);
-    PyResult AssemblyLinesSelectPrivate(PyCallArgs& call);
-    PyResult AssemblyLinesSelectAlliance(PyCallArgs& call);
-    PyResult UpdateAssemblyLineConfigurations(PyCallArgs& call, PyRep* installationLocationData, PyRep* rowset);
+  EVEResult GetJobs2(EVECallArgs& call, PyInt* ownerID, PyBool* completed);
+  EVEResult InstallJob(EVECallArgs& call, PyDataType* locationData, PyDataType* itemLocationData, PyDataType* bomLocationData, PyDataType* flagOutput, PyDataType* buildRuns, PyDataType* activityID, PyDataType* licensedProductionRuns, PyDataType* ownerFlag, PyDataType* blah);
+  EVEResult CompleteJob(EVECallArgs& call, PyDataType* info, PyDataType* jobID, PyDataType* cancel);
+  EVEResult AssemblyLinesGet(EVECallArgs& call, PyInt* stationID);
+  EVEResult AssemblyLinesSelect(EVECallArgs& call, PyString* filter);
+  EVEResult GetRelevantCharSkills(EVECallArgs& call);
+  EVEResult AssemblyLinesSelectCorp(EVECallArgs& call);
+  EVEResult AssemblyLinesSelectPublic(EVECallArgs& call);
+  EVEResult AssemblyLinesSelectPrivate(EVECallArgs& call);
+  EVEResult AssemblyLinesSelectAlliance(EVECallArgs& call);
+  EVEResult UpdateAssemblyLineConfigurations(EVECallArgs& call, PyDataType* installationLocationData, PyDataType* rowset);
 
 };
 

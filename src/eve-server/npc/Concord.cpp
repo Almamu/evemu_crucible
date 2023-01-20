@@ -20,7 +20,7 @@
 /*  note.....this taken straight from NPC */
 
 #include "Concord.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "inventory/AttributeEnum.h"
 #include "system/DestinyManager.h"
 #include "system/Damage.h"

@@ -10,7 +10,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "system/DestinyManager.h"
 #include "system/Asteroid.h"
 #include "system/SystemManager.h"

@@ -46,16 +46,16 @@ CalendarMgrService::CalendarMgrService() :
     this->Add("GetResponsesToEvent", &CalendarMgrService::GetResponsesToEvent);
 }
 
-PyResult CalendarMgrService::GetResponsesForCharacter(PyCallArgs& call) {
+EVEResult CalendarMgrService::GetResponsesForCharacter(EVECallArgs& call) {
     return CalendarDB::GetResponsesForCharacter(call.client->GetCharacterID());
 }
 
-PyResult CalendarMgrService::GetResponsesToEvent(PyCallArgs& call, PyInt* eventID, PyInt* ownerID)
+EVEResult CalendarMgrService::GetResponsesToEvent(EVECallArgs& call, PyInt* eventID, PyInt* ownerID)
 {
     return CalendarDB::GetResponsesToEvent(eventID->value()); // eventID
 }
 
-PyResult CalendarMgrService::DeleteEvent(PyCallArgs& call, PyInt* eventID, PyInt* ownerID)
+EVEResult CalendarMgrService::DeleteEvent(EVECallArgs& call, PyInt* eventID, PyInt* ownerID)
 {
     CalendarDB::DeleteEvent(eventID->value()); // eventID
 
@@ -65,7 +65,7 @@ PyResult CalendarMgrService::DeleteEvent(PyCallArgs& call, PyInt* eventID, PyInt
     return nullptr;
 }
 
-PyResult CalendarMgrService::SendEventResponse(PyCallArgs& call, PyInt* eventID, PyInt* ownerID, PyInt* response)
+EVEResult CalendarMgrService::SendEventResponse(EVECallArgs& call, PyInt* eventID, PyInt* ownerID, PyInt* response)
 {
     CalendarDB::SaveEventResponse(call.client->GetCharacterID(), eventID->value(), response->value());
 
@@ -74,12 +74,12 @@ PyResult CalendarMgrService::SendEventResponse(PyCallArgs& call, PyInt* eventID,
     return nullptr;
 }
 
-PyResult CalendarMgrService::CreatePersonalEvent(PyCallArgs& call, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important, PyList* invitees)
+EVEResult CalendarMgrService::CreatePersonalEvent(EVECallArgs& call, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important, PyList* invitees)
 {
     // newEventID = self.calendarMgr.CreatePersonalEvent(dateTime, duration, title, description, important, invitees)
 
     sLog.Cyan( "CalendarMgrService::Handle_CreatePersonalEvent()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     // TODO: update this to not use xmlpktgen, too many changes just for the services update
     Call_CreateEventWithInvites args;
@@ -92,7 +92,7 @@ PyResult CalendarMgrService::CreatePersonalEvent(PyCallArgs& call, PyLong* dateT
     return CalendarDB::SaveNewEvent(call.client->GetCharacterID(), args);
 }
 
-PyResult CalendarMgrService::CreateCorporationEvent(PyCallArgs& call, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important)
+EVEResult CalendarMgrService::CreateCorporationEvent(EVECallArgs& call, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important)
 {
     // TODO: update this to not use xmlpktgen, too many changes just for the services update
     Call_CreateEvent args;
@@ -105,7 +105,7 @@ PyResult CalendarMgrService::CreateCorporationEvent(PyCallArgs& call, PyLong* da
     return CalendarDB::SaveNewEvent(call.client->GetCorporationID(), call.client->GetCharacterID(), args);
 }
 
-PyResult CalendarMgrService::CreateAllianceEvent(PyCallArgs& call, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important)
+EVEResult CalendarMgrService::CreateAllianceEvent(EVECallArgs& call, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important)
 {
     // TODO: update this to not use xmlpktgen, too many changes just for the services update
     Call_CreateEvent args;
@@ -118,42 +118,42 @@ PyResult CalendarMgrService::CreateAllianceEvent(PyCallArgs& call, PyLong* dateT
     return CalendarDB::SaveNewEvent(call.client->GetAllianceID(), call.client->GetCharacterID(), args);
 }
 
-PyResult CalendarMgrService::EditPersonalEvent(PyCallArgs& call, PyInt* eventID, PyLong* oldDateTime, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important)
+EVEResult CalendarMgrService::EditPersonalEvent(EVECallArgs& call, PyInt* eventID, PyInt* oldDateTime, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important)
 {
     //self.calendarMgr.EditPersonalEvent(eventID, oldDateTime, dateTime, duration, title, description, important)
 
     sLog.Cyan( "CalendarMgrService::Handle_EditPersonalEvent()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CalendarMgrService::EditCorporationEvent(PyCallArgs& call, PyInt* eventID, PyLong* oldDateTime, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important)
+EVEResult CalendarMgrService::EditCorporationEvent(EVECallArgs& call, PyInt* eventID, PyInt* oldDateTime, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important)
 {
     // self.calendarMgr.EditCorporationEvent(eventID, oldDateTime, dateTime, duration, title, description, important)
 
     sLog.Cyan( "CalendarMgrService::Handle_EditCorporationEvent()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CalendarMgrService::EditAllianceEvent(PyCallArgs& call, PyInt* eventID, PyLong* oldDateTime, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important)
+EVEResult CalendarMgrService::EditAllianceEvent(EVECallArgs& call, PyInt* eventID, PyInt* oldDateTime, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important)
 {
     //self.calendarMgr.EditAllianceEvent(eventID, oldDateTime, dateTime, duration, title, description, important)
 
     sLog.Cyan( "CalendarMgrService::Handle_EditAllianceEvent()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CalendarMgrService::UpdateEventParticipants(PyCallArgs& call, PyInt* eventID, PyList* charsToAdd, PyList* charsToRemove)
+EVEResult CalendarMgrService::UpdateEventParticipants(EVECallArgs& call, PyInt* eventID, PyList* charsToAdd, PyList* charsToRemove)
 {
     // self.calendarMgr.UpdateEventParticipants(eventID, charsToAdd, charsToRemove)
 
     sLog.Cyan( "CalendarMgrService::Handle_UpdateEventParticipants()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     // TODO: implement this
     CalendarDB::UpdateEventParticipants();

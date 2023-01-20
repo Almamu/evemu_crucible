@@ -33,10 +33,10 @@ public:
     void Close();
     void GetInfo();
 
-    PyRep *GetSystemSovereignty(uint32 systemID);
-    PyRep *GetAllianceSystems();
-    PyRep *GetCurrentSovData(uint32 locationID);
-    PyRep *GetAllianceBeacons(uint32 allianceID);
+    PyDataType *GetSystemSovereignty(uint32 systemID);
+    PyDataType *GetAllianceSystems();
+    PyDataType *GetCurrentSovData(uint32 locationID);
+    PyDataType *GetAllianceBeacons(uint32 allianceID);
     uint32 GetSystemAllianceID(uint32 systemID);
     void AddSovClaim(SovereigntyData data);
     void RemoveSovClaim(uint32 systemID);

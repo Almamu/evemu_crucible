@@ -28,17 +28,15 @@
 #include "marshal/EVEMarshal.h"
 #include "marshal/EVEUnmarshal.h"
 #include "network/EVESession.h"
-#include "packets/Crypto.h"
-#include "python/PyVisitor.h"
-#include "python/PyRep.h"
-#include "python/PyPacket.h"
-#include "python/PyDumpVisitor.h"
+#include "network/python/EVESecureClientHandshake.h"
+#include "network/python/EVELowLevelVersionExchange.h"
+#include "network/python/EVEPacket.h"
+#include "python/Types.h"
+#include "python/visitors/PyDumpVisitor.h"
 #include "EVEVersion.h"
 
-EVEClientSession::EVEClientSession(EVETCPConnection** n)
-: mNet(*n),
-mPacketHandler(nullptr)
-{
+EVEClientSession::EVEClientSession(EVETCPConnection** n, TrackedPythonArena* arena)
+: mNet(*n), mArena(arena), mPacketHandler(nullptr) {
     *n = nullptr;
 }
 
@@ -54,147 +52,140 @@ void EVEClientSession::Reset() {
         // Connection has been lost, there's no point in reset
         return;
 
-    VersionExchangeServer version;
+    EVELowLevelVersionExchange version;
     _GetVersion(version);
 
-    PyRep* res(version.Encode());
-    mNet->QueueRep(res);
+    mNet->QueueRep(version);
 
     mPacketHandler = &EVEClientSession::_HandleVersion;
 }
 
-void EVEClientSession::QueuePacket(PyPacket* packet) {
+void EVEClientSession::QueuePacket (EVEPacket* packet, PythonArena* arena) {
     if (packet == nullptr)
         return;
 
-    PyRep* res(packet->Encode());
-
-    if (res == nullptr) {
-        sLog.Error("QueuePacket", "%s: Failed to encode a packet.", GetAddress().c_str());
-        return;
-    }
-
-    mNet->QueueRep(res);
+    mNet->QueueRep(packet->encode(arena));
 }
 
-PyPacket* EVEClientSession::PopPacket() {
-    PyRep* rep(mNet->PopRep());
+EVEPacket* EVEClientSession::PopPacket(PythonArena* arena) {
+    auto rep = mNet->PopRep(arena);
+
     if (rep == nullptr)
         return nullptr;
 
     if (is_log_enabled(NET__PRES_REP)) {
         _log(NET__PRES_REP, "%s: Raw Rep Dump:", GetAddress().c_str());
-        rep->Dump(NET__PRES_REP, "    ");
+        rep->dump(NET__PRES_REP, "    ");
     }
 
     assert(mPacketHandler);
     return (this->*mPacketHandler)(rep);
 }
 
-PyPacket* EVEClientSession::_HandleVersion(PyRep* rep) {
+EVEPacket* EVEClientSession::_HandleVersion(PyDataType* rep) {
     //we are waiting for their version information...
-    VersionExchangeClient ve;
-    if (!ve.Decode(&rep)) {
-        sLog.Error("_HandleVersion", "%s: Received invalid version exchange!", GetAddress().c_str());
-    } else if (_VerifyVersion(ve)) {
+    EVELowLevelVersionExchange ve(rep->as<PyTuple>());
+
+    if (_VerifyVersion(ve)) {
         mPacketHandler = &EVEClientSession::_HandleCommand;
     }
 
     //PySafeDecRef(rep);
     // recurse
-    return PopPacket();
+    return PopPacket(mArena);
 }
 
-PyPacket* EVEClientSession::_HandleCommand(PyRep* rep) {
-    //check if it actually is tuple
-    if (!rep->IsTuple()) {
+EVEPacket* EVEClientSession::_HandleCommand(PyDataType* rep) {
+    // TODO: THROW EXCEPTIONS INSTEAD
+    auto tup = rep->as<PyTuple>();
+
+    if (tup->size() > 3) {
         sLog.Error("_HandleCommand", "%s: Invalid packet during waiting for command (tuple expected).", GetAddress().c_str());
-    } else if (rep->AsTuple()->size() == 2) {    // decode
-        //QC = Queue Check
-        NetCommand_QC cmd;
-        if (!cmd.Decode(&rep)) {
-            sLog.Error("_HandleCommand", "%s: Failed to decode 2-arg command.", GetAddress().c_str());
-        } else {
+
+        if (is_log_enabled(NET__PRES_ERROR)) {
+            _log(NET__PRES_ERROR, "%s: Received invalid command packet:", GetAddress().c_str());
+            rep->dump(NET__PRES_ERROR, "  ");
+        }
+
+        return PopPacket(mArena);
+    }
+
+    if (tup->size() == 2) {
+        if (tup->at(0)->is<PyNone>() && tup->at(1)->string() == "QC") {
             sLog.Debug("_HandleCommand", "%s: Got Queue Check command.", GetAddress().c_str());
 
             //they return position in queue
-            PyRep* rsp = new PyInt(_GetQueuePosition());
-            mNet->QueueRep(rsp);
+            mNet->QueueRep(new PyInt(_GetQueuePosition()));
 
             //now reset connection
             Reset();
-        }
-    } else if (rep->AsTuple()->size() == 3) {
-        //this is sent when client is logging in
-        NetCommand_VK cmd;
-        if (!cmd.Decode(&rep)) {
-            sLog.Error("_HandleCommand", "%s: Failed to decode 3-arg command.", GetAddress().c_str());
         } else {
-            sLog.Debug("_HandleCommand", "%s: Got VK command, vipKey=%s.", GetAddress().c_str(), cmd.vipKey.c_str());
+            sLog.Error("_HandleCommand", "%s: Failed to decode 2-arg command.", GetAddress().c_str());
+        }
+    } else if (tup->size() == 3) {
+        if (tup->at(0)->is<PyNone>() && tup->at(1)->string() == "VK") {
+            auto vipKey = tup->at(2)->string();
 
-            if (_VerifyVIPKey(cmd.vipKey))
+            sLog.Debug("_HandleCommand", "%s: Got VK command, vipKey=%s.", GetAddress().c_str(), vipKey.c_str());
+
+            if (_VerifyVIPKey(vipKey))
                 mPacketHandler = &EVEClientSession::_HandleCrypto;
-        }
-    } else {
-        if (is_log_enabled(NET__PRES_ERROR)) {
-            _log(NET__PRES_ERROR, "%s: Received invalid command packet:", GetAddress().c_str());
-            rep->Dump(NET__PRES_ERROR, "  ");
+        } else {
+            sLog.Error("_HandleCommand", "%s: Failed to decode 3-arg command.", GetAddress().c_str());
         }
     }
 
-    //PySafeDecRef(rep);
-    // recurse
-    return PopPacket();
+    return PopPacket(mArena);
 }
 
-PyPacket* EVEClientSession::_HandleCrypto(PyRep* rep) {
-    CryptoRequestPacket cr;
-    if (!cr.Decode(&rep)) {
+EVEPacket* EVEClientSession::_HandleCrypto(PyDataType* rep) {
+    // TODO: THROW EXCEPTIONS INSTEAD
+    auto tup = rep->as<PyTuple>();
+
+    if (tup->size() != 2) {
         sLog.Error("_HandleCrypto", "%s: Received invalid crypto request!", GetAddress().c_str());
-    } else if (_VerifyCrypto(cr)) {
-        mPacketHandler = &EVEClientSession::_HandleAuthentication;
+    } else {
+        std::string keyVersion = tup->at(0)->string();
+        PyDict* keyParams = tup->at(1)->as<PyDict>();
+
+        if (_VerifyCrypto(keyVersion, keyParams)) {
+          mPacketHandler = &EVEClientSession::_HandleAuthentication;
+        }
     }
 
-    //PySafeDecRef(rep);
-    // recurse
-    return PopPacket();
+    return PopPacket(mArena);
 }
 
-PyPacket* EVEClientSession::_HandleAuthentication(PyRep* rep) {
+EVEPacket* EVEClientSession::_HandleAuthentication(PyDataType* rep) {
+    // TODO: THROW EXCEPTIONS INSTEAD
     //just to be sure
-    CryptoChallengePacket ccp;
-    if (!ccp.Decode(&rep)) {
-        sLog.Error("_HandleAuthentication", "%s: Received invalid crypto challenge!", GetAddress().c_str());
-    } else if (_VerifyLogin(ccp)) {
+    EVESecureClientHandshake ccp(rep->as<PyTuple>());
+    if (_VerifyLogin(ccp)) {
         mPacketHandler = &EVEClientSession::_HandleFuncResult;
     }
 
     //PySafeDecRef(rep);
-    return PopPacket();
+    return PopPacket(mArena);
 }
 
-PyPacket* EVEClientSession::_HandleFuncResult(PyRep* rep) {
-    CryptoHandshakeResult hr;
-    if (!hr.Decode(&rep)) {
+EVEPacket* EVEClientSession::_HandleFuncResult(PyDataType* rep) {
+    // TODO: THROW EXCEPTIONS INSTEAD
+    auto tup = rep->as<PyTuple>();
+
+    if (tup->size() != 3) {
         sLog.Error("_HandleFuncResult", "%s: Received invalid crypto handshake result!", GetAddress().c_str());
-    } else if (_VerifyFuncResult(hr)) {
-        mPacketHandler = &EVEClientSession::_HandlePacket;
+    } else {
+        auto challenge_responsehash = tup->at(0)->string();
+        auto func_output = tup->at(1)->string();
+
+        if (_VerifyFuncResult(challenge_responsehash, func_output)) {
+          mPacketHandler = &EVEClientSession::_HandlePacket;
+        }
     }
 
-    //PySafeDecRef(rep);
-    return PopPacket();
+    return PopPacket(mArena);
 }
 
-PyPacket* EVEClientSession::_HandlePacket(PyRep* rep) {
-    //take the PyRep and turn it into a PyPacket
-    PyPacket* p = new PyPacket();
-    if (!p->Decode(&rep)) { //rep is consumed here
-        sLog.Error("_HandlePacket", "%s: Failed to decode packet rep", GetAddress().c_str());
-        SafeDelete(p);
-        PySafeDecRef(rep);
-        return PopPacket();
-    }
-
-    //PySafeDecRef(rep);
-    return p;
+EVEPacket* EVEClientSession::_HandlePacket(PyDataType* rep) {
+    return EVEPacket::from (rep);
 }

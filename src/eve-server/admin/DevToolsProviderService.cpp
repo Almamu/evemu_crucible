@@ -35,25 +35,24 @@ DevToolsProviderService::DevToolsProviderService() :
     this->Add("ExceptionFluentExample", &DevToolsProviderService::ExceptionFluentExample);
 }
 
-PyResult DevToolsProviderService::GetLoader(PyCallArgs& call)
-{
-    FILE *pFile;
+EVEResult DevToolsProviderService::GetLoader(EVECallArgs& call) {
+    FILE *pFile = fopen(EVEMU_ROOT"/etc/devtools.raw", "rb");
 
-    if (pFile = fopen(EVEMU_ROOT"/etc/devtools.raw", "rb"))
-    {
+    if (pFile) {
+        // TODO: USE BUFFER CLASS TO READ THE FILE INTO, INSTEAD OF ALLOCATING A STRING THAT IS NOT FREE'D AFTER
         fseek(pFile, 0, SEEK_END);
-	    int size = ftell(pFile);
-	    char * buf = new char[size];
-	    fseek(pFile, 0, SEEK_SET);
-	    fread(buf, 1, size, pFile);
-	    fclose(pFile);
-	    return new PyString(buf, size);
+        int size = ftell(pFile);
+        char * buf = new char[size];
+        fseek(pFile, 0, SEEK_SET);
+        fread(buf, 1, size, pFile);
+        fclose(pFile);
+        return call.arena.String(buf, size);
     }
 
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
-PyResult DevToolsProviderService::ExceptionFluentExample (PyCallArgs& call, PyInt* value)
+EVEResult DevToolsProviderService::ExceptionFluentExample (EVECallArgs& call, PyInt* value)
 {
     switch (value->value())
     {
@@ -99,12 +98,13 @@ PyResult DevToolsProviderService::ExceptionFluentExample (PyCallArgs& call, PyIn
             throw UserError ("SalvagingTooComplex").AddTypeDescription ("type", 658);
         case 20:
         {
-            PyList* list = new PyList (2);
-
-            list->SetItem (0, new PyInt (35));
-            list->SetItem (1, new PyInt (34));
-
-            throw UserError ("SalvagingTooComplex").AddTypeList ("type", list);
+            throw UserError ("SalvagingTooComplex").AddTypeList (
+                "type",
+                new PyList {
+                    new PyInt (35),
+                    new PyInt (34)
+                }
+            );
         }
         case 21:
             throw UserError ("SalvagingTooComplex").AddTypeIDAndQuantity ("type", 35, 1500);

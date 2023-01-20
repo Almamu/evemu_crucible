@@ -23,10 +23,9 @@
     Author:        Zhur, Captnoord
 */
 
-#ifndef PY_TRACE_LOG_H
-#define PY_TRACE_LOG_H
+#pragma once
 
-#include "PyRep.h"
+#include "python/Types.h"
 
 /* ascents cross platform color thingy's */
 #ifdef HAVE_WINDOWS_H
@@ -135,7 +134,7 @@ public:
         assert(mInitialized && "PyTraceLog isn't initialized");
 
         // base object should be a tuple
-        if(tuple.IsTuple() == false)
+        if(tuple.is<PyTuple>() == false)
         {
             _logInternMessage("trace error because the base object isn't a tuple");
             return false;
@@ -154,7 +153,7 @@ public:
             fprintf(mFout, "\nStackTraceAlert:\n");
 
         // tuple 0 should contain the error message or something binary
-        PyRepTuple& tuple0_0 = tuple[0]->AsTuple();
+        PyRepTuple& tuple0_0 = tuple[0]->as<PyTuple>();
         //tuple0_0[0] some integer... which I don't care about
         if( tuple0_0[1]->IsString() == true )
         {
@@ -179,7 +178,7 @@ public:
         /* python stack trace payload */
         //if (tuple.GetItem(1)->IsString() == true)
         {
-            _logInternBufferPacket(tuple.GetItem(1));
+            _logInternBufferPacket(tuple.at(1));
         }
 
         if (mLogToFile == true)
@@ -196,9 +195,9 @@ public:
 
 protected:
 
-    void _logInternStringMessage(PyRep* packet)
+    void _logInternStringMessage(PyDataType* packet)
     {
-        PyString & msg = *packet->AsString();
+        PyString & msg = *packet->as<PyString>();
         if (mLogToConsole == true)
         {
             fprintf(stdout, "%s\n", msg.content().c_str());
@@ -210,9 +209,9 @@ protected:
         }
     }
 
-    void _logInternBufferMessage(PyRep* packet)
+    void _logInternBufferMessage(PyDataType* packet)
     {
-        PyBuffer & msg = *packet->AsBuffer();
+        PyBuffer & msg = *packet->as<PyBuffer>();
         if (mLogToConsole == true)
         {
             fwrite(&msg.content()[0], msg.size(), 1, stdout);
@@ -227,7 +226,7 @@ protected:
     }
 
     // its unclear what this consists of so the current code mimics the one of _logInternBufferMessage
-    void _logInternBufferPacket(PyRep* packet)
+    void _logInternBufferPacket(PyDataType* packet)
     {
         // just placement code atm...
         /*PyBuffer & msg = *packet->AsBuffer();
@@ -243,10 +242,10 @@ protected:
             fputc('\n', mFout);
         }*/
 
-        if (packet->GetType() != PyRep::PyTypeString)
+        if (packet->GetType() != PyDataType::PyTypeString)
             return;
 
-        PyString & msg = *packet->AsString();
+        PyString & msg = *packet->as<PyString>();
         if (mLogToConsole == true)
         {
             fwrite(msg.content().c_str(), msg.content().size(), 1, stdout);
@@ -319,5 +318,3 @@ private:
     HANDLE mStdoutHandle, mStderrHandle;
 #endif /* HAVE_WINDOWS_H */
 };
-
-#endif//PY_TRACE_LOG_H

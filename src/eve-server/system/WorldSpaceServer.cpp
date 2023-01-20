@@ -29,22 +29,22 @@ WorldSpaceServer::WorldSpaceServer() :
         */
 }
 
-PyResult WorldSpaceServer::GetWorldSpaceTypeIDFromWorldSpaceID(PyCallArgs &call, PyInt* worldSpaceID) {
+EVEResult WorldSpaceServer::GetWorldSpaceTypeIDFromWorldSpaceID(EVECallArgs&call, PyInt* worldSpaceID) {
     /**
      *        worldSpaceTypeID = self.GetWorldSpaceTypeIDFromWorldSpaceID(worldSpaceID)
      */
     sLog.White( "WorldSpaceServer::Handle_GetWorldSpaceTypeIDFromWorldSpaceID()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return PyStatic.NewNone();
 }
 
-PyResult WorldSpaceServer::GetWorldSpaceMachoAddress(PyCallArgs &call, PyString* address) {
+EVEResult WorldSpaceServer::GetWorldSpaceMachoAddress(EVECallArgs&call, PyString* address) {
     /**
      *       service, address = wss.GetWorldSpaceMachoAddress(address)
      */
     sLog.White( "WorldSpaceServer::Handle_GetWorldSpaceMachoAddress()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return PyStatic.NewNone();
 }

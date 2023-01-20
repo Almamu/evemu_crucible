@@ -26,7 +26,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "character/Character.h"
 #include "character/CharacterDB.h"
 
@@ -175,7 +175,7 @@ bool CharacterDB::ReportRespec(uint32 characterId)
     return true;
 }
 
-PyRep* CharacterDB::GetRespecInfo(uint32 characterId)
+PyDataType* CharacterDB::GetRespecInfo(uint32 characterId)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT freeRespecs, lastRespecDateTime, nextRespecDateTime FROM chrCharacters WHERE characterID = %u", characterId))
@@ -185,9 +185,9 @@ PyRep* CharacterDB::GetRespecInfo(uint32 characterId)
         return nullptr;
 
     PyDict* result = new PyDict();
-    result->SetItemString( "freeRespecs", new PyInt( row.GetInt(0) ) );
-    result->SetItemString( "lastRespecDate", new PyLong( row.GetInt64(1) ) );
-    result->SetItemString( "nextTimedRespec", new PyLong( row.GetInt64(2) ) );
+    result->set ( "freeRespecs", new PyInt( row.GetInt(0) ) );
+    result->set ( "lastRespecDate", new PyInt( row.GetInt64(1) ) );
+    result->set ( "nextTimedRespec", new PyInt( row.GetInt64(2) ) );
 
     return result;
 }
@@ -218,7 +218,7 @@ void CharacterDB::CancelCharacterDeletePrepare(uint32 accountID, uint32 charID)
         _log(CLIENT__ERROR, "Failed to cancel character deletion, affected rows: %u", affectedRows);
 }
 
-PyRep *CharacterDB::GetCharacterList(uint32 accountID) {
+PyDataType *CharacterDB::GetCharacterList(uint32 accountID, PythonArena* arena) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT"
@@ -234,10 +234,10 @@ PyRep *CharacterDB::GetCharacterList(uint32 accountID) {
         return nullptr;
     }
 
-    return DBResultToCRowset(res);
+    return DBResultToCRowset(res, arena);
 }
 
-PyRep* CharacterDB::ValidateCharNameRep(std::string name)
+PyDataType* CharacterDB::ValidateCharNameRep(std::string name)
 {
     /** @todo
             validStates = {-1: localization.GetByLabel('UI/CharacterCreation/InvalidName/TooShort'),
@@ -394,7 +394,7 @@ void CharacterDB::AddEmployment(uint32 charID, uint32 corpID, uint32 oldCorpID/*
         codelog(CORP__DB_ERROR, "Error in new corp member increase query: %s", err.c_str());
 }
 
-PyRep *CharacterDB::GetCharSelectInfo(uint32 characterID) {
+PyDataType *CharacterDB::GetCharSelectInfo(uint32 characterID, PythonArena* arena) {
     //  this shows char on select screen....fixed/updated  -allan 20Jan15
     std::string shipName = "My Ship";
     uint32 shipTypeID = 606;  //arbitrary default.
@@ -407,7 +407,7 @@ PyRep *CharacterDB::GetCharSelectInfo(uint32 characterID) {
         /** @todo  need to make proper error here. */
         // this causes blanks on char sel screen if there is no ship, or shipID is wrong.
         if (!res.GetRow(row))
-            return PyStatic.NewNone();
+            return arena->None ();
 
         sDatabase.DoEscapeString(shipName, row.GetText(0));
         shipTypeID = row.GetUInt(1);
@@ -460,10 +460,10 @@ PyRep *CharacterDB::GetCharSelectInfo(uint32 characterID) {
         codelog(DATABASE__ERROR, "Error in query: %s", res.error.c_str());
         return nullptr;
     }
-    return DBResultToCRowset(res);
+    return DBResultToCRowset(res, arena);
 }
 
-PyRep *CharacterDB::GetCharPublicInfo(uint32 characterID) {
+PyDataType *CharacterDB::GetCharPublicInfo(uint32 characterID) {
     if (IsAgent(characterID)) {
         sLog.Error("CharacterDB::GetCharPublicInfo()", "Character %u is NPC.", characterID);
         return nullptr;
@@ -786,7 +786,7 @@ void CharacterDB::GetCharacterDataMap(uint32 charID, std::map<std::string, int64
     characterDataMap["cloneStationID"] = stationID;
 }
 
-PyRep* CharacterDB::GetCharPublicInfo3(uint32 charID) {
+PyDataType* CharacterDB::GetCharPublicInfo3(uint32 charID) {
     // bounty, title, startDateTime, description, corporationID
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -806,7 +806,7 @@ PyRep* CharacterDB::GetCharPublicInfo3(uint32 charID) {
     return DBResultToCRowset(res);
 }
 
-PyRep* CharacterDB::GetCharPrivateInfo(uint32 charID) {
+PyDataType* CharacterDB::GetCharPrivateInfo(uint32 charID) {
     // characterID, gender, raceID, bloodlineID, createDateTime
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -828,7 +828,7 @@ PyRep* CharacterDB::GetCharPrivateInfo(uint32 charID) {
     return DBRowToPackedRow(row);
 }
 
-PyRep *CharacterDB::GetInfoWindowDataForChar(uint32 characterID) {
+PyDataType *CharacterDB::GetInfoWindowDataForChar(uint32 characterID) {
     //corpID, allianceID, title
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -879,7 +879,7 @@ void CharacterDB::SetCharacterOnlineStatus(uint32 char_id, bool online) {
         sDatabase.RunQuery(err, "UPDATE srvStatus SET Connections = Connections + 1");
 }
 
-PyRep* CharacterDB::GetContacts(uint32 charID, bool blocked)
+PyDataType* CharacterDB::GetContacts(uint32 charID, bool blocked)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery( res,
@@ -1216,13 +1216,13 @@ uint32 CharacterDB::GetStartingStationByCareer(uint32 careerID)
     return row.GetUInt(0);
 }
 
-void CharacterDB::SetAvatar(uint32 charID, PyRep* hairDarkness) {
+void CharacterDB::SetAvatar(uint32 charID, PyDataType* hairDarkness) {
 	//populate the DB with avatar information
 	DBerror err;
 	if (!sDatabase.RunQuery(err,
 		"INSERT INTO avatars (charID, hairDarkness)"
 		" VALUES (%u, %f)",
-		charID, hairDarkness->AsFloat()->value()))
+		charID, hairDarkness->as<PyFloat>()->value()))
 	{
 		codelog(DATABASE__ERROR, "Error in query: %s", err.c_str());
 	}
@@ -1240,32 +1240,32 @@ void CharacterDB::SetAvatarColors(uint32 charID, uint32 colorID, uint32 colorNam
 	}
 }
 
-void CharacterDB::SetAvatarModifiers(uint32 charID, PyRep* modifierLocationID,  PyRep* paperdollResourceID, PyRep* paperdollResourceVariation) {
+void CharacterDB::SetAvatarModifiers(uint32 charID, PyDataType* modifierLocationID,  PyDataType* paperdollResourceID, PyDataType* paperdollResourceVariation) {
 	//add avatar modifiers to the DB
 	DBerror err;
 	if (!sDatabase.RunQuery(err,
 		"INSERT INTO avatar_modifiers (charID, modifierLocationID, paperdollResourceID, paperdollResourceVariation)"
 		" VALUES (%u, %u, %u, %u)",
 		charID,
-		modifierLocationID->AsInt()->value(),
-		paperdollResourceID->AsInt()->value(),
-		paperdollResourceVariation->IsInt() ? paperdollResourceVariation->AsInt()->value() : 0 ))
+		modifierLocationID->as<PyInt>()->value(),
+		paperdollResourceID->as<PyInt>()->value(),
+		paperdollResourceVariation->is<PyInt>() ? paperdollResourceVariation->as<PyInt>()->value() : 0 ))
 	{
 		codelog(DATABASE__ERROR, "Error in query: %s", err.c_str());
 	}
 }
 
-void CharacterDB::SetAvatarSculpts(uint32 charID, PyRep* sculptLocationID, PyRep* weightUpDown, PyRep* weightLeftRight, PyRep* weightForwardBack) {
+void CharacterDB::SetAvatarSculpts(uint32 charID, PyDataType* sculptLocationID, PyDataType* weightUpDown, PyDataType* weightLeftRight, PyDataType* weightForwardBack) {
 	//add avatar sculpts to the DB
 	DBerror err;
 	if (!sDatabase.RunQuery(err,
 		"INSERT INTO avatar_sculpts (charID, sculptLocationID, weightUpDown, weightLeftRight, weightForwardBack)"
 		" VALUES (%u, %u, %f, %f, %f)",
 		charID,
-		sculptLocationID->AsInt()->value(),
-		weightUpDown->IsFloat() ? weightUpDown->AsFloat()->value() : 0.0,
-		weightLeftRight->IsFloat() ? weightLeftRight->AsFloat()->value() : 0.0,
-		weightForwardBack->IsFloat() ? weightForwardBack->AsFloat()->value() : 0.0))
+		sculptLocationID->as<PyInt>()->value(),
+		weightUpDown->is<PyFloat>() ? weightUpDown->as<PyFloat>()->value() : 0.0,
+		weightLeftRight->is<PyFloat>() ? weightLeftRight->as<PyFloat>()->value() : 0.0,
+		weightForwardBack->is<PyFloat>() ? weightForwardBack->as<PyFloat>()->value() : 0.0))
 	{
 		codelog(DATABASE__ERROR, "Error in query: %s", err.c_str());
 	}
@@ -1440,7 +1440,7 @@ bool CharacterDB::EditOwnerNote(uint32 charID, uint32 noteID, const std::string 
     return true;
 }
 
-PyRep *CharacterDB::GetOwnerNoteLabels(uint32 charID) {
+PyDataType *CharacterDB::GetOwnerNoteLabels(uint32 charID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT noteID, label FROM chrOwnerNote WHERE ownerID = %u", charID))
     {
@@ -1451,7 +1451,7 @@ PyRep *CharacterDB::GetOwnerNoteLabels(uint32 charID) {
     return DBResultToCRowset(res);
 }
 
-PyRep *CharacterDB::GetOwnerNote(uint32 charID, uint32 noteID) {
+PyDataType *CharacterDB::GetOwnerNote(uint32 charID, uint32 noteID) {
     /*
                     [PyTuple 6 items]
                       [PyTuple 2 items]
@@ -1500,7 +1500,7 @@ void CharacterDB::EditLabel(uint32 charID, uint32 labelID, uint32 color, std::st
     sDatabase.RunQuery(res, "UPDATE chrLabels SET color = %u, name = '%s' WHERE ownerID = %u AND labelID = %u", color, eName.c_str(), charID, labelID);
 }
 
-PyRep* CharacterDB::GetLabels(uint32 charID)
+PyDataType* CharacterDB::GetLabels(uint32 charID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT labelID, color, name FROM chrLabels WHERE ownerID = %u", charID)) {
@@ -1644,7 +1644,7 @@ void CharacterDB::SaveSkillHistory(uint16 eventID, double logDate, uint32 charac
             _log(DATABASE__ERROR, "Failed to set chrSkillHistory for character %u: %s", characterID, err.c_str());
 }
 
-PyRep* CharacterDB::GetSkillHistory(uint32 characterID) {
+PyDataType* CharacterDB::GetSkillHistory(uint32 characterID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT logDate, eventTypeID, skillTypeID, absolutePoints"
@@ -1685,13 +1685,13 @@ void CharacterDB::AddOwnerCache(uint32 ownerID, std::string ownerName, uint32 ty
         ownerID, ownerName.c_str(), typeID);
 }
 
-PyRep* CharacterDB::GetBounty(uint32 charID, uint32 ownerID) {
+PyDataType* CharacterDB::GetBounty(uint32 charID, uint32 ownerID) {
     DBQueryResult res;
     sDatabase.RunQuery(res, "SELECT characterID, bounty FROM webBounties WHERE characterID = %u OR ownerID = %u", charID, ownerID);
     return DBResultToRowset(res);
 }
 
-PyRep* CharacterDB::GetTopBounties() {
+PyDataType* CharacterDB::GetTopBounties() {
     DBQueryResult res;
     sDatabase.RunQuery(res,
                        "SELECT c.characterID, c.bounty, c.online, o.characterName AS ownerName"
@@ -1712,7 +1712,7 @@ void CharacterDB::AddBounty(uint32 charID, uint32 ownerID, uint32 amount) {
         charID, ownerID, amount );
 }
 
-PyRep* CharacterDB::GetKillOrLoss(uint32 charID) {
+PyDataType* CharacterDB::GetKillOrLoss(uint32 charID) {
     /*
      *    def GetKillsRecentKills(self, num, startIndex):
      *        shipKills = sm.RemoteSvc('charMgr').GetRecentShipKillsAndLosses(num, startIndex)
@@ -1814,7 +1814,7 @@ float CharacterDB::GetCorpTaxRate(uint32 charID)
     return row.GetFloat(0);
 }
 
-PyRep* CharacterDB::GetMyCorpMates(uint32 corpID)
+PyDataType* CharacterDB::GetMyCorpMates(uint32 corpID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT solarSystemID AS locationID, characterID FROM chrCharacters WHERE corporationID = %u", corpID)) {
@@ -1835,7 +1835,7 @@ void CharacterDB::VisitSystem(uint32 solarSystemID, uint32 charID) {
             " lastDateTime = %f", charID, solarSystemID, GetFileTimeNow(), GetFileTimeNow());
 }
 
-PyRep* CharacterDB::List(uint32 ownerID)
+PyDataType* CharacterDB::List(uint32 ownerID)
 {
     // maybe get all items owned by calling character?
     DBQueryResult res;
@@ -1864,7 +1864,7 @@ PyRep* CharacterDB::List(uint32 ownerID)
     return DBResultToCRowset(res);
 }
 
-PyRep* CharacterDB::ListStations(uint32 ownerID, std::ostringstream& flagIDs, bool forCorp/*false*/, bool bpOnly/*false*/)
+PyDataType* CharacterDB::ListStations(uint32 ownerID, std::ostringstream& flagIDs, bool forCorp/*false*/, bool bpOnly/*false*/)
 {
     /** @todo check into this to see if we're querying POS modules(uk) also.
      * if so, we'll need to revise location checks and somehow fix it so customs offices (and anything else using flagHangar)
@@ -1925,13 +1925,13 @@ PyRep* CharacterDB::ListStations(uint32 ownerID, std::ostringstream& flagIDs, bo
             }
         }
     }
-    PyRep* rsp = DBResultToCRowset(res);
+    PyDataType* rsp = DBResultToCRowset(res);
     if (is_log_enabled(CLIENT__RSP_DUMP))
-        rsp->Dump(CLIENT__RSP_DUMP, "    ");
+        rsp->dump(CLIENT__RSP_DUMP, "    ");
     return rsp;
 }
 
-PyRep* CharacterDB::ListStationItems(uint32 ownerID, uint32 stationID)
+PyDataType* CharacterDB::ListStationItems(uint32 ownerID, uint32 stationID)
 {
     /** @todo check into this to see if we're querying POS modules also */
     // some code shows 'copy' field here (for corp bp)
@@ -1958,13 +1958,13 @@ PyRep* CharacterDB::ListStationItems(uint32 ownerID, uint32 stationID)
         codelog(SERVICE__ERROR, "Error in query: %s", res.error.c_str());
         return nullptr;
     }
-    PyRep* rsp = DBResultToCRowset(res);
+    PyDataType* rsp = DBResultToCRowset(res);
     if (is_log_enabled(CLIENT__RSP_DUMP))
-        rsp->Dump(CLIENT__RSP_DUMP, "    ");
+        rsp->dump(CLIENT__RSP_DUMP, "    ");
     return rsp;
 }
 
-PyRep* CharacterDB::ListStationBlueprintItems(uint32 ownerID, uint32 stationID, bool forCorp/*false*/)
+PyDataType* CharacterDB::ListStationBlueprintItems(uint32 ownerID, uint32 stationID, bool forCorp/*false*/)
 {
     /** @todo check into this to see if we're querying POS modules also(uk) */
     DBQueryResult res;
@@ -2028,9 +2028,9 @@ PyRep* CharacterDB::ListStationBlueprintItems(uint32 ownerID, uint32 stationID, 
         }
     }
 
-    PyRep* rsp = DBResultToCRowset(res);
+    PyDataType* rsp = DBResultToCRowset(res);
     if (is_log_enabled(CLIENT__RSP_DUMP))
-        rsp->Dump(CLIENT__RSP_DUMP, "    ");
+        rsp->dump(CLIENT__RSP_DUMP, "    ");
     return rsp;
 }
 

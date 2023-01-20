@@ -33,7 +33,7 @@ ClientStatLogger::ClientStatLogger() :
     this->Add("LogString", &ClientStatLogger::LogString);
 }
 
-PyResult ClientStatLogger::LogString(PyCallArgs &call, PyString* arg) {
+EVEResult ClientStatLogger::LogString(EVECallArgs&call, PyString* arg) {
     sLog.Error("LogFromClient", "%s", arg->content ().c_str());
 
     return nullptr;

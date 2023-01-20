@@ -38,12 +38,12 @@ PlanetORB::PlanetORB(EVEServiceManager& mgr) :
 {
 }
 
-BoundDispatcher* PlanetORB::BindObject(Client* client, PyRep* bindParameters) {
-    if (bindParameters->IsInt() == false) {
+BoundDispatcher* PlanetORB::BindObject(Client* client, PyDataType* bindParameters) {
+    if (bindParameters->is<PyInt>() == false) {
         throw CustomError("Cannot bind service");
     }
 
-    uint32 systemID = bindParameters->AsInt()->value();
+    uint32 systemID = bindParameters->as<PyInt>()->value();
     auto it = this->m_instances.find (systemID);
 
     if (it != this->m_instances.end ())
@@ -65,7 +65,7 @@ PlanetORBBound::PlanetORBBound(EVEServiceManager& mgr, PlanetORB& parent, uint32
 {
 }
 
-PyResult PlanetORBBound::GetTaxRate(PyCallArgs& call, PyInt* itemID)
+EVEResult PlanetORBBound::GetTaxRate(EVECallArgs& call, PyInt* itemID)
 {
     //  taxRate = moniker.GetPlanetOrbitalRegistry(session.solarsystemid).GetTaxRate(itemID)
     // NOTE:  "return PyNone()" = access denied to customs office.
@@ -79,7 +79,7 @@ PyResult PlanetORBBound::GetTaxRate(PyCallArgs& call, PyInt* itemID)
     return new PyFloat(pCOSE->GetTaxRate(call.client));
 }
 
-PyResult PlanetORBBound::GetSettingsInfo(PyCallArgs& call, PyInt* orbitalID)
+EVEResult PlanetORBBound::GetSettingsInfo(EVECallArgs& call, PyInt* orbitalID)
 {
     /*   self.orbitalData = self.remoteOrbitalRegistry.GetSettingsInfo(self.orbitalID)  << for customs offices
      *   self.selectedHour, self.taxRateValues, self.standingLevel, self.allowAlliance, self.allowStandings = self.orbitalData
@@ -88,13 +88,13 @@ PyResult PlanetORBBound::GetSettingsInfo(PyCallArgs& call, PyInt* orbitalID)
     return pCOSE->GetSettingsInfo();
 }
 
-PyResult PlanetORBBound::UpdateSettings(PyCallArgs& call, PyInt* orbitalID, PyInt* reinforceValue, PyObject* taxRateValues, PyFloat* standingValue, PyBool* allowAllianceValue, PyBool* allowStandingsValue)
+EVEResult PlanetORBBound::UpdateSettings(EVECallArgs& call, PyInt* orbitalID, PyInt* reinforceValue, PyObject* taxRateValues, PyFloat* standingValue, PyBool* allowAllianceValue, PyBool* allowStandingsValue)
 {
     //remoteOrbitalRegistry.UpdateSettings(self.orbitalID, reinforceValue, taxRateValues, standingValue, allowAllianceValue, allowStandingsValue)
     _log(INV__MESSAGE, "Calling PlanetORBBound::UpdateSettings()");
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
-    PyDict* input = taxRateValues->arguments()->AsDict();
+    PyDict* input = taxRateValues->arguments()->as<PyDict>();
     Call_TaxRateValuesDict dict;
     if (!dict.Decode(input)) {
         codelog(SERVICE__ERROR, "PlanetORBBound: Failed to decode arguments.");
@@ -107,7 +107,7 @@ PyResult PlanetORBBound::UpdateSettings(PyCallArgs& call, PyInt* orbitalID, PyIn
     return nullptr;
 }
 
-PyResult PlanetORBBound::GMChangeSpaceObjectOwner(PyCallArgs& call, PyInt* itemID, PyInt* corpID)
+EVEResult PlanetORBBound::GMChangeSpaceObjectOwner(EVECallArgs& call, PyInt* itemID, PyInt* corpID)
 {
     // this is called when taking ownership of control tower
     // sends itemID, corpID
@@ -132,7 +132,7 @@ PyResult PlanetORBBound::GMChangeSpaceObjectOwner(PyCallArgs& call, PyInt* itemI
         registry.GMChangeSpaceObjectOwner(itemID, session.corpid)
     */
     _log(PLANET__DEBUG, "PlanetORBBound::Handle_GMChangeSpaceObjectOwner - size=%lli", call.tuple->size());
-    call.Dump(PLANET__DUMP);
+    call.dump(PLANET__DUMP);
 
     return PyStatic.NewNone();
 }

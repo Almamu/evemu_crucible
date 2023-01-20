@@ -109,7 +109,7 @@ enum DBTYPE
  * @param[in] type Type of fields.
  * @return Length of field (in bits).
  */
-extern uint8 DBTYPE_GetSizeBits( DBTYPE type );
+extern uint8 DBTYPE_GetSizeBits (DBTYPE type);
 
 /**
  * Returns length of field of given type.
@@ -117,6 +117,14 @@ extern uint8 DBTYPE_GetSizeBits( DBTYPE type );
  * @param[in] type Type of fields.
  * @return Length of field (in bytes).
  */
-extern uint8 DBTYPE_GetSizeBytes( DBTYPE type );
+extern uint8 DBTYPE_GetSizeBytes (DBTYPE type);
+
+/**
+ * Returns literal name of the given type
+ *
+ * @param[in] type Type of the field
+ * @return Literal name of the field
+ */
+extern const char* DBTYPE_GetName (DBTYPE type);
 
 #endif /* !__DBTYPE_H__INCL__ */

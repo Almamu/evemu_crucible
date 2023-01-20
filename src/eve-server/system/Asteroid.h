@@ -27,7 +27,7 @@
 #ifndef __ASTEROID_H_INCL__
 #define __ASTEROID_H_INCL__
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "system/SystemEntity.h"
 #include "system/cosmicMgrs/ManagerDB.h"

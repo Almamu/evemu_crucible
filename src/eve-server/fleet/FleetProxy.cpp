@@ -36,24 +36,24 @@ FLEET__TRACE
 FLEET__DUMP
 FLEET__BIND_DUMP
 */
-PyResult FleetProxy::GetAvailableFleets(PyCallArgs &call) {
+EVEResult FleetProxy::GetAvailableFleets(EVECallArgs&call) {
     return sFltSvc.GetAvailableFleets();
 }
 
-PyResult FleetProxy::ApplyToJoinFleet(PyCallArgs &call, PyInt* fleetID) {
+EVEResult FleetProxy::ApplyToJoinFleet(EVECallArgs&call, PyInt* fleetID) {
   // ret = sm.ProxySvc('fleetProxy').ApplyToJoinFleet(fleetID)
    // sLog.White("FleetProxy", "Handle_ApplyToJoinFleet() size=%lli", call.tuple->size());
-   // call.Dump(FLEET__DUMP);
+   // call.dump(FLEET__DUMP);
 
     // returns boolean
     return new PyBool(sFltSvc.AddJoinRequest(fleetID->value(), call.client));
 }
 
     // this is also used to update advert info
-PyResult FleetProxy::AddFleetFinderAdvert(PyCallArgs &call, PyObject* info) {
+EVEResult FleetProxy::AddFleetFinderAdvert(EVECallArgs&call, PyObject* info) {
  //  sm.ProxySvc('fleetProxy').AddFleetFinderAdvert(info)
     //sLog.White("FleetProxy", "Handle_AddFleetFinderAdvert() size=%lli", call.tuple->size());
-    //call.Dump(FLEET__DUMP);
+    //call.dump(FLEET__DUMP);
 
     /** @todo  this needs to be updated....check standings and verifly scope */
 
@@ -74,50 +74,50 @@ PyResult FleetProxy::AddFleetFinderAdvert(PyCallArgs &call, PyObject* info) {
         adata.hideInfo = args.hideInfo;
         adata.inviteScope = args.inviteScope;
         adata.leader = call.client;
-        adata.fleetName = PyRep::StringContent(args.fleetName);
+        adata.fleetName = args.fleetName->string();
         adata.advertTime = GetFileTimeNow();
         adata.dateCreated = fData.dateCreated;
-        adata.description = PyRep::StringContent(args.description);
+        adata.description = args.description->string();
         adata.solarSystemID = call.client->GetSystemID();
         adata.joinNeedsApproval = args.joinNeedsApproval;
         adata.local_minSecurity = args.local_minSecurity;
         adata.local_minStanding = args.local_minStanding;
         adata.public_minSecurity = args.public_minSecurity;
         adata.public_minStanding = args.public_minStanding;
-    PyList* localList = args.local_allowedEntities->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+    PyList* localList = args.local_allowedEntities->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
         adata.local_allowedEntities.clear();
     for (PyList::const_iterator itr = localList->begin(); itr != localList->end(); ++itr)
-        adata.local_allowedEntities.push_back(PyRep::IntegerValueU32(*itr));
-    PyList* publicList = args.public_allowedEntities->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+        adata.local_allowedEntities.push_back((*itr)->u32());
+    PyList* publicList = args.public_allowedEntities->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
         adata.public_allowedEntities.clear();
     for (PyList::const_iterator itr = publicList->begin(); itr != publicList->end(); ++itr)
-        adata.public_allowedEntities.push_back(PyRep::IntegerValueU32(*itr));
+        adata.public_allowedEntities.push_back((*itr)->u32());
     sFltSvc.CreateFleetAdvert(fleetID, adata);
 
     return nullptr;
 }
 
-PyResult FleetProxy::RemoveFleetFinderAdvert(PyCallArgs &call) {
+EVEResult FleetProxy::RemoveFleetFinderAdvert(EVECallArgs&call) {
    // sLog.White("FleetProxy", "Handle_RemoveFleetFinderAdvert() size=%lli", call.tuple->size());
-    //call.Dump(FLEET__DUMP);
+    //call.dump(FLEET__DUMP);
 
     sFltSvc.RemoveFleetAdvert(call.client->GetChar()->fleetID());
 
     return nullptr;
 }
 
-PyResult FleetProxy::GetMyFleetFinderAdvert(PyCallArgs &call) {
+EVEResult FleetProxy::GetMyFleetFinderAdvert(EVECallArgs&call) {
    // sLog.White("FleetProxy", "Handle_GetMyFleetFinderAdvert() size=%lli", call.tuple->size());
-   // call.Dump(FLEET__DUMP);
+   // call.dump(FLEET__DUMP);
 
     return sFltSvc.GetFleetAdvert(call.client->GetChar()->fleetID());
 }
 
-PyResult FleetProxy::UpdateAdvertInfo(PyCallArgs &call, PyInt* numMembers) {
+EVEResult FleetProxy::UpdateAdvertInfo(EVECallArgs&call, PyInt* numMembers) {
   //   sm.ProxySvc('fleetProxy').UpdateAdvertInfo(numMembers)
     // this call just updates member count in fleet advert.  not needed here, as that is dynamic data.
     //sLog.White("FleetProxy", "Handle_UpdateAdvertInfo() size=%lli", call.tuple->size());
-    //call.Dump(FLEET__DUMP);
+    //call.dump(FLEET__DUMP);
 
     return nullptr;
 }

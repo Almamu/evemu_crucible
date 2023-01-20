@@ -39,7 +39,7 @@ class LSCDB
 public:
     uint32 StoreMail(uint32 senderID, uint32 recipID, const char * subject, const char * message, int64 sentTime);
     PyObject *GetMailHeaders(uint32 recID);
-    PyRep *GetMailDetails(uint32 messageID, uint32 readerID);
+    PyDataType *GetMailDetails(uint32 messageID, uint32 readerID);
     bool MarkMessageRead(uint32 messageID);
     bool DeleteMessage(uint32 messageID, uint32 readerID);
     void GetChannelNames(uint32 charID, std::vector<std::string> & names);

@@ -41,7 +41,7 @@
 class ServiceDB
 {
 public:
-    static bool GetAccountInformation(CryptoChallengePacket& ccp, AccountData& aData, std::string& failMsg);
+    static bool GetAccountInformation(EVESecureClientHandshake& ccp, AccountData& aData, std::string& failMsg);
     static bool UpdateAccountHash( const char* username, std::string &hash );
     static bool IncrementLoginCount(uint32 accountID );
     static void UpdatePassword(uint32 accountID, const char* pass);
@@ -58,18 +58,18 @@ public:
 
     static uint32 SetClientSeed();
 
-    static PyRep* LookupChars(const char *match, bool exact=false);
-    static PyRep* LookupOwners(const char *match, bool exact=false);
-    static PyRep* LookupCorporations(const std::string &);
-    static PyRep* LookupFactions(const std::string &);
-    static PyRep* LookupCorporationTickers(const std::string &);
-    static PyRep* LookupStations(const std::string &);
-    static PyRep* LookupKnownLocationsByGroup(const std::string &, uint32);
+    static PyDataType* LookupChars(const char *match, bool exact=false);
+    static PyDataType* LookupOwners(const char *match, bool exact=false);
+    static PyDataType* LookupCorporations(const std::string &);
+    static PyDataType* LookupFactions(const std::string &);
+    static PyDataType* LookupCorporationTickers(const std::string &);
+    static PyDataType* LookupStations(const std::string &);
+    static PyDataType* LookupKnownLocationsByGroup(const std::string &, uint32);
 
-    static PyRep* PrimeOwners(std::vector<int32>& itemIDs);
+    static PyDataType* PrimeOwners(std::vector<int32>& itemIDs);
 
     // tests for invalid characters
-    static bool ValidateAccountName(CryptoChallengePacket& ccp, std::string& failMsg);
+    static bool ValidateAccountName(EVESecureClientHandshake& ccp, std::string& failMsg);
 
     // get corp hangar names for `.cargo` command
     static void GetCorpHangarNames(uint32 corpID, std::map<uint8, std::string> &hangarNames);

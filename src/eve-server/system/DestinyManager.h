@@ -166,7 +166,7 @@ public:
     void Cloak();
     void UnCloak();
 
-    PyResult AttemptDockOperation();
+    EVEResult AttemptDockOperation();
     void Undock(GPoint dir);
     void SetUndockSpeed();
     void DockingAccepted();

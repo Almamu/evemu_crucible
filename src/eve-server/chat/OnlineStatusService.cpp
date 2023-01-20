@@ -37,7 +37,7 @@ OnlineStatusService::OnlineStatusService() :
 }
 
 /** @todo finish this */
-PyResult OnlineStatusService::GetInitialState(PyCallArgs &call) {
+EVEResult OnlineStatusService::GetInitialState(EVECallArgs&call) {
 /*
 21:35:16 L OnlineStatusService::Handle_GetInitialState(): size= 0
 21:35:16 [SvcCall]   Call Arguments:
@@ -46,7 +46,7 @@ PyResult OnlineStatusService::GetInitialState(PyCallArgs &call) {
 21:35:16 [SvcCall]     Argument 'machoVersion':
 21:35:16 [SvcCall]         Integer field: 1
   sLog.White( "OnlineStatusService::Handle_GetInitialState()", "size=%lu", call.tuple->size());
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
 
 
       [PySubStream 1861 bytes]
@@ -83,16 +83,16 @@ PyResult OnlineStatusService::GetInitialState(PyCallArgs &call) {
     // this is used to query the initial online state of all contacts.
 
     DBRowDescriptor *header = new DBRowDescriptor();
-    header->AddColumn("contactID", DBTYPE_I4);
-    header->AddColumn("online", DBTYPE_BOOL);
-    CRowSet *rowset = new CRowSet( &header );
+    header->add("contactID", DBTYPE_I4);
+    header->add("online", DBTYPE_BOOL);
+    CRowset *rowset = new CRowset (header);
     // loop thru contact list and fill following row accordingly
     //PyPackedRow* row = rowset->NewRow();
     //row->SetField(new PyInt(*charID*), sEntityList.PyIsOnline(PyRep::IntegerValue(charID)))); // charID/online
     return rowset;
 }
 
-PyResult OnlineStatusService::GetOnlineStatus(PyCallArgs &call, PyInt* characterID) {
+EVEResult OnlineStatusService::GetOnlineStatus(EVECallArgs&call, PyInt* characterID) {
     // this is used to query the online state of a character by charID.
      return sEntityList.PyIsOnline(characterID->value());
 }

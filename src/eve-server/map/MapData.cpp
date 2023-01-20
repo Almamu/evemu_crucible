@@ -59,10 +59,11 @@ void MapData::Populate()
 
     double start = GetTimeMSeconds();
 
-    m_stationExtraInfo = new PyTuple(3);
-    m_stationExtraInfo->items[0] = MapDB::GetStationExtraInfo();
-    m_stationExtraInfo->items[1] = MapDB::GetStationOpServices();
-    m_stationExtraInfo->items[2] = MapDB::GetStationServiceInfo();
+    m_stationExtraInfo = new PyTuple {
+        MapDB::GetStationExtraInfo(),
+        MapDB::GetStationOpServices(),
+        MapDB::GetStationServiceInfo()
+    };
     sLog.Cyan("          MapData", "StationExtraInfo loaded in %.3fms.",(GetTimeMSeconds() - start));
 
     start = GetTimeMSeconds();

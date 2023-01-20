@@ -129,7 +129,7 @@ ObjCacheDB::ObjCacheDB()
     m_generators["charCreationInfo.lipsticks"] = &ObjCacheDB::Generate_a_lipsticks;
 }
 
-PyRep *ObjCacheDB::GetCachableObject(const std::string &type)
+PyDataType *ObjCacheDB::GetCachableObject(const std::string &type)
 {
     std::map<std::string, genFunc>::const_iterator res;
     res = m_generators.find(type);
@@ -144,7 +144,7 @@ PyRep *ObjCacheDB::GetCachableObject(const std::string &type)
 }
 
 //implement all the generators:
-PyRep *ObjCacheDB::Generate_CharNewExtraSpecialities()
+PyDataType *ObjCacheDB::Generate_CharNewExtraSpecialities()
 {
     DBQueryResult res;
     const char *q = "SELECT careerID, specialityID, specialityName, description, shortDescription, graphicID, iconID, dataID FROM specialities";
@@ -155,7 +155,7 @@ PyRep *ObjCacheDB::Generate_CharNewExtraSpecialities()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_CharNewExtraCareers()
+PyDataType *ObjCacheDB::Generate_CharNewExtraCareers()
 {
     DBQueryResult res;
     const char *q = "SELECT raceID, careerID, careerName, description, shortDescription, graphicID, schoolID, iconID, dataID FROM careers";
@@ -167,7 +167,7 @@ PyRep *ObjCacheDB::Generate_CharNewExtraCareers()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_CharNewExtraSpecialitySkills()
+PyDataType *ObjCacheDB::Generate_CharNewExtraSpecialitySkills()
 {
     DBQueryResult res;
     const char *q = "SELECT specialityID, skillTypeID, level FROM specialitySkills";
@@ -179,7 +179,7 @@ PyRep *ObjCacheDB::Generate_CharNewExtraSpecialitySkills()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_CharNewExtraCareerSkills()
+PyDataType *ObjCacheDB::Generate_CharNewExtraCareerSkills()
 {
     DBQueryResult res;
     const char *q = "SELECT careerID, skillTypeID, level FROM sklCareerSkills";
@@ -191,7 +191,7 @@ PyRep *ObjCacheDB::Generate_CharNewExtraCareerSkills()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_CharNewExtraRaceSkills()
+PyDataType *ObjCacheDB::Generate_CharNewExtraRaceSkills()
 {
     DBQueryResult res;
     const char *q = "SELECT raceID, skillTypeID, level FROM sklRaceSkills";
@@ -203,7 +203,7 @@ PyRep *ObjCacheDB::Generate_CharNewExtraRaceSkills()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Icons()
+PyDataType *ObjCacheDB::Generate_Icons()
 {
     DBQueryResult res;
     const char *q = "SELECT iconID, iconFile, description, obsolete, iconType FROM icons";
@@ -215,7 +215,7 @@ PyRep *ObjCacheDB::Generate_Icons()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Ownericons()
+PyDataType *ObjCacheDB::Generate_Ownericons()
 {
     DBQueryResult res;
     const char *q = "SELECT ownerID, iconID FROM ownerIcons";
@@ -227,7 +227,7 @@ PyRep *ObjCacheDB::Generate_Ownericons()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Invtypematerials()
+PyDataType *ObjCacheDB::Generate_Invtypematerials()
 {
     DBQueryResult res;
     const char *q = "SELECT typeID, materialTypeID, quantity FROM invTypeMaterials";
@@ -239,7 +239,7 @@ PyRep *ObjCacheDB::Generate_Invtypematerials()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Sounds()
+PyDataType *ObjCacheDB::Generate_Sounds()
 {
     DBQueryResult res;
     const char *q = "SELECT soundID, soundFile, description, obsolete FROM sounds";
@@ -251,7 +251,7 @@ PyRep *ObjCacheDB::Generate_Sounds()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Schematicstypemap()
+PyDataType *ObjCacheDB::Generate_Schematicstypemap()
 {
     DBQueryResult res;
     const char *q = "SELECT schematicID, typeID, quantity, isInput FROM schematicsTypeMap";
@@ -263,7 +263,7 @@ PyRep *ObjCacheDB::Generate_Schematicstypemap()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Schematics()
+PyDataType *ObjCacheDB::Generate_Schematics()
 {
     DBQueryResult res;
     const char *q = "SELECT schematicID, schematicName, cycleTime, dataID FROM schematics";
@@ -275,7 +275,7 @@ PyRep *ObjCacheDB::Generate_Schematics()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_OverviewDefaultGroups()
+PyDataType *ObjCacheDB::Generate_OverviewDefaultGroups()
 {
     DBQueryResult res;
     const char *q = "SELECT overviewID, groupID FROM chrDefaultOverviewGroups";
@@ -287,7 +287,7 @@ PyRep *ObjCacheDB::Generate_OverviewDefaultGroups()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Schematicspinmap()
+PyDataType *ObjCacheDB::Generate_Schematicspinmap()
 {
     DBQueryResult res;
     const char *q = "SELECT schematicID, pinTypeID FROM schematicsPinMap";
@@ -299,7 +299,7 @@ PyRep *ObjCacheDB::Generate_Schematicspinmap()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_OverviewDefaults()
+PyDataType *ObjCacheDB::Generate_OverviewDefaults()
 {
     DBQueryResult res;
     const char *q = "SELECT dataID, overviewID, overviewName, overviewShortName FROM chrDefaultOverviews";
@@ -311,7 +311,7 @@ PyRep *ObjCacheDB::Generate_OverviewDefaults()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_Locationscenes()
+PyDataType *ObjCacheDB::Generate_Locationscenes()
 {
     DBQueryResult res;
     const char *q = "SELECT locationID, sceneID FROM locationScenes";
@@ -323,7 +323,7 @@ PyRep *ObjCacheDB::Generate_Locationscenes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_BloodlineNames()
+PyDataType *ObjCacheDB::Generate_BloodlineNames()
 {
     DBQueryResult res;
     const char *q = "SELECT nameID, bloodlineID, lastName FROM chrBloodlineNames";
@@ -335,7 +335,7 @@ PyRep *ObjCacheDB::Generate_BloodlineNames()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_PaperdollColors()
+PyDataType *ObjCacheDB::Generate_PaperdollColors()
 {
     DBQueryResult res;
     const char *q = "SELECT colorID, colorKey, hasSecondary, hasWeight, hasGloss FROM paperdollColors";
@@ -347,7 +347,7 @@ PyRep *ObjCacheDB::Generate_PaperdollColors()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_PaperdollColorRestrictions()
+PyDataType *ObjCacheDB::Generate_PaperdollColorRestrictions()
 {
     DBQueryResult res;
     const char *q = "SELECT colorNameID, gender, restrictions FROM paperdollColorRestrictions";
@@ -359,7 +359,7 @@ PyRep *ObjCacheDB::Generate_PaperdollColorRestrictions()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_PaperdollColorNames()
+PyDataType *ObjCacheDB::Generate_PaperdollColorNames()
 {
     DBQueryResult res;
     const char *q = "SELECT colorNameID, colorName FROM paperdollColorNames";
@@ -371,7 +371,7 @@ PyRep *ObjCacheDB::Generate_PaperdollColorNames()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_PaperdollSculptingLocations()
+PyDataType *ObjCacheDB::Generate_PaperdollSculptingLocations()
 {
     DBQueryResult res;
     const char *q = "SELECT sculptLocationID, weightKeyCategory, weightKeyPrefix FROM paperdollSculptingLocations";
@@ -383,7 +383,7 @@ PyRep *ObjCacheDB::Generate_PaperdollSculptingLocations()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_PaperdollModifierLocations()
+PyDataType *ObjCacheDB::Generate_PaperdollModifierLocations()
 {
     DBQueryResult res;
     const char *q = "SELECT modifierLocationID, modifierKey, variationKey FROM paperdollModifierLocations";
@@ -395,7 +395,7 @@ PyRep *ObjCacheDB::Generate_PaperdollModifierLocations()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_PaperdollResources()
+PyDataType *ObjCacheDB::Generate_PaperdollResources()
 {
     DBQueryResult res;
     const char *q = "SELECT paperdollResourceID, resGender, resPath, restrictions FROM paperdollResources";
@@ -407,7 +407,7 @@ PyRep *ObjCacheDB::Generate_PaperdollResources()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_BillTypes()
+PyDataType *ObjCacheDB::Generate_BillTypes()
 {
     DBQueryResult res;
     const char *q = "SELECT billTypeID,billTypeName,description FROM billTypes";
@@ -419,7 +419,7 @@ PyRep *ObjCacheDB::Generate_BillTypes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_AllianceShortnames()
+PyDataType *ObjCacheDB::Generate_AllianceShortnames()
 {   //TODO:  fix this when alliances are implemented (DB table will be 'alnAlliance')
     DBQueryResult res;
     const char *q = "SELECT allianceID, shortName FROM alnAlliance";
@@ -431,7 +431,7 @@ PyRep *ObjCacheDB::Generate_AllianceShortnames()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invCategories()
+PyDataType *ObjCacheDB::Generate_invCategories()
 {
     DBQueryResult res;
     const char *q = "SELECT categoryID, categoryName, description, published, iconID, categoryNameID, dataID FROM invCategories";
@@ -443,7 +443,7 @@ PyRep *ObjCacheDB::Generate_invCategories()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invTypeReactions()
+PyDataType *ObjCacheDB::Generate_invTypeReactions()
 {
     DBQueryResult res;
     const char *q = "SELECT reactionTypeID,input,typeID,quantity FROM invTypeReactions";
@@ -455,7 +455,7 @@ PyRep *ObjCacheDB::Generate_invTypeReactions()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_dgmTypeAttribs()
+PyDataType *ObjCacheDB::Generate_dgmTypeAttribs()
 {
     DBQueryResult res;
     const char *q = "SELECT typeID, attributeID, IF(valueInt IS NULL, valueFloat, valueInt) AS value FROM dgmTypeAttributes";
@@ -467,7 +467,7 @@ PyRep *ObjCacheDB::Generate_dgmTypeAttribs()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_dgmTypeEffects()
+PyDataType *ObjCacheDB::Generate_dgmTypeEffects()
 {
     DBQueryResult res;
     const char *q = "SELECT typeID,effectID,isDefault FROM dgmTypeEffects";
@@ -479,7 +479,7 @@ PyRep *ObjCacheDB::Generate_dgmTypeEffects()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_dgmEffects()
+PyDataType *ObjCacheDB::Generate_dgmEffects()
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -494,7 +494,7 @@ PyRep *ObjCacheDB::Generate_dgmEffects()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_dgmAttribs()
+PyDataType *ObjCacheDB::Generate_dgmAttribs()
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -507,7 +507,7 @@ PyRep *ObjCacheDB::Generate_dgmAttribs()
     return DBResultToCRowset(res);
 }
 
-PyRep* ObjCacheDB::Generate_dgmExpressions()
+PyDataType* ObjCacheDB::Generate_dgmExpressions()
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -520,7 +520,7 @@ PyRep* ObjCacheDB::Generate_dgmExpressions()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invMetaGroups()
+PyDataType *ObjCacheDB::Generate_invMetaGroups()
 {
     DBQueryResult res;
     const char *q = "SELECT metaGroupID, metaGroupName, description, iconID, 0 as graphicID, 0 AS dataID FROM invMetaGroups";
@@ -532,7 +532,7 @@ PyRep *ObjCacheDB::Generate_invMetaGroups()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_ramActivities()
+PyDataType *ObjCacheDB::Generate_ramActivities()
 {
     DBQueryResult res;
     const char *q = "SELECT activityID, activityName, iconNo, description, published FROM ramActivities";
@@ -544,7 +544,7 @@ PyRep *ObjCacheDB::Generate_ramActivities()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_ramALTypeGroup()
+PyDataType *ObjCacheDB::Generate_ramALTypeGroup()
 {
     DBQueryResult res;
     const char *q = "SELECT a.assemblyLineTypeID, b.activityID, a.groupID, a.timeMultiplier, a.materialMultiplier"
@@ -558,7 +558,7 @@ PyRep *ObjCacheDB::Generate_ramALTypeGroup()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_ramALTypeCategory()
+PyDataType *ObjCacheDB::Generate_ramALTypeCategory()
 {
     DBQueryResult res;
     const char *q = "SELECT a.assemblyLineTypeID, b.activityID, a.categoryID, a.timeMultiplier, a.materialMultiplier"
@@ -572,7 +572,7 @@ PyRep *ObjCacheDB::Generate_ramALTypeCategory()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_ramALTypes()
+PyDataType *ObjCacheDB::Generate_ramALTypes()
 {
     DBQueryResult res;
     const char *q = "SELECT assemblyLineTypeID, assemblyLineTypeName, assemblyLineTypeName AS typeName, description, activityID, baseTimeMultiplier, baseMaterialMultiplier, volume FROM ramAssemblyLineTypes";
@@ -584,7 +584,7 @@ PyRep *ObjCacheDB::Generate_ramALTypes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_ramCompletedStatuses()
+PyDataType *ObjCacheDB::Generate_ramCompletedStatuses()
 {
     DBQueryResult res;
     const char *q = "SELECT completedStatusID, completedStatusName FROM ramCompletedStatuses";
@@ -596,7 +596,7 @@ PyRep *ObjCacheDB::Generate_ramCompletedStatuses()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_ramTypeRequirements()
+PyDataType *ObjCacheDB::Generate_ramTypeRequirements()
 {
     DBQueryResult res;
     const char *q = "SELECT typeID, activityID, requiredTypeID, quantity, damagePerJob, extra FROM ramTypeRequirements";
@@ -608,7 +608,7 @@ PyRep *ObjCacheDB::Generate_ramTypeRequirements()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_mapCelestialDescriptions()
+PyDataType *ObjCacheDB::Generate_mapCelestialDescriptions()
 {
     DBQueryResult res;
     const char *q = "SELECT celestialID, description FROM mapCelestialDescriptions";
@@ -620,7 +620,7 @@ PyRep *ObjCacheDB::Generate_mapCelestialDescriptions()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_tickerNames()
+PyDataType *ObjCacheDB::Generate_tickerNames()
 {
     DBQueryResult res;
     const char *q = "SELECT corporationID,tickerName,shape1,shape2,shape3,color1,color2,color3 FROM crpCorporation";
@@ -632,7 +632,7 @@ PyRep *ObjCacheDB::Generate_tickerNames()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invGroups()
+PyDataType *ObjCacheDB::Generate_invGroups()
 {
     DBQueryResult res;
     const char *q = "SELECT groupID, categoryID, groupName, description, iconID, 0 as graphicID, useBasePrice, allowManufacture, allowRecycler, anchored, anchorable, fittableNonSingleton, 1 AS published, 0 AS dataID FROM invGroups";
@@ -644,7 +644,7 @@ PyRep *ObjCacheDB::Generate_invGroups()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_certificates()
+PyDataType *ObjCacheDB::Generate_certificates()
 {
     DBQueryResult res;
     const char *q = "SELECT certificateID, categoryID, classID, grade, iconID, corpID, description, 0 AS dataID FROM crtCertificates";
@@ -656,7 +656,7 @@ PyRep *ObjCacheDB::Generate_certificates()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_certificateRelationships()
+PyDataType *ObjCacheDB::Generate_certificateRelationships()
 {
     DBQueryResult res;
     const char *q = "SELECT relationshipID, parentID, parentTypeID, parentLevel, childID, childTypeID FROM crtRelationships";
@@ -668,7 +668,7 @@ PyRep *ObjCacheDB::Generate_certificateRelationships()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invShipTypes()
+PyDataType *ObjCacheDB::Generate_invShipTypes()
 {
     DBQueryResult res;
     const char *q = "SELECT shipTypeID, weaponTypeID, miningTypeID, skillTypeID FROM shipTypes";
@@ -680,7 +680,7 @@ PyRep *ObjCacheDB::Generate_invShipTypes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_cacheLocations()
+PyDataType *ObjCacheDB::Generate_cacheLocations()
 {
     DBQueryResult res;
     const char *q = "SELECT locationID, locationName, locationNameID, x, y, z FROM cacheLocations";
@@ -698,7 +698,7 @@ PyRep *ObjCacheDB::Generate_cacheLocations()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_cacheOwners()  //  FIXME   add gender checks  -allan
+PyDataType *ObjCacheDB::Generate_cacheOwners()  //  FIXME   add gender checks  -allan
 {
     DBQueryResult res;
     //const char *q = "SELECT ownerID, ownerName, typeID, gender, ownerNameID FROM cacheOwners";
@@ -717,7 +717,7 @@ PyRep *ObjCacheDB::Generate_cacheOwners()  //  FIXME   add gender checks  -allan
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_locationWormholeClasses()
+PyDataType *ObjCacheDB::Generate_locationWormholeClasses()
 {
     DBQueryResult res;
     const char *q = "SELECT locationID, wormholeClassID FROM mapLocationWormholeClasses";
@@ -729,7 +729,7 @@ PyRep *ObjCacheDB::Generate_locationWormholeClasses()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invBlueprintTypes()
+PyDataType *ObjCacheDB::Generate_invBlueprintTypes()
 {
     DBQueryResult res;
     const char *q = "SELECT blueprintTypeID, parentBlueprintTypeID, productTypeID, productionTime, techLevel, researchProductivityTime, researchMaterialTime, researchCopyTime, researchTechTime, productivityModifier, materialModifier, wasteFactor, chanceOfRE, maxProductionLimit FROM invBlueprintTypes";
@@ -741,7 +741,7 @@ PyRep *ObjCacheDB::Generate_invBlueprintTypes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_eveGraphics()
+PyDataType *ObjCacheDB::Generate_eveGraphics()
 {
     DBQueryResult res;
     const char *q = "SELECT graphicID, graphicFile, graphicName, description, obsolete, graphicType, collisionFile, paperdollFile, animationTemplate, collidable, explosionID, directoryID, graphicMinX, graphicMinY, graphicMinZ, graphicMaxX, graphicMaxY, graphicMaxZ from graphics";
@@ -753,7 +753,7 @@ PyRep *ObjCacheDB::Generate_eveGraphics()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invTypes()
+PyDataType *ObjCacheDB::Generate_invTypes()
 {
     DBQueryResult res;
     const char *q = "SELECT typeID, groupID, typeName, description, graphicID, radius, mass, volume, capacity, portionSize, raceID, basePrice, published, marketGroupID, chanceOfDuplicating, soundID, iconID, dataID, typeNameID, descriptionID FROM invTypes";
@@ -765,7 +765,7 @@ PyRep *ObjCacheDB::Generate_invTypes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invMetaTypes()
+PyDataType *ObjCacheDB::Generate_invMetaTypes()
 {
     DBQueryResult res;
     const char *q = "SELECT typeID, parentTypeID, metaGroupID FROM invMetaTypes";
@@ -777,7 +777,7 @@ PyRep *ObjCacheDB::Generate_invMetaTypes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_chrBloodlines()
+PyDataType *ObjCacheDB::Generate_chrBloodlines()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, bloodlineName, raceID, description, maleDescription, femaleDescription, shipTypeID, corporationID, shortDescription, shortMaleDescription, shortFemaleDescription, iconID, bloodlineNameID, descriptionID, dataID FROM chrBloodlines";
@@ -789,7 +789,7 @@ PyRep *ObjCacheDB::Generate_chrBloodlines()
     return DBResultToPackedRowList(res);
 }
 
-PyRep *ObjCacheDB::Generate_eveUnits()
+PyDataType *ObjCacheDB::Generate_eveUnits()
 {
     DBQueryResult res;
     const char *q = "SELECT unitID, unitName, displayName FROM eveUnits";
@@ -801,7 +801,7 @@ PyRep *ObjCacheDB::Generate_eveUnits()
     return DBResultToPackedRowList(res);
 }
 
-PyRep *ObjCacheDB::Generate_eveBulkDataUnits()
+PyDataType *ObjCacheDB::Generate_eveBulkDataUnits()
 {
     DBQueryResult res;
     const char *q = "SELECT unitID, unitName, displayName FROM eveUnits";
@@ -813,7 +813,7 @@ PyRep *ObjCacheDB::Generate_eveBulkDataUnits()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_eveStaticOwners()
+PyDataType *ObjCacheDB::Generate_eveStaticOwners()
 {
     DBQueryResult res;
     const char *q = "SELECT ownerID, ownerName, typeID FROM eveStaticOwners";
@@ -825,7 +825,7 @@ PyRep *ObjCacheDB::Generate_eveStaticOwners()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_chrRaces()
+PyDataType *ObjCacheDB::Generate_chrRaces()
 {
     DBQueryResult res;
     const char *q = "SELECT raceID, raceName, description, iconID as graphicID, shortDescription, iconID, 0 AS dataID FROM chrRaces";
@@ -837,7 +837,7 @@ PyRep *ObjCacheDB::Generate_chrRaces()
     return DBResultToPackedRowList(res);
 }
 
-PyRep *ObjCacheDB::Generate_chrAttributes()
+PyDataType *ObjCacheDB::Generate_chrAttributes()
 {
     DBQueryResult res;
     const char *q = "SELECT attributeID, attributeName, description, iconID, shortDescription, notes, iconID as graphicID FROM chrAttributes";
@@ -849,7 +849,7 @@ PyRep *ObjCacheDB::Generate_chrAttributes()
     return DBResultToPackedRowList(res);
 }
 
-PyRep *ObjCacheDB::Generate_invFlags()
+PyDataType *ObjCacheDB::Generate_invFlags()
 {
     DBQueryResult res;
     const char *q = "SELECT flagID, flagName, flagName as flagLabel, flagName as flagGroup, flagName as description, orderID FROM invFlags";
@@ -861,7 +861,7 @@ PyRep *ObjCacheDB::Generate_invFlags()
     return DBResultToPackedRowList(res);
 }
 
-PyRep *ObjCacheDB::Generate_eveStaticLocations()
+PyDataType *ObjCacheDB::Generate_eveStaticLocations()
 {
     DBQueryResult res;
     const char *q = "SELECT locationID, locationName, x, y, z FROM eveStaticLocations";
@@ -873,7 +873,7 @@ PyRep *ObjCacheDB::Generate_eveStaticLocations()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_invContrabandTypes()
+PyDataType *ObjCacheDB::Generate_invContrabandTypes()
 {
     DBQueryResult res;
     const char *q = "SELECT factionID, typeID, standingLoss, confiscateMinSec, fineByValue, attackMinSec FROM invContrabandTypes";
@@ -885,7 +885,7 @@ PyRep *ObjCacheDB::Generate_invContrabandTypes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_c_chrBloodlines()
+PyDataType *ObjCacheDB::Generate_c_chrBloodlines()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, bloodlineName, raceID, description, maleDescription, femaleDescription, shipTypeID, corporationID, shortDescription, shortMaleDescription, shortFemaleDescription, iconID, bloodlineNameID, descriptionID, dataID FROM chrBloodlines";
@@ -897,7 +897,7 @@ PyRep *ObjCacheDB::Generate_c_chrBloodlines()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_c_chrRaces()
+PyDataType *ObjCacheDB::Generate_c_chrRaces()
 {
     DBQueryResult res;
     const char *q = "SELECT raceID, raceName, description, iconID, iconID AS graphicID, shortDescription, 0 AS dataID FROM chrRaces";
@@ -909,7 +909,7 @@ PyRep *ObjCacheDB::Generate_c_chrRaces()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_c_chrAncestries()
+PyDataType *ObjCacheDB::Generate_c_chrAncestries()
 {
     DBQueryResult res;
     const char *q = "SELECT ancestryID, ancestryName, bloodlineID, description, iconID, iconID AS graphicID, shortDescription, ancestryNameID, descriptionID, dataID FROM chrAncestries";
@@ -921,7 +921,7 @@ PyRep *ObjCacheDB::Generate_c_chrAncestries()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_c_chrSchools()
+PyDataType *ObjCacheDB::Generate_c_chrSchools()
 {
     DBQueryResult res;
     const char *q = "SELECT raceID, schoolID, schoolName, description, graphicID, chrSchools.corporationID, chrSchools.agentID, newAgentID, iconID, schoolNameID, descriptionID"
@@ -934,7 +934,7 @@ PyRep *ObjCacheDB::Generate_c_chrSchools()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_c_chrAttributes()
+PyDataType *ObjCacheDB::Generate_c_chrAttributes()
 {
     DBQueryResult res;
     const char *q = "SELECT attributeID, attributeName, description, iconID, iconID as graphicID, shortDescription, notes FROM chrAttributes";
@@ -946,7 +946,7 @@ PyRep *ObjCacheDB::Generate_c_chrAttributes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_accessories()
+PyDataType *ObjCacheDB::Generate_bl_accessories()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, accessoryID FROM chrBLAccessories";
@@ -958,7 +958,7 @@ PyRep *ObjCacheDB::Generate_bl_accessories()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_lights()
+PyDataType *ObjCacheDB::Generate_bl_lights()
 {
     DBQueryResult res;
     const char *q = "SELECT lightID, lightName FROM chrBLLights";
@@ -970,7 +970,7 @@ PyRep *ObjCacheDB::Generate_bl_lights()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_skins()
+PyDataType *ObjCacheDB::Generate_bl_skins()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, skinID FROM chrBLSkins";
@@ -982,7 +982,7 @@ PyRep *ObjCacheDB::Generate_bl_skins()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_beards()
+PyDataType *ObjCacheDB::Generate_bl_beards()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, beardID FROM chrBLBeards";
@@ -994,7 +994,7 @@ PyRep *ObjCacheDB::Generate_bl_beards()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_eyes()
+PyDataType *ObjCacheDB::Generate_bl_eyes()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, eyesID FROM chrBLEyes";
@@ -1006,7 +1006,7 @@ PyRep *ObjCacheDB::Generate_bl_eyes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_lipsticks()
+PyDataType *ObjCacheDB::Generate_bl_lipsticks()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, lipstickID FROM chrBLLipsticks";
@@ -1018,7 +1018,7 @@ PyRep *ObjCacheDB::Generate_bl_lipsticks()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_makeups()
+PyDataType *ObjCacheDB::Generate_bl_makeups()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, makeupID FROM chrBLMakeups";
@@ -1030,7 +1030,7 @@ PyRep *ObjCacheDB::Generate_bl_makeups()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_hairs()
+PyDataType *ObjCacheDB::Generate_bl_hairs()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, hairID FROM chrBLHairs";
@@ -1042,7 +1042,7 @@ PyRep *ObjCacheDB::Generate_bl_hairs()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_backgrounds()
+PyDataType *ObjCacheDB::Generate_bl_backgrounds()
 {
     DBQueryResult res;
     const char *q = "SELECT backgroundID, backgroundName FROM chrBLBackgrounds";
@@ -1054,7 +1054,7 @@ PyRep *ObjCacheDB::Generate_bl_backgrounds()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_decos()
+PyDataType *ObjCacheDB::Generate_bl_decos()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, decoID FROM chrBLDecos";
@@ -1066,7 +1066,7 @@ PyRep *ObjCacheDB::Generate_bl_decos()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_eyebrows()
+PyDataType *ObjCacheDB::Generate_bl_eyebrows()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, eyebrowsID FROM chrBLEyebrows";
@@ -1078,7 +1078,7 @@ PyRep *ObjCacheDB::Generate_bl_eyebrows()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_bl_costumes()
+PyDataType *ObjCacheDB::Generate_bl_costumes()
 {
     DBQueryResult res;
     const char *q = "SELECT bloodlineID, gender, costumeID FROM chrBLCostumes";
@@ -1090,7 +1090,7 @@ PyRep *ObjCacheDB::Generate_bl_costumes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_eyebrows()
+PyDataType *ObjCacheDB::Generate_a_eyebrows()
 {
     DBQueryResult res;
     const char *q = "SELECT eyebrowsID, eyebrowsName FROM chrEyebrows";
@@ -1102,7 +1102,7 @@ PyRep *ObjCacheDB::Generate_a_eyebrows()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_eyes()
+PyDataType *ObjCacheDB::Generate_a_eyes()
 {
     DBQueryResult res;
     const char *q = "SELECT eyesID, eyesName FROM chrEyes";
@@ -1114,7 +1114,7 @@ PyRep *ObjCacheDB::Generate_a_eyes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_decos()
+PyDataType *ObjCacheDB::Generate_a_decos()
 {
     DBQueryResult res;
     const char *q = "SELECT decoID, decoName FROM chrDecos";
@@ -1126,7 +1126,7 @@ PyRep *ObjCacheDB::Generate_a_decos()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_hairs()
+PyDataType *ObjCacheDB::Generate_a_hairs()
 {
     DBQueryResult res;
     const char *q = "SELECT hairID, hairName FROM chrHairs";
@@ -1138,7 +1138,7 @@ PyRep *ObjCacheDB::Generate_a_hairs()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_backgrounds()
+PyDataType *ObjCacheDB::Generate_a_backgrounds()
 {
     DBQueryResult res;
     const char *q = "SELECT backgroundID, backgroundName FROM chrBackgrounds";
@@ -1150,7 +1150,7 @@ PyRep *ObjCacheDB::Generate_a_backgrounds()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_accessories()
+PyDataType *ObjCacheDB::Generate_a_accessories()
 {
     DBQueryResult res;
     const char *q = "SELECT accessoryID, accessoryName FROM chrAccessories";
@@ -1162,7 +1162,7 @@ PyRep *ObjCacheDB::Generate_a_accessories()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_lights()
+PyDataType *ObjCacheDB::Generate_a_lights()
 {
     DBQueryResult res;
     const char *q = "SELECT lightID, lightName FROM chrLights";
@@ -1174,7 +1174,7 @@ PyRep *ObjCacheDB::Generate_a_lights()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_costumes()
+PyDataType *ObjCacheDB::Generate_a_costumes()
 {
     DBQueryResult res;
     const char *q = "SELECT costumeID, costumeName FROM chrCostumes";
@@ -1186,7 +1186,7 @@ PyRep *ObjCacheDB::Generate_a_costumes()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_makeups()
+PyDataType *ObjCacheDB::Generate_a_makeups()
 {
     DBQueryResult res;
     const char *q = "SELECT makeupID, makeupName FROM chrMakeups";
@@ -1198,7 +1198,7 @@ PyRep *ObjCacheDB::Generate_a_makeups()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_beards()
+PyDataType *ObjCacheDB::Generate_a_beards()
 {
     DBQueryResult res;
     const char *q = "SELECT beardID, beardName FROM chrBeards";
@@ -1210,7 +1210,7 @@ PyRep *ObjCacheDB::Generate_a_beards()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_skins()
+PyDataType *ObjCacheDB::Generate_a_skins()
 {
     DBQueryResult res;
     const char *q = "SELECT skinID, skinName FROM chrSkins";
@@ -1222,7 +1222,7 @@ PyRep *ObjCacheDB::Generate_a_skins()
     return DBResultToCRowset(res);
 }
 
-PyRep *ObjCacheDB::Generate_a_lipsticks()
+PyDataType *ObjCacheDB::Generate_a_lipsticks()
 {
     DBQueryResult res;
     const char *q = "SELECT lipstickID, lipstickName FROM chrLipsticks";

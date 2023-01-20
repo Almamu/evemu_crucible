@@ -43,11 +43,11 @@ public:
 protected:
     CorporationDB m_db;
 
-    PyResult GetStationServiceStates(PyCallArgs& call);
-    PyResult GetImprovementStaticData(PyCallArgs& call);
+    EVEResult GetStationServiceStates(EVECallArgs& call);
+    EVEResult GetImprovementStaticData(EVECallArgs& call);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters) override;
     void BoundReleased (CorpStationMgrIMBound* bound) override;
 
 private:
@@ -61,29 +61,29 @@ public:
     CorpStationMgrIMBound(EVEServiceManager& mgr, CorpStationMgr& parent, CorporationDB& db, uint32 station_id);
 
 protected:
-    PyResult GetCorporateStationInfo(PyCallArgs& call);
-    PyResult DoStandingCheckForStationService(PyCallArgs& call, PyInt* stationServiceID);
-    PyResult GetPotentialHomeStations(PyCallArgs& call);
-    PyResult SetHomeStation(PyCallArgs& call, PyInt* newHomeStationID);
-    PyResult SetCloneTypeID(PyCallArgs& call, PyInt* cloneTypeID);
-    PyResult GetQuoteForRentingAnOffice(PyCallArgs& call);
-    PyResult RentOffice(PyCallArgs& call, PyInt* amount);
-    PyResult CancelRentOfOffice(PyCallArgs& call);
-    PyResult GetStationOffices(PyCallArgs& call);
-    PyResult GetNumberOfUnrentedOffices(PyCallArgs& call);
-    PyResult MoveCorpHQHere(PyCallArgs& call);
+  EVEResult GetCorporateStationInfo(EVECallArgs& call);
+  EVEResult DoStandingCheckForStationService(EVECallArgs& call, PyInt* stationServiceID);
+  EVEResult GetPotentialHomeStations(EVECallArgs& call);
+  EVEResult SetHomeStation(EVECallArgs& call, PyInt* newHomeStationID);
+  EVEResult SetCloneTypeID(EVECallArgs& call, PyInt* cloneTypeID);
+  EVEResult GetQuoteForRentingAnOffice(EVECallArgs& call);
+  EVEResult RentOffice(EVECallArgs& call, PyInt* amount);
+  EVEResult CancelRentOfOffice(EVECallArgs& call);
+  EVEResult GetStationOffices(EVECallArgs& call);
+  EVEResult GetNumberOfUnrentedOffices(EVECallArgs& call);
+  EVEResult MoveCorpHQHere(EVECallArgs& call);
     //testing
-    PyResult GetCorporateStationOffice(PyCallArgs& call);
-    PyResult DoesPlayersCorpHaveJunkAtStation(PyCallArgs& call);
-    PyResult GetQuoteForGettingCorpJunkBack(PyCallArgs& call);
-    PyResult PayForReturnOfCorpJunk(PyCallArgs& call, PyFloat* cost);
-    PyResult GetStationServiceIdentifiers(PyCallArgs& call);
-    PyResult GetStationDetails(PyCallArgs& call, PyInt* stationID);
-    PyResult GetStationServiceAccessRule(PyCallArgs& call, PyInt* stationID, PyInt* serviceID);
-    PyResult GetStationManagementServiceCostModifiers(PyCallArgs& call, PyInt* stationID);
-    PyResult GetRentableItems(PyCallArgs& call);
-    PyResult GetOwnerIDsOfClonesAtStation(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetStationImprovements(PyCallArgs& call);
+  EVEResult GetCorporateStationOffice(EVECallArgs& call);
+  EVEResult DoesPlayersCorpHaveJunkAtStation(EVECallArgs& call);
+  EVEResult GetQuoteForGettingCorpJunkBack(EVECallArgs& call);
+  EVEResult PayForReturnOfCorpJunk(EVECallArgs& call, PyFloat* cost);
+  EVEResult GetStationServiceIdentifiers(EVECallArgs& call);
+  EVEResult GetStationDetails(EVECallArgs& call, PyInt* stationID);
+  EVEResult GetStationServiceAccessRule(EVECallArgs& call, PyInt* stationID, PyInt* serviceID);
+  EVEResult GetStationManagementServiceCostModifiers(EVECallArgs& call, PyInt* stationID);
+  EVEResult GetRentableItems(EVECallArgs& call);
+  EVEResult GetOwnerIDsOfClonesAtStation(EVECallArgs& call, PyInt* corporationID);
+  EVEResult GetStationImprovements(EVECallArgs& call);
 
 protected:
     const uint32 GetStationID() const { return this->m_stationID; }

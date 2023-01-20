@@ -78,22 +78,22 @@ public:
     /**
      * @brief Dispatches a normal call to the requested service and method and returns the result
      */
-    PyResult Dispatch(const std::string& service, const std::string& method, PyCallArgs& args);
+    EVEResult Dispatch(const std::string& service, const std::string& method, EVECallArgs& args);
 
     /**
      * @brief Dispatches a call to the requested bound service and method and returns the result
      */
-    PyResult Dispatch(const BoundID& service, const std::string& method, PyCallArgs& args);
+    EVEResult Dispatch(const BoundID& service, const std::string& method, EVECallArgs& args);
 
     /**
      * @brief Generates a string with debug information on the call
      */
-    std::string DebugDispatch (const std::string& service, const std::string& method, PyCallArgs& args);
+    std::string DebugDispatch (const std::string& service, const std::string& method, EVECallArgs& args);
 
     /**
      * @brief Generates a string with debug information on the call
      */
-    std::string DebugDispatch (const BoundID& service, const std::string& method, PyCallArgs& args);
+    std::string DebugDispatch (const BoundID& service, const std::string& method, EVECallArgs& args);
     
     /**
      * @brief Destroys the specified bound object

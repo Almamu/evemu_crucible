@@ -21,8 +21,8 @@ class StationDB
 public:
     void UpdateOfficeData(OfficeData& data);
 
-    static PyRep* GetOffices(uint32 stationID);
-    static PyRep* GetStationOfficeIDs(uint32 locationID, uint32 corpID, const char* key);
+    static PyDataType* GetOffices(uint32 stationID);
+    static PyDataType* GetStationOfficeIDs(uint32 locationID, uint32 corpID, const char* key);
 
     static uint32 CreateOffice(ItemData& idata, OfficeData& odata);
     static bool GetOfficeData(uint32 officeID, OfficeData& odata);

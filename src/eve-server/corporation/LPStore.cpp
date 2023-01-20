@@ -36,24 +36,24 @@ LPStore::LPStore() :
 
 }
 
-PyResult LPStore::AcceptOffer(PyCallArgs& call, PyInt* offerID, PyInt* quantity) {
+EVEResult LPStore::AcceptOffer(EVECallArgs& call, PyInt* offerID, PyInt* quantity) {
   /**
             return sm.RemoteSvc('storeServer').AcceptOffer(offerID, quantity)
             */
   sLog.White( "LPStore::AcceptOffer()", "size=%lu", call.tuple->size());
 
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
     return new PyList;
 }
 
-PyResult LPStore::GetAvailableOffers(PyCallArgs& call) {
+EVEResult LPStore::GetAvailableOffers(EVECallArgs& call) {
   /**
             availableOffers = sm.RemoteSvc('storeServer').GetAvailableOffers()
             */
     //no args
   sLog.White( "LPStore::GetAvailableOffers()", "size=%lu", call.tuple->size());
 
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
     return new PyList;
 }
 

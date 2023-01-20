@@ -45,7 +45,7 @@ protected:
     //PyCallable_DECL_CALL(GetShipCloneState)
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters);
 };
 
 class JumpCloneBound : public EVEBoundObject <JumpCloneBound>
@@ -54,16 +54,16 @@ public:
     JumpCloneBound(EVEServiceManager& mgr, JumpCloneService& parent, StationDB* db, uint32 locationID);
 
 protected:
-    PyResult GetCloneState(PyCallArgs& call);
-    PyResult GetShipCloneState(PyCallArgs& call);
-    PyResult GetPriceForClone(PyCallArgs& call);
-    PyResult InstallCloneInStation(PyCallArgs& call);
-    PyResult GetStationCloneState(PyCallArgs& call);
-    PyResult OfferShipCloneInstallation(PyCallArgs& call, PyInt* characterID);
-    PyResult DestroyInstalledClone(PyCallArgs& call, PyInt* cloneID);
-    PyResult AcceptShipCloneInstallation(PyCallArgs& call);
-    PyResult CancelShipCloneInstallation(PyCallArgs& call);
-    PyResult CloneJump(PyCallArgs& call, PyInt* locationID);
+  EVEResult GetCloneState(EVECallArgs& call);
+  EVEResult GetShipCloneState(EVECallArgs& call);
+  EVEResult GetPriceForClone(EVECallArgs& call);
+  EVEResult InstallCloneInStation(EVECallArgs& call);
+  EVEResult GetStationCloneState(EVECallArgs& call);
+  EVEResult OfferShipCloneInstallation(EVECallArgs& call, PyInt* characterID);
+  EVEResult DestroyInstalledClone(EVECallArgs& call, PyInt* cloneID);
+  EVEResult AcceptShipCloneInstallation(EVECallArgs& call);
+  EVEResult CancelShipCloneInstallation(EVECallArgs& call);
+  EVEResult CloneJump(EVECallArgs& call, PyInt* locationID);
 
 protected:
     StationDB *const m_db;        //we do not own this

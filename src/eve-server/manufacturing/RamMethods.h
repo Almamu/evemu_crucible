@@ -42,7 +42,7 @@ public:
 
     bool Calculate(const Call_InstallJob& args, BlueprintRef bpRef, Character* pChar, Rsp_InstallJob& into);
     void EncodeBillOfMaterials(const std::vector< EvERam::RequiredItem >& reqItems, float materialMultiplier, float charMaterialMultiplier, uint32 runs, BillOfMaterials& into);
-    void EncodeMissingMaterials(const std::vector< EvERam::RequiredItem >& reqItems, const PathElement& bomLocation, Client*const pClient, float materialMultiplier, float charMaterialMultiplier, int32 runs, std::map< int32, PyRep* >& into);
+    void EncodeMissingMaterials(const std::vector< EvERam::RequiredItem >& reqItems, const PathElement& bomLocation, Client*const pClient, float materialMultiplier, float charMaterialMultiplier, int32 runs, std::map< int32, PyDataType* >& into);
 
     void GetBOMItems(const PathElement &bomLocation, std::vector<InventoryItemRef> &into);
     void GetBOMItemsMap(const PathElement &bomLocation, std::map<uint16, InventoryItemRef> &into);

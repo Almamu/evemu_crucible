@@ -19,8 +19,8 @@ struct SignalData {
     float certainty;
     float deviation;
     CosmicSignature sig;
-    PyRep* probes;
-    PyRep* probePos;
+    PyDataType* probes;
+    PyDataType* probePos;
 };
 
 
@@ -40,7 +40,7 @@ public:
 
     uint8 GetProbeCount()                               { return (uint8)m_probeMap.size(); }
 
-    PyRep* ConeScan(Call_ConeScan args);
+    PyDataType* ConeScan(Call_ConeScan args);
     void RequestScans(PyDict* dict);
     void ShipScanResult();
     void ProbeScanResult();

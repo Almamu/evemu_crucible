@@ -37,7 +37,7 @@ void CalendarDB::DeleteEvent(uint32 eventID)
 }
 
 // for personal char events
-PyRep* CalendarDB::SaveNewEvent(uint32 ownerID, Call_CreateEventWithInvites& args)
+PyDataType* CalendarDB::SaveNewEvent(uint32 ownerID, Call_CreateEventWithInvites& args)
 {
     EvE::TimeParts data = EvE::TimeParts();
     data = GetTimeParts(args.startDateTime);
@@ -46,7 +46,7 @@ PyRep* CalendarDB::SaveNewEvent(uint32 ownerID, Call_CreateEventWithInvites& arg
     if (!args.invitees->empty()) {
         bool comma(false);
         std::ostringstream str;
-        PyList* list(args.invitees->AsList());
+        PyList* list(args.invitees->as<PyList>());
         PyList::const_iterator itr = list->begin(), end = list->end();
         while (itr != end) {
             if (comma) {
@@ -92,7 +92,7 @@ PyRep* CalendarDB::SaveNewEvent(uint32 ownerID, Call_CreateEventWithInvites& arg
 }
 
 // for corp/alliance events
-PyRep* CalendarDB::SaveNewEvent(uint32 ownerID, uint32 creatorID, Call_CreateEvent &args)
+PyDataType* CalendarDB::SaveNewEvent(uint32 ownerID, uint32 creatorID, Call_CreateEvent &args)
 {
     uint8 flag(Calendar::Flag::Invalid);
     if (IsCharacterID(ownerID)) {
@@ -159,7 +159,7 @@ uint32 CalendarDB::SaveSystemEvent(uint32 ownerID, uint32 creatorID, int64 start
 }
 
 
-PyRep* CalendarDB::GetEventList(uint32 ownerID, uint32 month, uint32 year)
+PyDataType* CalendarDB::GetEventList(uint32 ownerID, uint32 month, uint32 year)
 {
     if (ownerID == 0)
         return nullptr;
@@ -181,25 +181,25 @@ PyRep* CalendarDB::GetEventList(uint32 ownerID, uint32 month, uint32 year)
     PyList* list = new PyList();
     while (res.GetRow(row)) {
         PyDict* dict = new PyDict();
-            dict->SetItemString("eventID",              new PyInt(row.GetInt(0)));
-            dict->SetItemString("ownerID",              new PyInt(row.GetInt(1)));
-            dict->SetItemString("eventDateTime",        new PyLong(row.GetInt64(2)));
-            dict->SetItemString("dateModified",         row.IsNull(3) ? PyStatic.NewNone() : new PyLong(row.GetInt64(3)));
-            dict->SetItemString("eventDuration",        row.IsNull(4) ? PyStatic.NewNone() : new PyInt(row.GetInt(4)));
-            dict->SetItemString("importance",           new PyBool(row.GetBool(5)));
-            dict->SetItemString("eventTitle",           new PyString(row.GetText(6)));
-            dict->SetItemString("flag",                 new PyInt(row.GetInt(7)));
+            dict->set ("eventID",              new PyInt(row.GetInt(0)));
+            dict->set ("ownerID",              new PyInt(row.GetInt(1)));
+            dict->set ("eventDateTime",        new PyInt(row.GetInt64(2)));
+            dict->set ("dateModified",         row.IsNull(3) ? PyStatic.NewNone() : new PyInt(row.GetInt64(3)));
+            dict->set ("eventDuration",        row.IsNull(4) ? PyStatic.NewNone() : new PyInt(row.GetInt(4)));
+            dict->set ("importance",           new PyBool(row.GetBool(5)));
+            dict->set ("eventTitle",           new PyString(row.GetText(6)));
+            dict->set ("flag",                 new PyInt(row.GetInt(7)));
             // client patch to allow non-corp automated events for ram jobs
             if (row.GetInt(7) == Calendar::Flag::Automated)
-                dict->SetItemString("autoEventType",    new PyInt(row.GetInt(8)));
-            dict->SetItemString("isDeleted",            new PyBool(row.GetBool(9)));
-        list->AddItem(new PyObject("util.KeyVal",       dict));
+                dict->set ("autoEventType",    new PyInt(row.GetInt(8)));
+            dict->set ("isDeleted",            new PyBool(row.GetBool(9)));
+        list->add(new PyObject("util.KeyVal",       dict));
     }
 
     return list;
 }
 
-PyRep* CalendarDB::GetEventDetails(uint32 eventID)
+PyDataType* CalendarDB::GetEventDetails(uint32 eventID)
 {
     if (eventID == 0)
         return nullptr;
@@ -218,10 +218,10 @@ PyRep* CalendarDB::GetEventDetails(uint32 eventID)
         return nullptr;
 
     PyDict* dict = new PyDict();
-        dict->SetItemString("eventID",          new PyInt(eventID));
-        dict->SetItemString("ownerID",          new PyInt(row.GetInt(0)));
-        dict->SetItemString("creatorID",        new PyInt(row.GetInt(1)));
-        dict->SetItemString("eventText",        new PyString(row.GetText(2)));
+        dict->set ("eventID",          new PyInt(eventID));
+        dict->set ("ownerID",          new PyInt(row.GetInt(0)));
+        dict->set ("creatorID",        new PyInt(row.GetInt(1)));
+        dict->set ("eventText",        new PyString(row.GetText(2)));
 
     return new PyObject("util.KeyVal", dict);
 }
@@ -234,7 +234,7 @@ void CalendarDB::SaveEventResponse(uint32 charID, uint32 eventID, uint32 respons
         " VALUES (%u, %u, %u)", eventID, charID, response);
 }
 
-PyRep* CalendarDB::GetResponsesForCharacter(uint32 charID)
+PyDataType* CalendarDB::GetResponsesForCharacter(uint32 charID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,"SELECT eventID, response FROM sysCalendarResponses WHERE charID = %u", charID)) {
@@ -247,15 +247,15 @@ PyRep* CalendarDB::GetResponsesForCharacter(uint32 charID)
     while (res.GetRow(row)) {
         // list char response for each event
         PyDict* dict = new PyDict();
-            dict->SetItemString("eventID", new PyInt(row.GetInt(0)));
-            dict->SetItemString("status",  new PyInt(row.GetInt(1)));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+            dict->set ("eventID", new PyInt(row.GetInt(0)));
+            dict->set ("status",  new PyInt(row.GetInt(1)));
+        list->add(new PyObject("util.KeyVal", dict));
     }
 
     return list;
 }
 
-PyRep* CalendarDB::GetResponsesToEvent(uint32 eventID)
+PyDataType* CalendarDB::GetResponsesToEvent(uint32 eventID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,"SELECT charID, response FROM sysCalendarResponses WHERE eventID = %u", eventID)) {
@@ -268,9 +268,9 @@ PyRep* CalendarDB::GetResponsesToEvent(uint32 eventID)
     while (res.GetRow(row)) {
         // list char response for each event
         PyDict* dict = new PyDict();
-            dict->SetItemString("characterID", new PyInt(row.GetInt(0)));
-            dict->SetItemString("status",  new PyInt(row.GetInt(1)));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+            dict->set ("characterID", new PyInt(row.GetInt(0)));
+            dict->set ("status",  new PyInt(row.GetInt(1)));
+        list->add(new PyObject("util.KeyVal", dict));
     }
 
     return list;

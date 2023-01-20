@@ -67,13 +67,13 @@ AgentMgrService::AgentMgrService(EVEServiceManager& mgr) :
     this->Add("GetMyEpicJournalDetails", &AgentMgrService::GetMyEpicJournalDetails);
 }
 
-BoundDispatcher* AgentMgrService::BindObject(Client* client, PyRep* bindParameters) {
-    if (!bindParameters->IsInt()) {
+BoundDispatcher* AgentMgrService::BindObject(Client* client, PyDataType* bindParameters) {
+    if (!bindParameters->is<PyInt>()) {
         _log(SERVICE__ERROR, "%s: Non-integer argument '%s'", client->GetName(), bindParameters->TypeString());
         return nullptr;
     }
 
-    uint32 agentID = bindParameters->AsInt()->value();
+    uint32 agentID = bindParameters->as<PyInt>()->value();
     Agent* pAgent = sEntityList.GetAgent(agentID);
 
     if (pAgent == nullptr) {
@@ -102,21 +102,21 @@ void AgentMgrService::BoundReleased (AgentBound* bound) {
     this->m_instances.erase (it);
 }
 
-PyResult AgentMgrService::GetAgents(PyCallArgs &call) {
+EVEResult AgentMgrService::GetAgents(EVECallArgs&call) {
     // this is cached on client side...
     return sDataMgr.GetAgents();
 }
 
-PyResult AgentMgrService::GetSolarSystemOfAgent(PyCallArgs &call, PyInt* agentID)
+EVEResult AgentMgrService::GetSolarSystemOfAgent(EVECallArgs&call, PyInt* agentID)
 {
     return sDataMgr.GetAgentSystemID(agentID->value());
 }
 
-PyResult AgentMgrService::GetMyJournalDetails(PyCallArgs &call) {
+EVEResult AgentMgrService::GetMyJournalDetails(EVECallArgs&call) {
 // note:  this will show mission data in journal AND "offered" msg in agent data bloc on agent tab in station
 
     _log(AGENT__INFO, "AgentMgrService::Handle_GetMyJournalDetails() - size=%lli", call.tuple->size());
-    call.Dump(AGENT__DUMP);
+    call.dump(AGENT__DUMP);
 
     /** @todo  journal details
      * found in eve/client/script/ui/shared/neocom/journal.py
@@ -134,32 +134,33 @@ PyResult AgentMgrService::GetMyJournalDetails(PyCallArgs &call) {
      *                if research[0] == agentID:
      */
 
-    PyTuple *tuple = new PyTuple(2);
     //missions:
     PyList* missions = new PyList();
     std::vector<MissionOffer> data;
     sMissionDataMgr.LoadMissionOffers(call.client->GetCharacterID(), data);
     for (auto cur : data) {
-        PyTuple* mData = new PyTuple(9);
-        mData->SetItem(0, new PyInt(cur.stateID)); //missionState  .. these may be wrong also.
-        mData->SetItem(1, new PyInt(cur.important?1:0)); //importantMission  -- integer boolean
-        mData->SetItem(2, new PyString(sMissionDataMgr.GetTypeLabel(cur.typeID))); //missionTypeLabel
-        mData->SetItem(3, new PyString(cur.name)); //missionName
-        mData->SetItem(4, new PyInt(cur.agentID)); //agentID
-        mData->SetItem(5, new PyLong(cur.expiryTime)); //expirationTime
-        mData->SetItem(6, cur.bookmarks->Clone()); //bookmarks -- if populated, this is PyList of PyDicts as defined below...
-        mData->SetItem(7, new PyBool(cur.remoteOfferable)); //remoteOfferable
-        mData->SetItem(8, new PyBool(cur.remoteCompletable)); //remoteCompletable
-        missions->AddItem(mData);
+        missions->add (
+            new PyTuple {
+                new PyInt (cur.stateID), // missionState  .. these may be wrong also.
+                new PyInt (cur.important ? 1 : 0), // importantMission  -- integer boolean
+                new PyString (sMissionDataMgr.GetTypeLabel (cur.typeID)), // missionTypeLabel
+                new PyString (cur.name), // missionName
+                new PyInt (cur.agentID), // agentID
+                new PyInt (cur.expiryTime), // expirationTime
+                cur.bookmarks->clone (), // bookmarks -- if populated, this is PyList of PyDicts as defined below...
+                new PyBool (cur.remoteOfferable), // remoteOfferable
+                new PyBool (cur.remoteCompletable) // remoteCompletable
+            }
+        );
     }
-    tuple->SetItem(0, missions);
 
-    //research:
-    PyList* research = new PyList();
-    tuple->SetItem(1, research);
+    PyTuple* tuple = new PyTuple {
+        missions,
+        new PyList()
+    };
 
     if (is_log_enabled(AGENT__RSP_DUMP))
-        tuple->Dump(AGENT__RSP_DUMP, "   ");
+        tuple->dump(AGENT__RSP_DUMP, "   ");
     return tuple;
   /*
       [PySubStream 59 bytes]
@@ -278,7 +279,7 @@ PyResult AgentMgrService::GetMyJournalDetails(PyCallArgs &call) {
 
 
 /** not handled */
-PyResult AgentMgrService::GetMyEpicJournalDetails(PyCallArgs& call)
+EVEResult AgentMgrService::GetMyEpicJournalDetails(EVECallArgs& call)
 {
     //no args
   _log(AGENT__INFO, "AgentMgrBound::Handle_GetMyEpicJournalDetails() - size=%lli", call.tuple->size());
@@ -286,10 +287,10 @@ PyResult AgentMgrService::GetMyEpicJournalDetails(PyCallArgs& call)
     return new PyList();
 }
 
-PyResult AgentMgrService::GetCareerAgents(PyCallArgs &call)
+EVEResult AgentMgrService::GetCareerAgents(EVECallArgs&call)
 {
   _log(AGENT__INFO, "AgentMgrBound::Handle_GetCareerAgents() - size=%lli", call.tuple->size());
-    call.Dump(AGENT__DUMP);
+    call.dump(AGENT__DUMP);
 
     return PyStatic.NewZero();
 }
@@ -300,12 +301,12 @@ EpicArcService::EpicArcService() :
     this->Add("AgentHasEpicMissionsForCharacter", &EpicArcService::AgentHasEpicMissionsForCharacter);
 }
 
-PyResult EpicArcService::AgentHasEpicMissionsForCharacter(PyCallArgs &call, PyInt* agentID) {
+EVEResult EpicArcService::AgentHasEpicMissionsForCharacter(EVECallArgs&call, PyInt* agentID) {
   /**
      epicArcStatusSvc = sm.RemoteSvc('epicArcStatus').AgentHasEpicMissionsForCharacter(agent.agentID):
      */
     _log(AGENT__INFO, "EpicArcService::Handle_AgentHasEpicMissionsForCharacter() - size=%lli", call.tuple->size());
-    call.Dump(AGENT__DUMP);
+    call.dump(AGENT__DUMP);
 
     // return boolean
     return PyStatic.NewFalse();

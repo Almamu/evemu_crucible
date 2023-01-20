@@ -21,12 +21,12 @@ public:
     FleetProxy();
 
 protected:
-    PyResult GetAvailableFleets(PyCallArgs& call);
-    PyResult ApplyToJoinFleet(PyCallArgs& call, PyInt* fleetID);
-    PyResult AddFleetFinderAdvert(PyCallArgs& call, PyObject* info);
-    PyResult RemoveFleetFinderAdvert(PyCallArgs& call);
-    PyResult GetMyFleetFinderAdvert(PyCallArgs& call);
-    PyResult UpdateAdvertInfo(PyCallArgs& call, PyInt* numMembers);
+  EVEResult GetAvailableFleets(EVECallArgs& call);
+  EVEResult ApplyToJoinFleet(EVECallArgs& call, PyInt* fleetID);
+  EVEResult AddFleetFinderAdvert(EVECallArgs& call, PyObject* info);
+  EVEResult RemoveFleetFinderAdvert(EVECallArgs& call);
+  EVEResult GetMyFleetFinderAdvert(EVECallArgs& call);
+  EVEResult UpdateAdvertInfo(EVECallArgs& call, PyInt* numMembers);
 };
 
 #endif  // EVEMU_SRC_FLEET_PROXY_H_

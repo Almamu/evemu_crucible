@@ -26,8 +26,7 @@
 #ifndef __EVEUTILS_H__
 #define __EVEUTILS_H__
 
-#include "EvilNumber.h"
-#include "python/PyRep.h"
+#include "python/Types.h"
 
 /**
  * @brief Checks whether string is printable.
@@ -37,16 +36,7 @@
  * @retval true  The string is printable.
  * @retval false The string is not printable.
  */
-bool IsPrintable( const PyString* str );
-/**
- * @brief Checks whether string is printable.
- *
- * @param[in] str String to be checked.
- *
- * @retval true  The string is printable.
- * @retval false The string is not printable.
- */
-bool IsPrintable( const PyWString* str );
+bool IsPrintable (const PyString* str);
 
 /**
  * Checks compatibility between DBTYPE and PyRep.
@@ -55,7 +45,7 @@ bool IsPrintable( const PyWString* str );
  * @param[in] rep PyRep to check.
  * @return True if arguments are compatible, false if not.
  */
-bool DBTYPE_IsCompatible( DBTYPE type, const PyRep* rep );
+bool DBTYPE_IsCompatible (DBTYPE type, const PyDataType* rep);
 
 
 #endif

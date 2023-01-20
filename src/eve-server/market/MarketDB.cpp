@@ -26,7 +26,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "StaticDataMgr.h"
 #include "market/MarketDB.h"
 
@@ -40,7 +40,7 @@
  * MARKET__DB_TRACE
  */
 
-PyRep *MarketDB::GetStationAsks(uint32 stationID) {
+PyDataType *MarketDB::GetStationAsks(uint32 stationID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT"
@@ -61,7 +61,7 @@ PyRep *MarketDB::GetStationAsks(uint32 stationID) {
     return DBResultToIndexRowset(res, "typeID");
 }
 
-PyRep *MarketDB::GetSystemAsks(uint32 solarSystemID) {
+PyDataType *MarketDB::GetSystemAsks(uint32 solarSystemID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT"
@@ -82,7 +82,7 @@ PyRep *MarketDB::GetSystemAsks(uint32 solarSystemID) {
     return DBResultToIndexRowset(res, "typeID");
 }
 
-PyRep *MarketDB::GetRegionBest(uint32 regionID) {
+PyDataType *MarketDB::GetRegionBest(uint32 regionID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT"
@@ -103,11 +103,10 @@ PyRep *MarketDB::GetRegionBest(uint32 regionID) {
     return DBResultToIndexRowset(res, "typeID");
 }
 
-PyRep *MarketDB::GetOrders( uint32 regionID, uint16 typeID )
+PyDataType *MarketDB::GetOrders( uint32 regionID, uint16 typeID )
 {
     // returns a tuple (sell, buy) of PyObjectEx with data in PyPackedRows
 
-    PyTuple* tup = new PyTuple(2);
     DBQueryResult res;
     //query sell orders
     if (!sDatabase.RunQuery(res,
@@ -122,7 +121,7 @@ PyRep *MarketDB::GetOrders( uint32 regionID, uint16 typeID )
         return nullptr;
     }
     _log(MARKET__DB_TRACE, "GetOrders() - Fetched %u sell orders for type %u", res.GetRowCount(), typeID);
-    tup->SetItem(0, DBResultToCRowset( res ) );
+    PyDataType* first = DBResultToCRowset (res);
 
     //query buy orders
     if (!sDatabase.RunQuery(res,
@@ -134,18 +133,20 @@ PyRep *MarketDB::GetOrders( uint32 regionID, uint16 typeID )
         " WHERE regionID=%u AND typeID=%u AND bid=%u", regionID, typeID, Market::Type::Buy))
     {
         codelog( MARKET__DB_ERROR, "Error in query: %s", res.error.c_str() );
-        PyDecRef( tup );
         return nullptr;
     }
     _log(MARKET__DB_TRACE, "GetOrders() - Fetched %u buy orders for type %u", res.GetRowCount(), typeID);
-    tup->SetItem(1, DBResultToCRowset( res ) );
+    PyDataType* second = DBResultToCRowset (res);
 
+    PyTuple* tup = new PyTuple {
+        first, second
+    };
     if (is_log_enabled(MARKET__DUMP))
-        tup->Dump(MARKET__DUMP, "    ");
+        tup->dump(MARKET__DUMP, "    ");
     return tup;
 }
 
-PyRep* MarketDB::GetOrdersForOwner(uint32 ownerID)
+PyDataType* MarketDB::GetOrdersForOwner(uint32 ownerID)
 {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
@@ -166,7 +167,7 @@ PyRep* MarketDB::GetOrdersForOwner(uint32 ownerID)
     return DBResultToRowset(res);
 }
 
-PyRep *MarketDB::GetOrderRow(uint32 orderID) {
+PyDataType *MarketDB::GetOrderRow(uint32 orderID) {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res,
         "SELECT"
@@ -344,7 +345,7 @@ uint32 MarketDB::StoreOrder(Market::SaveData &data) {
 }
 
 // Retrieves the market transactions owned by the current `characterID`.
-PyRep *MarketDB::GetTransactions(uint32 characterID, Market::TxData& data) {
+PyDataType *MarketDB::GetTransactions(uint32 characterID, Market::TxData& data) {
     std::string typeID = "";
     if (data.typeID) {
         typeID = "typeID=";
@@ -426,7 +427,7 @@ bool MarketDB::RecordTransaction(Market::TxData &data) {
     return true;
 }
 
-PyRep *MarketDB::GetMarketGroups() {
+PyDataType *MarketDB::GetMarketGroups() {
     DBQueryResult res;
     if (!sDatabase.RunQuery(res, "SELECT parentGroupID, marketGroupID, marketGroupName,"
         " description, graphicID, hasTypes, iconID, dataID, marketGroupNameID, descriptionID"
@@ -437,45 +438,45 @@ PyRep *MarketDB::GetMarketGroups() {
 
     DBRowDescriptor *header = new DBRowDescriptor(res);
 
-    _log(MARKET__DB_TRACE, "GetMarketGroups header has %u columns.", header->ColumnCount());
+    _log(MARKET__DB_TRACE, "GetMarketGroups header has %u columns.", header->count());
 
-    CFilterRowSet *filterRowset = new CFilterRowSet(&header);
-    PyDict *keywords = filterRowset->GetKeywords();
-    keywords->SetItemString("allowDuplicateCompoundKeys", PyStatic.NewFalse());
-    keywords->SetItemString("indexName", PyStatic.NewNone());
-    keywords->SetItemString("columnName", new PyString("parentGroupID"));
+    CFilterRowset *filterRowset = new CFilterRowset(header, "parentGroupID");
+
+    filterRowset->clearIndexName();
+    filterRowset->setAllowDuplicateCompoundKeys (false);
 
     DBResultRow row;
-    std::map< int, PyRep* > tt;
+    std::map< int, PyDataType* > tt;
     while( res.GetRow(row) ) {
         int parentGroupID(row.IsNull(0) ? -1 : row.GetUInt(0));
-        PyRep* pid(nullptr);
-        CRowSet*rowset(nullptr);
+        PyDataType* pid(nullptr);
+        CRowset*rowset(nullptr);
         if (tt.count(parentGroupID)) {
             pid = tt[parentGroupID];
-            rowset = filterRowset->GetRowset(pid);
+            rowset = filterRowset->get(pid);
         } else {
-            pid = parentGroupID != -1 ? (PyRep*)new PyInt(parentGroupID) : PyStatic.NewNone();
+            pid = parentGroupID != -1 ? (PyDataType*)new PyInt(parentGroupID) : PyStatic.NewNone();
             tt[parentGroupID] = pid;
-            rowset = filterRowset->NewRowset(pid);
+            rowset = filterRowset->insert(pid);
         }
 
-        PyPackedRow* pyrow = rowset->NewRow();
-        pyrow->SetField((uint32)0, pid); //parentGroupID
-        pyrow->SetField(1, new PyInt(row.GetUInt(1))); //marketGroupID
-        pyrow->SetField(2, new PyString(row.GetText(2))); //marketGroupName
-        pyrow->SetField(3, new PyString(row.GetText(3))); //description
-        pyrow->SetField(4, row.IsNull(4) ? PyStatic.NewNone() : new PyInt(row.GetUInt(4))); //graphicID
-        pyrow->SetField(5, new PyBool(row.GetBool(5))); //hasTypes
-        pyrow->SetField(6, row.IsNull(6) ? PyStatic.NewNone() : new PyInt(row.GetUInt(6))); // iconID
-        pyrow->SetField(7, new PyInt(row.GetUInt(7))); //dataID
-        pyrow->SetField(8, new PyInt(row.GetUInt(8))); //marketGroupNameID
-        pyrow->SetField(9, new PyInt(row.GetUInt(9))); //descriptionID
+        PyPackedRow* pyrow = rowset->insert({
+            pid, // parentGroupID
+            new PyInt (row.GetUInt(1)), // marketGroupID
+            new PyString (row.GetText(2)), // marketGroupName
+            new PyString (row.GetText(3)), // description
+            row.IsNull(4) ? PyStatic.NewNone() : new PyInt (row.GetUInt(4)), // graphicID
+            new PyBool (row.GetBool (5)), // hasTypes
+            row.IsNull(6) ? PyStatic.NewNone() : new PyInt (row.GetUInt(6)), // iconID
+            new PyInt (row.GetUInt(7)), // data
+            new PyInt (row.GetUInt(8)), // marketGroupNameID
+            new PyInt (row.GetUInt (9)) // descriptionID
+        });
     }
 
     if (is_log_enabled(MARKET__DB_TRACE)) {
-        _log(MARKET__DB_TRACE, "GetMarketGroups returned %u keys.", filterRowset->GetKeyCount());
-        filterRowset->Dump(MARKET__DB_TRACE, "    ");
+        _log(MARKET__DB_TRACE, "GetMarketGroups returned %u keys.", filterRowset->keyCount());
+        filterRowset->dump(MARKET__DB_TRACE, "    ");
     }
 
     return filterRowset;

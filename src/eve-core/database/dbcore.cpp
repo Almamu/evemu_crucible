@@ -31,20 +31,9 @@
 #include "log/logsys.h"
 #include "utils/misc.h"
 #include "utils/utils_time.h"
-//#include "../eve-server/Profiler.h"
+#include "../log/Profiler.h"
 
 #define COLUMN_BOUNDS_CHECKING
-
-// this is to enable profile tracking for db
-#define sProfiler ( Profiler::get() )
-
-class Profiler
-: public Singleton<Profiler>
-{
-public:
-    void AddTime(uint8 key, double value);
-};
-
 
 DBcore::DBcore()
 : mysql(nullptr),

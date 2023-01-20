@@ -63,18 +63,18 @@ MailMgrService::MailMgrService() :
     this->Add("DeleteLabel", &MailMgrService::DeleteLabel);
 }
 
-PyResult MailMgrService::SendMail(PyCallArgs &call, PyList* toCharacterIDs, std::optional<PyInt*> listID, std::optional<PyInt*> toCorpOrAllianceID, PyWString* title, PyWString* body, PyBool* isReplyTo, PyBool* isForwardedFrom)
+EVEResult MailMgrService::SendMail(EVECallArgs&call, PyList* toCharacterIDs, std::optional<PyInt*> listID, std::optional<PyInt*> toCorpOrAllianceID, PyString* title, PyString* body, PyBool* isReplyTo, PyBool* isForwardedFrom)
 {
     std::vector<int32> characters;
 
     PyList::const_iterator list_2_cur = toCharacterIDs->begin();
     for (size_t list_2_index(0); list_2_cur != toCharacterIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SendMail failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         characters.push_back(t->value());
     }
 
@@ -91,24 +91,24 @@ PyResult MailMgrService::SendMail(PyCallArgs &call, PyList* toCharacterIDs, std:
     );
 }
 
-PyResult MailMgrService::PrimeOwners(PyCallArgs &call, PyList* ownerIDs)
+EVEResult MailMgrService::PrimeOwners(EVECallArgs&call, PyList* ownerIDs)
 {
     std::vector<int32> owners;
 
     PyList::const_iterator list_2_cur = ownerIDs->begin();
     for (size_t list_2_index(0); list_2_cur != ownerIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SendMail failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         owners.push_back(t->value());
     }
     return ServiceDB::PrimeOwners(owners);
 }
 
-PyResult MailMgrService::SyncMail(PyCallArgs &call, std::optional<PyInt*> first, std::optional<PyInt*> second)
+EVEResult MailMgrService::SyncMail(EVECallArgs&call, std::optional<PyInt*> first, std::optional<PyInt*> second)
 {
     int firstId = 0, secondId = 0;
 
@@ -119,24 +119,24 @@ PyResult MailMgrService::SyncMail(PyCallArgs &call, std::optional<PyInt*> first,
     }
 
     PyDict* dummy = new PyDict;
-    dummy->SetItemString("oldMail", PyStatic.NewNone());
-    dummy->SetItemString("newMail", m_db.GetNewMail(call.client->GetCharacterID()));
-    dummy->SetItemString("mailStatus", m_db.GetMailStatus(call.client->GetCharacterID()));
+    dummy->set ("oldMail", PyStatic.NewNone());
+    dummy->set ("newMail", m_db.GetNewMail(call.client->GetCharacterID()));
+    dummy->set ("mailStatus", m_db.GetMailStatus(call.client->GetCharacterID()));
     return new PyObject("util.KeyVal", dummy);
 }
 
-PyResult MailMgrService::AssignLabels(PyCallArgs &call, PyList* messageIDs, PyInt* labelID)
+EVEResult MailMgrService::AssignLabels(EVECallArgs&call, PyList* messageIDs, PyInt* labelID)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 
@@ -145,7 +145,7 @@ PyResult MailMgrService::AssignLabels(PyCallArgs &call, PyList* messageIDs, PyIn
     return nullptr;
 }
 
-PyResult MailMgrService::CreateLabel(PyCallArgs &call, PyWString* name, std::optional<PyInt*> color)
+EVEResult MailMgrService::CreateLabel(EVECallArgs&call, PyString* name, std::optional<PyInt*> color)
 {
     uint32 ret;
     if (m_db.CreateLabel(call.client->GetCharacterID(), name->content(), color.has_value() ? color.value()->value() : -1, ret))
@@ -153,25 +153,25 @@ PyResult MailMgrService::CreateLabel(PyCallArgs &call, PyWString* name, std::opt
     return nullptr;
 }
 
-PyResult MailMgrService::DeleteLabel(PyCallArgs &call, PyInt* labelID)
+EVEResult MailMgrService::DeleteLabel(EVECallArgs&call, PyInt* labelID)
 {
     m_db.DeleteLabel(call.client->GetCharacterID(), labelID->value());
 
     return nullptr;
 }
 
-PyResult MailMgrService::DeleteMail(PyCallArgs &call, PyList* messageIDs)
+EVEResult MailMgrService::DeleteMail(EVECallArgs&call, PyList* messageIDs)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 
@@ -183,20 +183,20 @@ PyResult MailMgrService::DeleteMail(PyCallArgs &call, PyList* messageIDs)
     return nullptr;
 }
 
-PyResult MailMgrService::EditLabel(PyCallArgs &call, PyInt* labelID, PyWString* name, std::optional<PyInt*> color)
+EVEResult MailMgrService::EditLabel(EVECallArgs&call, PyInt* labelID, PyString* name, std::optional<PyInt*> color)
 {
     m_db.EditLabel(call.client->GetCharacterID(), labelID->value(), name->content(), color.has_value() ? color.value()->value() : -1);
     return nullptr;
 }
 
-PyResult MailMgrService::EmptyTrash(PyCallArgs &call)
+EVEResult MailMgrService::EmptyTrash(EVECallArgs&call)
 {
     // @TODO: TEST
     m_db.EmptyTrash(call.client->GetCharacterID());
     return nullptr;
 }
 
-PyResult MailMgrService::GetBody(PyCallArgs &call, PyInt* messageID, PyBool* isUnread)
+EVEResult MailMgrService::GetBody(EVECallArgs&call, PyInt* messageID, PyBool* isUnread)
 {
     if (!isUnread->value()) {
         m_db.SetMailUnread(messageID->value());
@@ -207,43 +207,43 @@ PyResult MailMgrService::GetBody(PyCallArgs &call, PyInt* messageID, PyBool* isU
     return m_db.GetMailBody(messageID->value());
 }
 
-PyResult MailMgrService::GetLabels(PyCallArgs &call)
+EVEResult MailMgrService::GetLabels(EVECallArgs&call)
 {
     return m_db.GetLabels(call.client->GetCharacterID());
 }
 
-PyResult MailMgrService::GetMailHeaders(PyCallArgs &call, PyList* messageIDs)
+EVEResult MailMgrService::GetMailHeaders(EVECallArgs&call, PyList* messageIDs)
 {
     // @TODO: Stub
     // contains message ids
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAllAsRead(PyCallArgs &call)
+EVEResult MailMgrService::MarkAllAsRead(EVECallArgs&call)
 {
     m_db.MarkAllAsRead(call.client->GetCharacterID());
 
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAllAsUnread(PyCallArgs &call)
+EVEResult MailMgrService::MarkAllAsUnread(EVECallArgs&call)
 {
     m_db.MarkAllAsUnread(call.client->GetCharacterID());
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAsRead(PyCallArgs &call, PyList* messageIDs)
+EVEResult MailMgrService::MarkAsRead(EVECallArgs&call, PyList* messageIDs)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 
@@ -252,30 +252,30 @@ PyResult MailMgrService::MarkAsRead(PyCallArgs &call, PyList* messageIDs)
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAsReadByLabel(PyCallArgs &call, PyInt* labelID)
+EVEResult MailMgrService::MarkAsReadByLabel(EVECallArgs&call, PyInt* labelID)
 {
     m_db.MarkAllAsReadByLabel(call.client->GetCharacterID(), labelID->value());
 
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAsReadByList(PyCallArgs &call, PyInt* listID)
+EVEResult MailMgrService::MarkAsReadByList(EVECallArgs&call, PyInt* listID)
 {
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAsUnread(PyCallArgs &call, PyList* messageIDs)
+EVEResult MailMgrService::MarkAsUnread(EVECallArgs&call, PyList* messageIDs)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 
@@ -284,55 +284,55 @@ PyResult MailMgrService::MarkAsUnread(PyCallArgs &call, PyList* messageIDs)
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAsUnreadByLabel(PyCallArgs &call, PyInt* labelID)
+EVEResult MailMgrService::MarkAsUnreadByLabel(EVECallArgs&call, PyInt* labelID)
 {
     m_db.MarkAllAsUnreadByLabel(call.client->GetCharacterID(), labelID->value());
 
     return nullptr;
 }
 
-PyResult MailMgrService::MarkAsUnreadByList(PyCallArgs &call, PyList* messageIDs)
+EVEResult MailMgrService::MarkAsUnreadByList(EVECallArgs&call, PyList* messageIDs)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 
     return nullptr;
 }
 
-PyResult MailMgrService::MoveAllFromTrash(PyCallArgs &call)
+EVEResult MailMgrService::MoveAllFromTrash(EVECallArgs&call)
 {
     m_db.MoveAllFromTrash(call.client->GetCharacterID());
     return nullptr;
 }
 
-PyResult MailMgrService::MoveAllToTrash(PyCallArgs &call)
+EVEResult MailMgrService::MoveAllToTrash(EVECallArgs&call)
 {
     m_db.MoveAllToTrash(call.client->GetCharacterID());
     return nullptr;
 }
 
-PyResult MailMgrService::MoveFromTrash(PyCallArgs &call, PyList* messageIDs)
+EVEResult MailMgrService::MoveFromTrash(EVECallArgs&call, PyList* messageIDs)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 
@@ -341,18 +341,18 @@ PyResult MailMgrService::MoveFromTrash(PyCallArgs &call, PyList* messageIDs)
     return nullptr;
 }
 
-PyResult MailMgrService::MoveToTrash(PyCallArgs &call, PyList* messageIDs)
+EVEResult MailMgrService::MoveToTrash(EVECallArgs&call, PyList* messageIDs)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 
@@ -361,28 +361,28 @@ PyResult MailMgrService::MoveToTrash(PyCallArgs &call, PyList* messageIDs)
     return nullptr;
 }
 
-PyResult MailMgrService::MoveToTrashByLabel(PyCallArgs &call, PyInt* labelID)
+EVEResult MailMgrService::MoveToTrashByLabel(EVECallArgs&call, PyInt* labelID)
 {
     return nullptr;
 }
 
-PyResult MailMgrService::MoveToTrashByList(PyCallArgs &call, PyInt* listID)
+EVEResult MailMgrService::MoveToTrashByList(EVECallArgs&call, PyInt* listID)
 {
     return nullptr;
 }
 
-PyResult MailMgrService::RemoveLabels(PyCallArgs &call, PyList* messageIDs, PyInt* labelID)
+EVEResult MailMgrService::RemoveLabels(EVECallArgs&call, PyList* messageIDs, PyInt* labelID)
 {
     std::vector<int32> messageIds;
 
     PyList::const_iterator list_2_cur = messageIDs->begin();
     for (size_t list_2_index(0); list_2_cur != messageIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_AssignLabels failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         messageIds.push_back(t->value());
     }
 

@@ -22,13 +22,13 @@ class CalendarDB {
       static void SaveEventResponse(uint32 charID, uint32 eventID, uint32 response);
       static void UpdateEventParticipants(); // TODO: implement this
 
-      static PyRep* SaveNewEvent(uint32 ownerID, Call_CreateEventWithInvites &args);
-      static PyRep* SaveNewEvent(uint32 ownerID, uint32 creatorID, Call_CreateEvent &args);
-      static PyRep* GetEventList(uint32 ownerID, uint32 month, uint32 year);
-      static PyRep* GetEventDetails(uint32 eventID);
+      static PyDataType* SaveNewEvent(uint32 ownerID, Call_CreateEventWithInvites &args);
+      static PyDataType* SaveNewEvent(uint32 ownerID, uint32 creatorID, Call_CreateEvent &args);
+      static PyDataType* GetEventList(uint32 ownerID, uint32 month, uint32 year);
+      static PyDataType* GetEventDetails(uint32 eventID);
 
-      static PyRep* GetResponsesToEvent(uint32 eventID);
-      static PyRep* GetResponsesForCharacter(uint32 charID);
+      static PyDataType* GetResponsesToEvent(uint32 eventID);
+      static PyDataType* GetResponsesForCharacter(uint32 charID);
 
   protected:
 

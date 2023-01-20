@@ -79,11 +79,11 @@ FactionWarMgrService::FactionWarMgrService(EVEServiceManager& mgr) :
     this->m_cache = this->m_manager.Lookup <ObjCacheService>("objectCaching");
 }
 
-PyResult FactionWarMgrService::GetWarFactions(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetWarFactions(EVECallArgs&call) {
     ObjectCachedMethodID method_id(GetName().c_str(), "GetWarFactions");
 
     if (!this->m_cache->IsCacheLoaded(method_id)) {
-        PyRep *res = m_db.GetWarFactions();
+        PyDataType *res = m_db.GetWarFactions();
         if (res == NULL)
             return nullptr;
         this->m_cache->GiveCache(method_id, &res);
@@ -92,7 +92,7 @@ PyResult FactionWarMgrService::GetWarFactions(PyCallArgs &call) {
     return this->m_cache->MakeObjectCachedMethodCallResult(method_id);
 }
 
-PyResult FactionWarMgrService::GetFWSystems(PyCallArgs& call)
+EVEResult FactionWarMgrService::GetFWSystems(EVECallArgs& call)
 {
     /*
       [PySubStream 3625 bytes]
@@ -114,7 +114,7 @@ PyResult FactionWarMgrService::GetFWSystems(PyCallArgs& call)
 
     if ( !this->m_cache->IsCacheLoaded( method_id ) )
     {
-        PyRep* res = m_db.GetFacWarSystems();
+        PyDataType* res = m_db.GetFacWarSystems();
         if ( res == NULL )
             return nullptr;
 
@@ -128,7 +128,7 @@ PyResult FactionWarMgrService::GetFWSystems(PyCallArgs& call)
  * @note   these below are partially coded
  */
 
-PyResult FactionWarMgrService::GetMyCharacterRankOverview(PyCallArgs& call) {
+EVEResult FactionWarMgrService::GetMyCharacterRankOverview(EVECallArgs& call) {
     /**
             [PySubStream 122 bytes]
               [PyObjectEx Type2]
@@ -167,9 +167,9 @@ PyResult FactionWarMgrService::GetMyCharacterRankOverview(PyCallArgs& call) {
     return rs.Encode();
 }
 
-PyResult FactionWarMgrService::GetMyCharacterRankInfo(PyCallArgs& call) {
+EVEResult FactionWarMgrService::GetMyCharacterRankInfo(EVECallArgs& call) {
   _log(FACWAR__CALL, "FacWarMgr::Handle_GetMyCharacterRankInfo() size=%lli", call.tuple->size());
-  call.Dump(FACWAR__CALL_DUMP);
+  call.dump(FACWAR__CALL_DUMP);
   util_Rowset rs;
 
     rs.header.push_back( "currentRank" );
@@ -180,7 +180,7 @@ PyResult FactionWarMgrService::GetMyCharacterRankInfo(PyCallArgs& call) {
     return rs.Encode();
 }
 
-PyResult FactionWarMgrService::GetFactionMilitiaCorporation(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::GetFactionMilitiaCorporation(EVECallArgs&call, PyInt* factionID) {
     /* 05:39:07 [SvcCall] Service facWarMgr: calling GetFactionMilitiaCorporation
      * 05:39:07 FactionWarMgrService::Handle_GetFactionMilitiaCorporation(): size= 1
      * 05:39:07 [SvcCall]   Call Arguments:
@@ -188,12 +188,12 @@ PyResult FactionWarMgrService::GetFactionMilitiaCorporation(PyCallArgs &call, Py
      * 05:39:07 [SvcCall]         [ 0] Integer field: 500002
      */
   _log(FACWAR__CALL, "FacWarMgr::Handle_GetFactionMilitiaCorporation() size=%lli", call.tuple->size());
-  call.Dump(FACWAR__CALL_DUMP);
+  call.dump(FACWAR__CALL_DUMP);
 
     return (new PyInt(m_db.GetFactionMilitiaCorporation(factionID->value())));
 }
 
-PyResult FactionWarMgrService::GetSystemStatus(PyCallArgs &call, PyInt* solarsystemID, PyInt* warFactionID) {
+EVEResult FactionWarMgrService::GetSystemStatus(EVECallArgs&call, PyInt* solarsystemID, PyInt* warFactionID) {
     /*
      * status = self.facWarMgr.GetSystemStatus(session.solarsystemid2, session.warfactionid)
      * systemStatus = sm.StartService('facwar').GetSystemStatus()
@@ -210,12 +210,12 @@ PyResult FactionWarMgrService::GetSystemStatus(PyCallArgs &call, PyInt* solarsys
      */
 
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetSystemStatus()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
     return new PyInt(FacWar::SysStatus::None);
 }
 
 // these next two should use static data or cached data to avoid db hits
-PyResult FactionWarMgrService::IsEnemyFaction(PyCallArgs &call, PyInt* enemyID, PyInt* factionID) {
+EVEResult FactionWarMgrService::IsEnemyFaction(EVECallArgs&call, PyInt* enemyID, PyInt* factionID) {
     //  return self.facWarMgr.IsEnemyFaction(enemyID, factionID)
     /*
      * 05:39:09 L FactionWarMgrService::Handle_IsEnemyFaction(): size=2
@@ -225,16 +225,16 @@ PyResult FactionWarMgrService::IsEnemyFaction(PyCallArgs &call, PyInt* enemyID, 
      * 05:39:09 [SvcCall]         [ 1] Integer field: 500001   <- this one changes
      */
     _log(FACWAR__CALL, "FacWarMgr::Handle_IsEnemyFaction()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     // return boolean
     return PyStatic.NewFalse();
 }
 
-PyResult FactionWarMgrService::IsEnemyCorporation(PyCallArgs &call, PyInt* enemyID, PyInt* factionID) {
+EVEResult FactionWarMgrService::IsEnemyCorporation(EVECallArgs&call, PyInt* enemyID, PyInt* factionID) {
     //return self.facWarMgr.IsEnemyCorporation(enemyID, factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_IsEnemyCorporation()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     // return boolean
     return PyStatic.NewFalse();
@@ -244,191 +244,191 @@ PyResult FactionWarMgrService::IsEnemyCorporation(PyCallArgs &call, PyInt* enemy
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult FactionWarMgrService::GetCharacterRankInfo(PyCallArgs &call, PyInt* characterID) {
+EVEResult FactionWarMgrService::GetCharacterRankInfo(EVECallArgs&call, PyInt* characterID) {
   _log(FACWAR__CALL, "FacWarMgr::Handle_GetCharacterRankInfo()");
-  call.Dump(FACWAR__CALL_DUMP);
+  call.dump(FACWAR__CALL_DUMP);
 
   return nullptr;
 }
 
 //22:48:28 L FactionWarMgrService::Handle_GetFactionalWarStatus(): size= 0
-PyResult FactionWarMgrService::GetFactionalWarStatus(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetFactionalWarStatus(EVECallArgs&call) {
   _log(FACWAR__CALL, "FacWarMgr::Handle_GetFactionalWarStatus()");
-  call.Dump(FACWAR__CALL_DUMP);
+  call.dump(FACWAR__CALL_DUMP);
 
   return nullptr;
 }
 
-PyResult FactionWarMgrService::JoinFactionAsCharacter(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::JoinFactionAsCharacter(EVECallArgs&call, PyInt* factionID) {
   _log(FACWAR__CALL, "FacWarMgr::Handle_JoinFactionAsCharacter()");
-  call.Dump(FACWAR__CALL_DUMP);
+  call.dump(FACWAR__CALL_DUMP);
 
   return nullptr;
 }
 
-PyResult FactionWarMgrService::GetCorporationWarFactionID(PyCallArgs &call, PyInt* corporationID) {
+EVEResult FactionWarMgrService::GetCorporationWarFactionID(EVECallArgs&call, PyInt* corporationID) {
     //ret = self.facWarMgr.GetCorporationWarFactionID(corpID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetCorporationWarFactionID()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetSystemsConqueredThisRun(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetSystemsConqueredThisRun(EVECallArgs&call) {
     /*
         systemsThatWillSwitchNextDownTime = self.GetSystemsConqueredThisRun()
         cfg.evelocations.Prime([ d['solarsystemID'] for d in systemsThatWillSwitchNextDownTime ])
         cfg.eveowners.Prime([ d['occupierID'] for d in systemsThatWillSwitchNextDownTime ])
         */
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetSystemsConqueredThisRun()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetFactionCorporations(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::GetFactionCorporations(EVECallArgs&call, PyInt* factionID) {
     //return self.facWarMgr.GetFactionCorporations(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetFactionCorporations()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::JoinFactionAsCharacterRecommendationLetter(PyCallArgs &call, PyInt* factionID, PyInt* itemID) {
+EVEResult FactionWarMgrService::JoinFactionAsCharacterRecommendationLetter(EVECallArgs&call, PyInt* factionID, PyInt* itemID) {
     //self.facWarMgr.JoinFactionAsCharacterRecommendationLetter, factionID, itemID)
     // if char standing with faction is < 0.5,
     // they can join provided they have a 'recommendation letter', typeID 30906
     // dunno if the letter is removed after joining.
     _log(FACWAR__CALL, "FacWarMgr::Handle_JoinFactionAsCharacterRecommendationLetter()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::JoinFactionAsAlliance(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::JoinFactionAsAlliance(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.JoinFactionAsAlliance(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_JoinFactionAsAlliance()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::JoinFactionAsCorporation(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::JoinFactionAsCorporation(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.JoinFactionAsCorporation(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_JoinFactionAsCorporation()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetStats_FactionInfo(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetStats_FactionInfo(EVECallArgs&call) {
     //return self.facWarMgr.GetStats_FactionInfo()
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetStats_FactionInfo()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetStats_TopAndAllKillsAndVPs(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetStats_TopAndAllKillsAndVPs(EVECallArgs&call) {
     //self.topStats = self.facWarMgr.GetStats_TopAndAllKillsAndVPs()
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetStats_TopAndAllKillsAndVPs()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetStats_Character(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetStats_Character(EVECallArgs&call) {
     //for k, v in self.facWarMgr.GetStats_Character().items():
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetStats_Character()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetStats_Corp(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetStats_Corp(EVECallArgs&call) {
     // for k, v in self.facWarMgr.GetStats_Corp().items():
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetStats_Corp()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetStats_Alliance(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetStats_Alliance(EVECallArgs&call) {
     //for k, v in self.facWarMgr.GetStats_Alliance().items():
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetStats_Alliance()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetStats_Militia(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetStats_Militia(EVECallArgs&call) {
     //return self.facWarMgr.GetStats_Militia()
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetStats_Militia()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::GetStats_CorpPilots(PyCallArgs &call) {
+EVEResult FactionWarMgrService::GetStats_CorpPilots(EVECallArgs&call) {
     //return self.facWarMgr.GetStats_CorpPilots()
     _log(FACWAR__CALL, "FacWarMgr::Handle_GetStats_CorpPilots()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::LeaveFactionAsAlliance(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::LeaveFactionAsAlliance(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.LeaveFactionAsAlliance(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_LeaveFactionAsAlliance()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::LeaveFactionAsCorporation(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::LeaveFactionAsCorporation(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.LeaveFactionAsCorporation(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_LeaveFactionAsCorporation()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::WithdrawJoinFactionAsAlliance(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::WithdrawJoinFactionAsAlliance(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.WithdrawJoinFactionAsAlliance(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_WithdrawJoinFactionAsAlliance()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::WithdrawJoinFactionAsCorporation(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::WithdrawJoinFactionAsCorporation(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.WithdrawJoinFactionAsCorporation(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_WithdrawJoinFactionAsCorporation()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::WithdrawLeaveFactionAsAlliance(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::WithdrawLeaveFactionAsAlliance(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.WithdrawLeaveFactionAsAlliance(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_WithdrawLeaveFactionAsAlliance()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::WithdrawLeaveFactionAsCorporation(PyCallArgs &call, PyInt* factionID) {
+EVEResult FactionWarMgrService::WithdrawLeaveFactionAsCorporation(EVECallArgs&call, PyInt* factionID) {
     //self.facWarMgr.WithdrawLeaveFactionAsCorporation(factionID)
     _log(FACWAR__CALL, "FacWarMgr::Handle_WithdrawLeaveFactionAsCorporation()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult FactionWarMgrService::RefreshCorps(PyCallArgs &call) {
+EVEResult FactionWarMgrService::RefreshCorps(EVECallArgs&call) {
     //return self.facWarMgr.RefreshCorps()
     _log(FACWAR__CALL, "FacWarMgr::Handle_RefreshCorps()");
-    call.Dump(FACWAR__CALL_DUMP);
+    call.dump(FACWAR__CALL_DUMP);
 
     return nullptr;
 }

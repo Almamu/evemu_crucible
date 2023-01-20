@@ -33,34 +33,34 @@ public:
 
     uint32 GetAllianceID () const { return this->m_allyID; }
 protected:
-    PyResult CreateLabel(PyCallArgs& call, PyString* name, std::optional<PyInt*> color);
-    PyResult GetLabels(PyCallArgs& call);
-    PyResult DeleteLabel(PyCallArgs& call, PyInt* labelID);
-    PyResult EditLabel(PyCallArgs& call, PyInt* labelID, PyString* name, std::optional<PyInt*> color);
-    PyResult AssignLabels(PyCallArgs& call, PyList* contactIDs, PyInt* labelMask);
-    PyResult RemoveLabels(PyCallArgs& call, PyList* contactIDs, PyInt* labelMask);
+  EVEResult CreateLabel(EVECallArgs& call, PyString* name, std::optional<PyInt*> color);
+  EVEResult GetLabels(EVECallArgs& call);
+  EVEResult DeleteLabel(EVECallArgs& call, PyInt* labelID);
+  EVEResult EditLabel(EVECallArgs& call, PyInt* labelID, PyString* name, std::optional<PyInt*> color);
+  EVEResult AssignLabels(EVECallArgs& call, PyList* contactIDs, PyInt* labelMask);
+  EVEResult RemoveLabels(EVECallArgs& call, PyList* contactIDs, PyInt* labelMask);
 
-    PyResult AddBulletin(PyCallArgs& call, PyWString* title, PyWString* body);
-    PyResult GetBulletins(PyCallArgs& call);
-    PyResult DeleteBulletin(PyCallArgs& call, PyInt* id);
+  EVEResult AddBulletin(EVECallArgs& call, PyString* title, PyString* body);
+  EVEResult GetBulletins(EVECallArgs& call);
+  EVEResult DeleteBulletin(EVECallArgs& call, PyInt* id);
 
-    PyResult GetMembers(PyCallArgs& call);
-    PyResult DeclareExecutorSupport(PyCallArgs& call, PyInt* chosenExecutor);
-    PyResult DeleteMember(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetApplications(PyCallArgs& call);
-    PyResult UpdateApplication(PyCallArgs& call, PyInt* corporationID, PyWString* applicationText, PyInt* state);
-    PyResult AddToVoiceChat(PyCallArgs& call, PyString* channelName);
-    PyResult PayBill(PyCallArgs& call, PyInt* billID, PyInt* fromAccountKey);
-    PyResult GetBillBalance(PyCallArgs& call, PyInt* billID);
-    PyResult GetBills(PyCallArgs& call);
-    PyResult GetBillsReceivable(PyCallArgs& call);
-    PyResult GetAllianceContacts(PyCallArgs& call);
-    PyResult AddAllianceContact(PyCallArgs& call, PyInt* contactID, PyInt* relationshipID);
-    PyResult EditAllianceContact(PyCallArgs& call, PyInt* contactID, PyInt* relationshipID);
-    PyResult RemoveAllianceContacts(PyCallArgs& call, PyList* contactIDs);
-    PyResult EditContactsRelationshipID(PyCallArgs& call, PyList* contactIDs, PyInt* relationshipID);
-    PyResult GetAlliance(PyCallArgs& call);
-    PyResult UpdateAlliance(PyCallArgs& call, PyWString* description, PyWString* url);
+  EVEResult GetMembers(EVECallArgs& call);
+  EVEResult DeclareExecutorSupport(EVECallArgs& call, PyInt* chosenExecutor);
+  EVEResult DeleteMember(EVECallArgs& call, PyInt* corporationID);
+  EVEResult GetApplications(EVECallArgs& call);
+  EVEResult UpdateApplication(EVECallArgs& call, PyInt* corporationID, PyString* applicationText, PyInt* state);
+  EVEResult AddToVoiceChat(EVECallArgs& call, PyString* channelName);
+  EVEResult PayBill(EVECallArgs& call, PyInt* billID, PyInt* fromAccountKey);
+  EVEResult GetBillBalance(EVECallArgs& call, PyInt* billID);
+  EVEResult GetBills(EVECallArgs& call);
+  EVEResult GetBillsReceivable(EVECallArgs& call);
+  EVEResult GetAllianceContacts(EVECallArgs& call);
+  EVEResult AddAllianceContact(EVECallArgs& call, PyInt* contactID, PyInt* relationshipID);
+  EVEResult EditAllianceContact(EVECallArgs& call, PyInt* contactID, PyInt* relationshipID);
+  EVEResult RemoveAllianceContacts(EVECallArgs& call, PyList* contactIDs);
+  EVEResult EditContactsRelationshipID(EVECallArgs& call, PyList* contactIDs, PyInt* relationshipID);
+  EVEResult GetAlliance(EVECallArgs& call);
+  EVEResult UpdateAlliance(EVECallArgs& call, PyString* description, PyString* url);
 
     AllianceDB& m_db;
     ObjCacheService* m_cache;

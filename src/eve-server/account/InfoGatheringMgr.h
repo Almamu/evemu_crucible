@@ -35,8 +35,8 @@ public:
     InfoGatheringMgr();
 
 protected:
-    PyResult GetStateAndConfig(PyCallArgs& call);
-    PyResult LogInfoEventsFromClient(PyCallArgs& call, PyList* loggedEvents);
+  EVEResult GetStateAndConfig(EVECallArgs& call);
+  EVEResult LogInfoEventsFromClient(EVECallArgs& call, PyList* loggedEvents);
 };
 
 #endif

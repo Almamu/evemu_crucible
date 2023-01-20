@@ -35,7 +35,7 @@ JumpCloneService::JumpCloneService(EVEServiceManager& mgr) :
 { 
 }
 
-BoundDispatcher* JumpCloneService::BindObject (Client* client, PyRep* bindParameters)
+BoundDispatcher* JumpCloneService::BindObject (Client* client, PyDataType* bindParameters)
 {
     return new JumpCloneBound(this->GetServiceManager(), *this, &m_db, client->GetLocationID());
 }
@@ -72,13 +72,13 @@ JumpCloneBound::JumpCloneBound (EVEServiceManager& mgr, JumpCloneService& parent
         m_locGroupID = EVEDB::invGroups::Solar_System;
 }
 
-PyResult JumpCloneBound::InstallCloneInStation(PyCallArgs &call) {
+EVEResult JumpCloneBound::InstallCloneInStation(EVECallArgs&call) {
     //19:02:15 W JumpCloneBound::Handle_InstallCloneInStation(): size= 0
 
   return nullptr;
 }
 
-PyResult JumpCloneBound::GetCloneState(PyCallArgs &call) {
+EVEResult JumpCloneBound::GetCloneState(EVECallArgs&call) {
     /*  stationClones{jumpCloneID, locationID}
      * shipClones{jumpCloneID, ownerID, locationID}
      * cloneImplants{jumpCloneID, implants}
@@ -89,14 +89,14 @@ PyResult JumpCloneBound::GetCloneState(PyCallArgs &call) {
     PyDict* implants = new PyDict();  //jumpCloneID, implants{tuple of implantID?, typeID}
     //PyTuple* implants = new PyTuple(2);
 
-    dict->SetItemString( "clones", clones );
-    dict->SetItemString( "implants", implants );
-    dict->SetItemString( "timeLastJump", new PyLong(GetFileTimeNow() -(EvE::Time::Hour *MakeRandomFloat(1, 23))) );   /** @todo fix this to call.client->GetChar()->LastJumpTime()*/
+    dict->set ( "clones", clones );
+    dict->set ( "implants", implants );
+    dict->set ( "timeLastJump", new PyInt(GetFileTimeNow() -(EvE::Time::Hour *MakeRandomFloat(1, 23))) );   /** @todo fix this to call.client->GetChar()->LastJumpTime()*/
 
     return new PyObject( "util.KeyVal", dict );
 }
 
-PyResult JumpCloneBound::GetShipCloneState(PyCallArgs &call) {
+EVEResult JumpCloneBound::GetShipCloneState(EVECallArgs&call) {
     _log(CHARACTER__INFO, "JumpCloneBound::Handle_GetShipCloneState()");
 
     //Define PyList for ship clones (not dict since client is looking to index through list)
@@ -106,7 +106,7 @@ PyResult JumpCloneBound::GetShipCloneState(PyCallArgs &call) {
     return clones;
 }
 
-PyResult JumpCloneBound::GetStationCloneState(PyCallArgs &call) {
+EVEResult JumpCloneBound::GetStationCloneState(EVECallArgs&call) {
     _log(CHARACTER__INFO, "JumpCloneBound::Handle_GetStationCloneState()");
 
     PyDict* dict = new PyDict();
@@ -114,14 +114,14 @@ PyResult JumpCloneBound::GetStationCloneState(PyCallArgs &call) {
     PyDict* implants = new PyDict();  //jumpCloneID, implants{tuple of implantID?, typeID}
     //PyTuple* implants = new PyTuple(2);
 
-    dict->SetItemString( "clones", clones );
-    dict->SetItemString( "implants", implants );
-    dict->SetItemString( "timeLastJump", new PyLong(GetFileTimeNow() -(EvE::Time::Hour *MakeRandomFloat(1, 23))) );   /** @todo fix this to call.client->GetChar()->LastJumpTime()*/
+    dict->set ( "clones", clones );
+    dict->set ( "implants", implants );
+    dict->set ( "timeLastJump", new PyInt(GetFileTimeNow() -(EvE::Time::Hour *MakeRandomFloat(1, 23))) );   /** @todo fix this to call.client->GetChar()->LastJumpTime()*/
 
     return new PyObject( "util.KeyVal", dict );
 }
 
-PyResult JumpCloneBound::GetPriceForClone(PyCallArgs &call) {
+EVEResult JumpCloneBound::GetPriceForClone(EVECallArgs&call) {
     /*        kwargs = {'amount': None, 'player': 140000038}
      * TypeError: Numeric Formatter expects floating point or signed integer types.
      */
@@ -129,35 +129,35 @@ PyResult JumpCloneBound::GetPriceForClone(PyCallArgs &call) {
     return new PyInt(1000000);
 }
 
-PyResult JumpCloneBound::OfferShipCloneInstallation(PyCallArgs &call, PyInt* characterID) {
+EVEResult JumpCloneBound::OfferShipCloneInstallation(EVECallArgs&call, PyInt* characterID) {
     //    OfferShipCloneInstallation(charID)  //offeringCharID, targetCharID, shipID, b (b=unknown)
     _log(CHARACTER__INFO, "JumpCloneBound::Handle_OfferShipCloneInstallation()");
 
     return nullptr;
 }
 
-PyResult JumpCloneBound::DestroyInstalledClone(PyCallArgs &call, PyInt* cloneID) {
+EVEResult JumpCloneBound::DestroyInstalledClone(EVECallArgs&call, PyInt* cloneID) {
     //    lm.DestroyInstalledClone(cloneID)
     _log(CHARACTER__INFO, "JumpCloneBound::Handle_DestroyInstalledClone()");
 
     return nullptr;
 }
 
-PyResult JumpCloneBound::AcceptShipCloneInstallation(PyCallArgs &call) {
+EVEResult JumpCloneBound::AcceptShipCloneInstallation(EVECallArgs&call) {
     //lm.AcceptShipCloneInstallation()
     _log(CHARACTER__INFO, "JumpCloneBound::Handle_AcceptShipCloneInstallation()");
 
     return nullptr;
 }
 
-PyResult JumpCloneBound::CancelShipCloneInstallation(PyCallArgs &call) {
+EVEResult JumpCloneBound::CancelShipCloneInstallation(EVECallArgs&call) {
     //lm.CancelShipCloneInstallation()
     _log(CHARACTER__INFO, "JumpCloneBound::Handle_CancelShipCloneInstallation()");
 
     return nullptr;
 }
 
-PyResult JumpCloneBound::CloneJump(PyCallArgs &call, PyInt* locationID) {
+EVEResult JumpCloneBound::CloneJump(EVECallArgs&call, PyInt* locationID) {
     //lm.CloneJump, destLocationID
 _log(CHARACTER__INFO, "JumpCloneBound::Handle_CloneJump()");
 

@@ -38,21 +38,21 @@ public:
 protected:
     CorporationDB m_db;
 
-    PyResult GetNPCDivisions(PyCallArgs& call);
-    PyResult GetEmploymentRecord(PyCallArgs& call, PyInt* characterID);
-    PyResult GetFactionInfo(PyCallArgs& call);
-    PyResult GetCorpInfo(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetRecruitmentAdRegistryData(PyCallArgs& call);
-    PyResult GetRecruitmentAdsByCriteria(PyCallArgs& call, PyInt* typeMask, PyBool* inAlliance, std::optional<PyInt*> minMembers, std::optional<PyInt*> maxMembers);
-    PyResult GetRecruitmentAdsForCorporation(PyCallArgs& call);
-    PyResult CreateMedal(PyCallArgs& call, PyWString* name, PyWString* description, PyList* medalData);
-    PyResult GetMedalsReceived(PyCallArgs& call, PyInt* characterID);
-    PyResult GetMedalDetails(PyCallArgs& call, PyInt* medalID);
-    PyResult GetAllCorpMedals(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetRecipientsOfMedal(PyCallArgs& call, PyInt* medalID);
-    PyResult GiveMedalToCharacters(PyCallArgs& call, PyInt* medalID, PyList* recipientIDs, PyWString* reason);
-    PyResult GetMedalStatuses(PyCallArgs& call);
-    PyResult SetMedalStatus(PyCallArgs& call, PyDict* newStatus);
+    EVEResult GetNPCDivisions(EVECallArgs& call);
+    EVEResult GetEmploymentRecord(EVECallArgs& call, PyInt* characterID);
+    EVEResult GetFactionInfo(EVECallArgs& call);
+    EVEResult GetCorpInfo(EVECallArgs& call, PyInt* corporationID);
+    EVEResult GetRecruitmentAdRegistryData(EVECallArgs& call);
+    EVEResult GetRecruitmentAdsByCriteria(EVECallArgs& call, PyInt* typeMask, PyBool* inAlliance, std::optional<PyInt*> minMembers, std::optional<PyInt*> maxMembers);
+    EVEResult GetRecruitmentAdsForCorporation(EVECallArgs& call);
+    EVEResult CreateMedal(EVECallArgs& call, PyString* name, PyString* description, PyList* medalData);
+    EVEResult GetMedalsReceived(EVECallArgs& call, PyInt* characterID);
+    EVEResult GetMedalDetails(EVECallArgs& call, PyInt* medalID);
+    EVEResult GetAllCorpMedals(EVECallArgs& call, PyInt* corporationID);
+    EVEResult GetRecipientsOfMedal(EVECallArgs& call, PyInt* medalID);
+    EVEResult GiveMedalToCharacters(EVECallArgs& call, PyInt* medalID, PyList* recipientIDs, PyString* reason);
+    EVEResult GetMedalStatuses(EVECallArgs& call);
+    EVEResult SetMedalStatus(EVECallArgs& call, PyDict* newStatus);
 };
 
 #endif

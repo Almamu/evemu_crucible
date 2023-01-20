@@ -20,7 +20,7 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "planet/Planet.h"
 #include "pos/sovStructures/SBU.h"
 #include "pos/sovStructures/TCU.h"
@@ -119,18 +119,18 @@ void SBUSE::MarkContested(uint32 systemID, bool contested)
     //Get the new sov data so we can send it to the client in a notification
     SovereigntyData sovData = svDataMgr.GetSovereigntyData(systemID);
 
-    args->SetItemString("corporationID", new PyInt(sovData.corporationID));
-    args->SetItemString("claimTime", new PyLong(sovData.claimTime));
-    args->SetItemString("claimStructureID", new PyInt(sovData.claimStructureID));
-    args->SetItemString("hubID", new PyInt(sovData.hubID));
-    args->SetItemString("allianceID", new PyInt(sovData.allianceID));
-    args->SetItemString("contested", new PyInt(int(contested)));
-    args->SetItemString("solarSystemID", new PyInt(systemID));
-
-    PyTuple *data = new PyTuple(2);
-    data->SetItem(0, new PyInt(systemID));
-    data->SetItem(1, new PyObject("util.KeyVal", args));
-
+    PyTuple* data = new PyTuple {
+        new PyInt (systemID),
+        new PyObject ("util.KeyVal", new PyDict {
+            {"corporationID", new PyInt(sovData.corporationID)},
+            {"claimTime", new PyInt(sovData.claimTime)},
+            {"claimStructureID", new PyInt(sovData.claimStructureID)},
+            {"hubID", new PyInt(sovData.hubID)},
+            {"allianceID", new PyInt(sovData.allianceID)},
+            {"contested", new PyInt(int(contested))},
+            {"solarSystemID", new PyInt(systemID)},
+        })
+    };
     std::vector<Client *> list;
     sEntityList.GetClients(list);
     for (auto cur : list)

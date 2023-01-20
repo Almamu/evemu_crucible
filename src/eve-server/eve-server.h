@@ -40,7 +40,7 @@
 /* eve-server includes                                                  */
 /************************************************************************/
 // profile
-#include "Profiler.h"
+#include "log/Profiler.h"
 // auth
 #include "auth/PasswordModule.h"
 // cache
@@ -92,14 +92,12 @@
 
 // python
 #include "python/PyVisitor.h"
-#include "python/PyRep.h"
-#include "python/PyPacket.h"
-#include "python/PyDumpVisitor.h"
-#include "python/PyLookupDump.h"
-#include "python/PyXMLGenerator.h"
-#include "python/classes/PyDatabase.h"
-#include "python/classes/PyExceptions.h"
-#include "python/classes/PyUtils.h"
+#include "python/Types.h"
+#include "network/python/EVEPacket.h"
+#include "network/python/EVENotificationStream.h"
+#include "network/python/EVECallStream.h"
+#include "network/python/EVELowLevelVersionExchange.h"
+#include "network/python/EVESecureClientHandshake.h"
 // Common Enums
 #include "inventory/AttributeEnum.h"
 // pointer references for all classes

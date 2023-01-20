@@ -29,32 +29,36 @@ public:
     method_not_found() {}
 };
 
-class PyCallArgs
-{
+/**
+ * Value class that contains parameters related to a RPC call from the client
+ */
+class EVECallArgs {
 public:
-    PyCallArgs(Client* c, PyTuple* tup, PyDict* dict);
-    ~PyCallArgs();
+    EVECallArgs (Client* c, PyTuple* tup, PyDict* dict, PythonArena& arena);
+    ~EVECallArgs () = default;
 
-    void Dump(LogType type) const;
+    void dump(LogType type) const;
 
+    /** The python arena to use while allocating data for responses */
+    PythonArena& arena;
+    /** The client that performed the service call */
     Client* const client;    //we do not own this
+    /** The parameters tuple */
     PyTuple* tuple;        //we own this, but it may be taken
-    std::map<std::string, PyRep*> byname;    //we own this, but elements may be taken.
+    /** The named payload of the request */
+    std::map<std::string, PyDataType*> byname;    //we own this, but elements may be taken.
 };
 
-class PyResult
-{
+class EVEResult {
 public:
-    PyResult();
-    PyResult(PyRep* result);
-    PyResult(PyRep* result, PyDict* namedResult);
-    PyResult(const PyResult& oth);
-    ~PyResult();
+    EVEResult (bool checkArenaOwner = true);
+    EVEResult (PyDataType* result, bool checkArenaOwner = true);
+    EVEResult (PyDataType* result, PyDict* namedResult, bool checkArenaOwner = true);
+    ~EVEResult () = default;
 
-    PyResult& operator=(const PyResult& oth);
-
-    PyRep* ssResult;
-    PyDict* ssNamedResult;
+    std::optional<PyDataType*> result;
+    std::optional<PyDict*> named_result;
+    bool check_arena_owner;
 };
 
 
@@ -63,17 +67,17 @@ template <class T> struct is_optional<std::optional<T>> : std::true_type {};
 
 struct CallHandlerBase {
 public:
-    virtual PyResult operator() (void* service, PyCallArgs& args) const = 0;
+    virtual EVEResult operator() (void* service, EVECallArgs& args) const = 0;
     virtual const std::string& getSignature () = 0;
 };
 
 template <class S>
 struct CallHandler : public CallHandlerBase {
-    template<class... Args> CallHandler(PyResult(S::*callHandler)(PyCallArgs&, Args...)) :
-            erasedHandler(reinterpret_cast <PyResult(S::*)()> (callHandler)),
+    template<class... Args> CallHandler(EVEResult (S::*callHandler)(EVECallArgs&, Args...)) :
+            erasedHandler(reinterpret_cast <EVEResult (S::*)()> (callHandler)),
             handlerImpl {
-                [this](S* service, PyResult(S::*erasedHandler)(), PyCallArgs& args) -> PyResult {
-                    auto handler = reinterpret_cast <PyResult(S::*)(PyCallArgs&, Args...)> (erasedHandler);
+                [this](S* service, EVEResult (S::*erasedHandler)(), EVECallArgs& args) -> EVEResult {
+                    auto handler = reinterpret_cast <EVEResult (S::*)(EVECallArgs&, Args...)> (erasedHandler);
 
                     if constexpr (sizeof...(Args) == 0) {
                         // ensure there's no arguments in the data
@@ -95,7 +99,7 @@ struct CallHandler : public CallHandlerBase {
         this->generateSignature <std::decay_t <Args>...> ();
     }
 
-    PyResult operator() (void* service, PyCallArgs& args) const override {
+    EVEResult operator() (void* service, EVECallArgs& args) const override {
         return handlerImpl(reinterpret_cast <S*> (service), erasedHandler, args);
     }
 
@@ -104,11 +108,11 @@ struct CallHandler : public CallHandlerBase {
     }
 
 private:
-    template <typename T> bool validateArg(size_t index, PyCallArgs& args) {
+    template <typename T> bool validateArg(size_t index, EVECallArgs& args) {
         // handle optional values
         if constexpr (is_optional <T>::value) {
             // treat Nones on optional values as valid
-            if (index >= args.tuple->size() || args.tuple->GetItem(index)->IsNone()) {
+            if (index >= args.tuple->size() || args.tuple->at (index)->is<PyNone>()) {
                 return true;
             } else {
                 return validateArg <typename T::value_type>(index, args);
@@ -119,55 +123,49 @@ private:
             return false;
         }
 
-        if constexpr (std::is_same_v <T, PyRep*>)
+        if constexpr (std::is_same_v <T, PyDataType*>)
             return true;
 
-        PyRep* rep = args.tuple->GetItem(index);
+        PyDataType* rep = args.tuple->at (index);
 
         // validate type with their parameter equivalent
         if constexpr (std::is_same_v <T, PyBool*>)
-            return rep->IsBool();
+            return rep->is<PyBool>();
         if constexpr (std::is_same_v <T, PyInt*>)
-            return rep->IsInt();
-        if constexpr (std::is_same_v <T, PyLong*>)
-            return rep->IsLong();
+            return rep->is<PyInt>();
         if constexpr (std::is_same_v <T, PyFloat*>)
-            return rep->IsFloat();
+            return rep->is<PyFloat>();
         if constexpr (std::is_same_v <T, PyBuffer*>)
-            return rep->IsBuffer();
+            return rep->is<PyBuffer>();
         if constexpr (std::is_same_v <T, PyString*>)
-            return rep->IsString();
-        if constexpr (std::is_same_v <T, PyWString*>)
-            return rep->IsWString();
+            return rep->is<PyString>();
         if constexpr (std::is_same_v <T, PyToken*>)
-            return rep->IsToken();
+            return rep->is<PyToken>();
         if constexpr (std::is_same_v <T, PyTuple*>)
-            return rep->IsTuple();
+            return rep->is<PyTuple>();
         if constexpr (std::is_same_v <T, PyList*>)
-            return rep->IsList();
+            return rep->is<PyList>();
         if constexpr (std::is_same_v <T, PyDict*>)
-            return rep->IsDict();
+            return rep->is<PyDict>();
         if constexpr (std::is_same_v <T, PyNone*>)
-            return rep->IsNone();
+            return rep->is<PyNone>();
         if constexpr (std::is_same_v <T, PySubStruct*>)
-            return rep->IsSubStruct();
+            return rep->is<PySubStruct>();
         if constexpr (std::is_same_v <T, PySubStream*>)
-            return rep->IsSubStream();
-        if constexpr (std::is_same_v <T, PyChecksumedStream*>)
-            return rep->IsChecksumedStream();
+            return rep->is<PySubStream>();
         if constexpr (std::is_same_v <T, PyObject*>)
-            return rep->IsObject();
+            return rep->is<PyObject>();
         if constexpr (std::is_same_v <T, PyObjectEx*>)
-            return rep->IsObjectEx();
+            return rep->is<PyObjectEx>();
         if constexpr (std::is_same_v <T, PyPackedRow*>)
-            return rep->IsPackedRow();
+            return rep->is<PyPackedRow>();
 
         return false;
     }
 
     template <typename T> decltype(auto) getAs(size_t index, PyTuple* tup) {
         if constexpr (is_optional <T>::value) {
-            if (index >= tup->size() || tup->GetItem(index)->IsNone()) {
+            if (index >= tup->size() || tup->at (index)->is<PyNone>()) {
                 return T{};
             } else {
                 return std::make_optional(getAs <typename T::value_type>(index, tup));
@@ -178,50 +176,44 @@ private:
             throw std::runtime_error("This should not happen. Trying to get parameter out of bounds. What happened to the validation?!");
         }
 
-        PyRep* rep = tup->GetItem(index);
+        PyDataType* rep = tup->at (index);
 
-        if constexpr (std::is_same_v <T, PyRep*>)
+        if constexpr (std::is_same_v <T, PyDataType*>)
             return rep;
         if constexpr (std::is_same_v <T, PyBool*>)
-            return rep->AsBool();
+            return rep->as<PyBool>();
         if constexpr (std::is_same_v <T, PyInt*>)
-            return rep->AsInt();
-        if constexpr (std::is_same_v <T, PyLong*>)
-            return rep->AsLong();
+            return rep->as<PyInt>();
         if constexpr (std::is_same_v <T, PyFloat*>)
-            return rep->AsFloat();
+            return rep->as<PyFloat>();
         if constexpr (std::is_same_v <T, PyBuffer*>)
-            return rep->AsBuffer();
+            return rep->as<PyBuffer>();
         if constexpr (std::is_same_v <T, PyString*>)
-            return rep->AsString();
-        if constexpr (std::is_same_v <T, PyWString*>)
-            return rep->AsWString();
+            return rep->as<PyString>();
         if constexpr (std::is_same_v <T, PyToken*>)
-            return rep->AsToken();
+            return rep->as<PyToken>();
         if constexpr (std::is_same_v <T, PyTuple*>)
-            return rep->AsTuple();
+            return rep->as<PyTuple>();
         if constexpr (std::is_same_v <T, PyList*>)
-            return rep->AsList();
+            return rep->as<PyList>();
         if constexpr (std::is_same_v <T, PyDict*>)
-            return rep->AsDict();
+            return rep->as<PyDict>();
         if constexpr (std::is_same_v <T, PyNone*>)
-            return rep->AsNone();
+            return rep->as<PyNone>();
         if constexpr (std::is_same_v <T, PySubStruct*>)
-            return rep->AsSubStruct();
+            return rep->as<PySubStruct>();
         if constexpr (std::is_same_v <T, PySubStream*>)
-            return rep->AsSubStream();
-        if constexpr (std::is_same_v <T, PyChecksumedStream*>)
-            return rep->AsChecksumedStream();
+            return rep->as<PySubStream>();
         if constexpr (std::is_same_v <T, PyObject*>)
-            return rep->AsObject();
+            return rep->as<PyObject>();
         if constexpr (std::is_same_v <T, PyObjectEx*>)
-            return rep->AsObjectEx();
+            return rep->as<PyObjectEx>();
         if constexpr (std::is_same_v <T, PyPackedRow*>)
-            return rep->AsPackedRow();
+            return rep->as<PyPackedRow>();
     }
 
     template<class... Args>
-    bool validateArgs(PyCallArgs& args) {
+    bool validateArgs(EVECallArgs& args) {
         constexpr size_t ArgCount = sizeof... (Args);
         const bool argCountIsValid = args.tuple->size() <= ArgCount;
 
@@ -246,24 +238,22 @@ private:
             return "std::optional<" + translateParameter <typename T::value_type>() + ">";
         }
 
-        if constexpr (std::is_same_v <T, PyRep*>)
-            return "PyRep*";
+        if constexpr (std::is_same_v <T, PyDataType*>)
+            return "PyDataType*";
 
         // validate type with their parameter equivalent
         if constexpr (std::is_same_v <T, PyBool*>)
             return "PyBool*";
         if constexpr (std::is_same_v <T, PyInt*>)
             return "PyInt*";
-        if constexpr (std::is_same_v <T, PyLong*>)
-            return "PyLong*";
+        if constexpr (std::is_same_v <T, PyInt*>)
+            return "PyInt*";
         if constexpr (std::is_same_v <T, PyFloat*>)
             return "PyFloat*";
         if constexpr (std::is_same_v <T, PyBuffer*>)
             return "PyBuffer*";
         if constexpr (std::is_same_v <T, PyString*>)
             return "PyString*";
-        if constexpr (std::is_same_v <T, PyWString*>)
-            return "PyWString*";
         if constexpr (std::is_same_v <T, PyToken*>)
             return "PyToken*";
         if constexpr (std::is_same_v <T, PyTuple*>)
@@ -278,8 +268,6 @@ private:
             return "PySubStruct*";
         if constexpr (std::is_same_v <T, PySubStream*>)
             return "PySubStream*";
-        if constexpr (std::is_same_v <T, PyChecksumedStream*>)
-            return "PyChecksumedStream*";
         if constexpr (std::is_same_v <T, PyObject*>)
             return "PyObject*";
         if constexpr (std::is_same_v <T, PyObjectEx*>)
@@ -301,27 +289,23 @@ private:
     }
 
     template<class... Args, size_t... I>
-    PyResult applyImpl(
-            S* service,
-            PyResult(S::*handler)(PyCallArgs& args, Args...),
-            PyCallArgs& args,
+    EVEResult applyImpl(
+            S* service, EVEResult (S::*handler)(EVECallArgs& args, Args...), EVECallArgs& args,
             std::index_sequence<I...>) {
         return (service->*handler) (args, getAs<std::decay_t<Args>>(I, args.tuple)...);
     }
 
     template<class... Args>
-    PyResult apply(
-            S* service,
-            PyResult(S::*handler) (PyCallArgs& args, Args...),
-            PyCallArgs& args) {
+    EVEResult apply(
+            S* service, EVEResult (S::*handler) (EVECallArgs& args, Args...), EVECallArgs& args) {
         return applyImpl(
                 service, handler, args,
                 std::make_index_sequence <sizeof...(Args)>{}
         );
     }
 
-    PyResult(S::*erasedHandler)() = nullptr;
-    std::function <PyResult(S* service, PyResult(S::* erasedHandler)(), PyCallArgs& args)> handlerImpl;
+    EVEResult (S::*erasedHandler)() = nullptr;
+    std::function <EVEResult (S* service, EVEResult (S::* erasedHandler)(), EVECallArgs& args)> handlerImpl;
     std::string signature;
 };
 

@@ -34,8 +34,8 @@ public:
     OnlineStatusService();
 
 protected:
-    PyResult GetInitialState(PyCallArgs& call);
-    PyResult GetOnlineStatus(PyCallArgs& call, PyInt* characterID);
+  EVEResult GetInitialState(EVECallArgs& call);
+  EVEResult GetOnlineStatus(EVECallArgs& call, PyInt* characterID);
 };
 
 #endif

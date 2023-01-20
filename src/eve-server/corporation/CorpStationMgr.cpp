@@ -59,13 +59,13 @@ CorpStationMgr::CorpStationMgr(EVEServiceManager& mgr) :
     this->Add("GetImprovementStaticData", &CorpStationMgr::GetImprovementStaticData);
 }
 
-BoundDispatcher* CorpStationMgr::BindObject(Client *client, PyRep* bindParameters) {
-    if (!bindParameters->IsInt()) {
+BoundDispatcher* CorpStationMgr::BindObject(Client *client, PyDataType* bindParameters) {
+    if (!bindParameters->is<PyInt>()) {
         codelog(SERVICE__ERROR, "%s Service: invalid bind argument type %s", GetName().c_str(), bindParameters->TypeString());
         return nullptr;
     }
 
-    uint32_t stationID = bindParameters->AsInt ()->value ();
+    uint32_t stationID = bindParameters->as<PyInt> ()->value ();
 
     // ensure the player is in the given station
     if (client->GetStationID2() != stationID)
@@ -92,10 +92,10 @@ void CorpStationMgr::BoundReleased (CorpStationMgrIMBound* bound) {
     this->m_instances.erase (it);
 }
 
-PyResult CorpStationMgr::GetImprovementStaticData(PyCallArgs& call)
+EVEResult CorpStationMgr::GetImprovementStaticData(EVECallArgs& call)
 {
     _log(CORP__CALL, "CorpStationMgr::Handle_GetImprovementStaticData()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::StationDB::GetOutpostImprovementStaticData(res);
@@ -103,43 +103,43 @@ PyResult CorpStationMgr::GetImprovementStaticData(PyCallArgs& call)
     DBResultRow row;
 
     DBRowDescriptor* header = new DBRowDescriptor();
-    header->AddColumn("typeID", DBTYPE_I4);
-    header->AddColumn("raceID", DBTYPE_I4);
-    header->AddColumn("requiredAssemblyLineTypeID", DBTYPE_I4);
-    header->AddColumn("requiredImprovementTypeID", DBTYPE_I4);
+    header->add("typeID", DBTYPE_I4);
+    header->add("raceID", DBTYPE_I4);
+    header->add("requiredAssemblyLineTypeID", DBTYPE_I4);
+    header->add("requiredImprovementTypeID", DBTYPE_I4);
 
-    CRowSet* rowset = new CRowSet(&header);
+    CRowset* rowset = new CRowset(header);
 
     while (res.GetRow(row)) {
-        PyPackedRow* newRow = rowset->NewRow();
-        newRow->SetField("typeID", new PyInt(row.GetInt(0)));
-        newRow->SetField("raceID", new PyInt(row.GetInt(1)));
+        PyPackedRow* newRow = rowset->insert();
+        newRow->set("typeID", new PyInt(row.GetInt(0)));
+        newRow->set("raceID", new PyInt(row.GetInt(1)));
         uint32 asmLine = row.GetInt(2);
         if (asmLine == 0) {
-            newRow->SetField("requiredAssemblyLineTypeID", new PyNone());
+            newRow->set("requiredAssemblyLineTypeID", new PyNone());
         }
         else {
-            newRow->SetField("requiredAssemblyLineTypeID", new PyInt(asmLine));
+            newRow->set("requiredAssemblyLineTypeID", new PyInt(asmLine));
         }
         uint32 improvement = row.GetInt(3);
         if (improvement == 0) {
-            newRow->SetField("requiredImprovementTypeID", new PyNone());
+            newRow->set("requiredImprovementTypeID", new PyNone());
         }
         else {
-            newRow->SetField("requiredImprovementTypeID", new PyInt(improvement));
+            newRow->set("requiredImprovementTypeID", new PyInt(improvement));
         }
     }
 
     PyDict* dict = new PyDict();
-    dict->SetItemString("improvementTypes", rowset);
+    dict->set ("improvementTypes", rowset);
 
     return new PyObject("util.KeyVal", dict);
 }
 
-PyResult CorpStationMgr::GetStationServiceStates(PyCallArgs& call)
+EVEResult CorpStationMgr::GetStationServiceStates(EVECallArgs& call)
 {
     _log(CORP__CALL, "CorpStationMgr::Handle_GetStationServiceStates()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetStationServiceStates(call.client->GetLocationID(), res);
@@ -179,23 +179,23 @@ CorpStationMgrIMBound::CorpStationMgrIMBound(EVEServiceManager& mgr, CorpStation
     pStationItem = sEntityList.GetStationByID(station_id).get();
 }
 
-PyResult CorpStationMgrIMBound::GetStationOffices(PyCallArgs& call)
+EVEResult CorpStationMgrIMBound::GetStationOffices(EVECallArgs& call)
 {
     return pStationItem->GetOffices();
 }
 
-PyResult CorpStationMgrIMBound::GetNumberOfUnrentedOffices(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::GetNumberOfUnrentedOffices(EVECallArgs&call)
 {
     return new PyInt(pStationItem->GetAvalibleOfficeCount());
 }
 
-PyResult CorpStationMgrIMBound::GetQuoteForRentingAnOffice(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::GetQuoteForRentingAnOffice(EVECallArgs&call)
 {
-    return new PyLong(pStationItem->GetOfficeRentalFee());
+    return new PyInt(pStationItem->GetOfficeRentalFee());
 }
 
 // cannot find this call in client code
-PyResult CorpStationMgrIMBound::GetCorporateStationInfo(PyCallArgs &call) {
+EVEResult CorpStationMgrIMBound::GetCorporateStationInfo(EVECallArgs&call) {
     // is this right?
     /* returns:
      *  list(
@@ -208,14 +208,14 @@ PyResult CorpStationMgrIMBound::GetCorporateStationInfo(PyCallArgs &call) {
      *      )
      */
 
-    PyList *list = new PyList();
-        list->AddItem(m_db.ListStationOwners(m_stationID));
-        list->AddItem(m_db.ListStationCorps(m_stationID));
-        list->AddItem(StationDB::GetOffices(m_stationID));/*m_db.ListStationOffices*/
-    return list;
+    return new PyList {
+        m_db.ListStationOwners (m_stationID),
+        m_db.ListStationCorps (m_stationID),
+        StationDB::GetOffices (m_stationID)/*m_db.ListStationOffices*/
+    };
 }
 
-PyResult CorpStationMgrIMBound::SetCloneTypeID(PyCallArgs &call, PyInt* cloneTypeID) {
+EVEResult CorpStationMgrIMBound::SetCloneTypeID(EVECallArgs&call, PyInt* cloneTypeID) {
     //Get cost of clone
     double cost = m_db.GetCloneTypeCostByID(cloneTypeID->value());
 
@@ -242,7 +242,7 @@ PyResult CorpStationMgrIMBound::SetCloneTypeID(PyCallArgs &call, PyInt* cloneTyp
     return PyStatic.NewNone();
 }
 
-PyResult CorpStationMgrIMBound::RentOffice(PyCallArgs &call, PyInt* amount) {
+EVEResult CorpStationMgrIMBound::RentOffice(EVECallArgs&call, PyInt* amount) {
     // corp role is checked in client before this button is shown.  no need to check here.
     // 1 param, corp rent price
     Client* pClient = call.client;
@@ -268,7 +268,7 @@ PyResult CorpStationMgrIMBound::RentOffice(PyCallArgs &call, PyInt* amount) {
 /** @note  why is this disabled?
     int64 balance = AccountDB::GetCorpBalance(pClient->GetCorporationID(), Account::KeyType::Cash);
     if (balance < arg.arg) {
-        std::map<std::string, PyRep *> args;
+        std::map<std::string, PyDataType *> args;
         args["amount"] = new PyFloat(arg.arg);
         args["balance"] = new PyFloat(balance);
         throw PyException(MakeUserError("NotEnoughMoney", args));
@@ -328,7 +328,7 @@ PyResult CorpStationMgrIMBound::RentOffice(PyCallArgs &call, PyInt* amount) {
     return new PyInt(odata.officeID);
 }
 
-PyResult CorpStationMgrIMBound::GetCorporateStationOffice(PyCallArgs &call) {
+EVEResult CorpStationMgrIMBound::GetCorporateStationOffice(EVECallArgs&call) {
   /*
    *        if not session.stationid2:
    *            return
@@ -344,7 +344,7 @@ PyResult CorpStationMgrIMBound::GetCorporateStationOffice(PyCallArgs &call) {
     return pStationItem->GetOffices();
 }
 
-PyResult CorpStationMgrIMBound::MoveCorpHQHere(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::MoveCorpHQHere(EVECallArgs&call)
 {
     if (call.client->GetCorpHQ() == m_stationID)
         throw UserError ("CorpHQIsAtThisStation");
@@ -370,7 +370,7 @@ PyResult CorpStationMgrIMBound::MoveCorpHQHere(PyCallArgs &call)
  * @note   these below are partially coded
  */
 
-PyResult CorpStationMgrIMBound::GetPotentialHomeStations(PyCallArgs &call) {
+EVEResult CorpStationMgrIMBound::GetPotentialHomeStations(EVECallArgs&call) {
     // this is for station options for xfering clone
     //returns stationID,typeID,serviceMask
 
@@ -393,34 +393,41 @@ PyResult CorpStationMgrIMBound::GetPotentialHomeStations(PyCallArgs &call) {
      *  other possible stations?  test for min/max potential station count?
      */
 
-    PyDict* dict = new PyDict();
     PyList* list = new PyList();
     StationData data = StationData();
     for (auto cur : stVec) {
         stDataMgr.GetStationData(cur, data);
-        dict->SetItemString("stationID", new PyInt(cur));
-        dict->SetItemString("typeID", new PyInt(data.typeID));
-        dict->SetItemString("serviceMask", new PyLong(data.serviceMask));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(
+            new PyObject(
+                "util.KeyVal",
+                new PyDict {
+                    {"stationID", new PyInt (cur)},
+                    {"typeID", new PyInt (data.typeID)},
+                    {"serviceMask", new PyInt (data.serviceMask)}
+                }
+            )
+        );
     }
 
     return list;
 }
 
-PyResult CorpStationMgrIMBound::GetQuoteForGettingCorpJunkBack(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::GetQuoteForGettingCorpJunkBack(
+    EVECallArgs&call)
 {   //cost = corpStationMgr.GetQuoteForGettingCorpJunkBack()
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetQuoteForGettingCorpJunkBack()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // office rental fee (with multiplier?  config option for multiplier?)
     //stDataMgr.GetOfficeRentalFee(m_stationID);
     return new PyInt(pStationItem->GetOfficeRentalFee());
 }
 
-PyResult CorpStationMgrIMBound::DoesPlayersCorpHaveJunkAtStation(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::DoesPlayersCorpHaveJunkAtStation(
+    EVECallArgs&call)
 {   //if corpStationMgr.DoesPlayersCorpHaveJunkAtStation():
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_DoesPlayersCorpHaveJunkAtStation()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // query station for (officeID:flagimpounded)
 
@@ -428,7 +435,7 @@ PyResult CorpStationMgrIMBound::DoesPlayersCorpHaveJunkAtStation(PyCallArgs &cal
     return PyStatic.NewFalse();
 }
 
-PyResult CorpStationMgrIMBound::SetHomeStation(PyCallArgs &call, PyInt* newHomeStationID) {
+EVEResult CorpStationMgrIMBound::SetHomeStation(EVECallArgs&call, PyInt* newHomeStationID) {
     // sm.GetService('corp').GetCorpStationManager().SetHomeStation(newHomeStationID)
     /** @todo this is once a year on live, unless a new char changes corps.
      *  we will need to make other checks when this is called, as i dont think client checks anything.
@@ -443,7 +450,7 @@ PyResult CorpStationMgrIMBound::SetHomeStation(PyCallArgs &call, PyInt* newHomeS
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult CorpStationMgrIMBound::DoStandingCheckForStationService(PyCallArgs &call, PyInt* stationServiceID) {
+EVEResult CorpStationMgrIMBound::DoStandingCheckForStationService(EVECallArgs&call, PyInt* stationServiceID) {
     // not sure what this actually does...
     //   corpStationMgr.DoStandingCheckForStationService(stationServiceID)
     /*
@@ -472,16 +479,16 @@ PyResult CorpStationMgrIMBound::DoStandingCheckForStationService(PyCallArgs &cal
      */
 
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_DoStandingCheckForStationService()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     // returns None
     return PyStatic.NewNone();
 }
 
-PyResult CorpStationMgrIMBound::CancelRentOfOffice(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::CancelRentOfOffice(EVECallArgs&call)
 {   //  corpStationMgr.CancelRentOfOffice()
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_CancelRentOfOffice()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     /* this will need to search for items in office hangar.
      *   if none, then no worries
@@ -493,18 +500,19 @@ PyResult CorpStationMgrIMBound::CancelRentOfOffice(PyCallArgs &call)
     return nullptr;
 }
 
-PyResult CorpStationMgrIMBound::PayForReturnOfCorpJunk(PyCallArgs &call, PyFloat* cost)
+EVEResult CorpStationMgrIMBound::PayForReturnOfCorpJunk(
+    EVECallArgs&call, PyFloat* cost)
 {   //    corpStationMgr.PayForReturnOfCorpJunk(cost)
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_PayForReturnOfCorpJunk()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CorpStationMgrIMBound::GetStationServiceIdentifiers(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::GetStationServiceIdentifiers(EVECallArgs&call)
 {
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetStationServiceIdentifiers()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetStationServiceIdentifiers(res);
@@ -512,10 +520,10 @@ PyResult CorpStationMgrIMBound::GetStationServiceIdentifiers(PyCallArgs &call)
     return DBResultToCRowset(res);
 }
 
-PyResult CorpStationMgrIMBound::GetStationDetails(PyCallArgs &call, PyInt* stationID)
+EVEResult CorpStationMgrIMBound::GetStationDetails(EVECallArgs&call, PyInt* stationID)
 {
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetStationDetails()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetStationDetails(stationID->value(), res);
@@ -524,28 +532,28 @@ PyResult CorpStationMgrIMBound::GetStationDetails(PyCallArgs &call, PyInt* stati
     DBResultRow row;
 
     while (res.GetRow(row)) {    
-        dict->SetItemString("stationName", new PyString(row.GetText(0), row.ColumnLength(0)));
-        dict->SetItemString("stationID", new PyInt(row.GetInt(1)));
-        dict->SetItemString("orbitID", new PyInt(row.GetInt(2)));
-        dict->SetItemString("description", new PyString(row.GetText(3), row.ColumnLength(3)));
-        dict->SetItemString("security", new PyFloat(row.GetFloat(4)));
-        dict->SetItemString("dockingCostPerVolume", new PyFloat(row.GetFloat(5)));
-        dict->SetItemString("officeRentalCost", new PyInt(row.GetInt(6)));
-        dict->SetItemString("reprocessingStationsTake", new PyFloat(row.GetFloat(7)));
-        dict->SetItemString("reprocessingHangarFlag", new PyInt(row.GetInt(8)));
-        dict->SetItemString("corporationID", new PyInt(row.GetInt(9)));
-        dict->SetItemString("maxShipVolumeDockable", new PyInt(row.GetInt(10)));
-        dict->SetItemString("exitTime", PyStatic.NewNone());
-        dict->SetItemString("standingOwnerID", new PyInt(row.GetInt(9)));
-        dict->SetItemString("upgradeLevel", new PyInt(row.GetInt(11)));
+        dict->set ("stationName", new PyString(row.GetText(0), row.ColumnLength(0)));
+        dict->set ("stationID", new PyInt(row.GetInt(1)));
+        dict->set ("orbitID", new PyInt(row.GetInt(2)));
+        dict->set ("description", new PyString(row.GetText(3), row.ColumnLength(3)));
+        dict->set ("security", new PyFloat(row.GetFloat(4)));
+        dict->set ("dockingCostPerVolume", new PyFloat(row.GetFloat(5)));
+        dict->set ("officeRentalCost", new PyInt(row.GetInt(6)));
+        dict->set ("reprocessingStationsTake", new PyFloat(row.GetFloat(7)));
+        dict->set ("reprocessingHangarFlag", new PyInt(row.GetInt(8)));
+        dict->set ("corporationID", new PyInt(row.GetInt(9)));
+        dict->set ("maxShipVolumeDockable", new PyInt(row.GetInt(10)));
+        dict->set ("exitTime", PyStatic.NewNone());
+        dict->set ("standingOwnerID", new PyInt(row.GetInt(9)));
+        dict->set ("upgradeLevel", new PyInt(row.GetInt(11)));
     }
     return new PyObject("util.KeyVal", dict);
 }
 
-PyResult CorpStationMgrIMBound::GetStationServiceAccessRule(PyCallArgs &call, PyInt* stationID, PyInt* serviceID)
+EVEResult CorpStationMgrIMBound::GetStationServiceAccessRule(EVECallArgs&call, PyInt* stationID, PyInt* serviceID)
 {
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetStationServiceAccessRule()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetStationServiceAccessRule(stationID->value(), serviceID->value(), res);
@@ -555,31 +563,31 @@ PyResult CorpStationMgrIMBound::GetStationServiceAccessRule(PyCallArgs &call, Py
 
     // If no rule exists for this service, we should return the default
     if (res.GetRowCount() == 0) {
-        dict->SetItemString("serviceID", new PyInt(serviceID->value()));
-        dict->SetItemString("minimumStanding", new PyFloat(0));
-        dict->SetItemString("minimumCharSecurity", new PyFloat(0));
-        dict->SetItemString("maximumCharSecurity", new PyFloat(0));
-        dict->SetItemString("minimumCorpSecurity", new PyFloat(0));
-        dict->SetItemString("maximumCorpSecurity", new PyFloat(0));
+        dict->set ("serviceID", new PyInt(serviceID->value()));
+        dict->set ("minimumStanding", new PyFloat(0));
+        dict->set ("minimumCharSecurity", new PyFloat(0));
+        dict->set ("maximumCharSecurity", new PyFloat(0));
+        dict->set ("minimumCorpSecurity", new PyFloat(0));
+        dict->set ("maximumCorpSecurity", new PyFloat(0));
     }
     else {
         while (res.GetRow(row)) {    
-            dict->SetItemString("serviceID", new PyInt(row.GetInt(0)));
-            dict->SetItemString("minimumStanding", new PyFloat(row.GetFloat(2)));
-            dict->SetItemString("minimumCharSecurity", new PyFloat(row.GetFloat(3)));
-            dict->SetItemString("maximumCharSecurity", new PyFloat(row.GetFloat(4)));
-            dict->SetItemString("minimumCorpSecurity", new PyFloat(row.GetFloat(5)));
-            dict->SetItemString("maximumCorpSecurity", new PyFloat(row.GetFloat(6)));
+            dict->set ("serviceID", new PyInt(row.GetInt(0)));
+            dict->set ("minimumStanding", new PyFloat(row.GetFloat(2)));
+            dict->set ("minimumCharSecurity", new PyFloat(row.GetFloat(3)));
+            dict->set ("maximumCharSecurity", new PyFloat(row.GetFloat(4)));
+            dict->set ("minimumCorpSecurity", new PyFloat(row.GetFloat(5)));
+            dict->set ("maximumCorpSecurity", new PyFloat(row.GetFloat(6)));
         }
     }
 
     return new PyObject("util.KeyVal", dict);
 }
 
-PyResult CorpStationMgrIMBound::GetStationManagementServiceCostModifiers(PyCallArgs &call, PyInt* stationID)
+EVEResult CorpStationMgrIMBound::GetStationManagementServiceCostModifiers(EVECallArgs&call, PyInt* stationID)
 {
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetStationManagementServiceCostModifiers()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetStationManagementServiceCostModifiers(stationID->value(), res);
@@ -588,11 +596,11 @@ PyResult CorpStationMgrIMBound::GetStationManagementServiceCostModifiers(PyCallA
     DBResultRow row;
 
     DBRowDescriptor *header = new DBRowDescriptor();
-    header->AddColumn("serviceID", DBTYPE_I4);
-    header->AddColumn("discountPerGoodStandingPoint", DBTYPE_R4);
-    header->AddColumn("surchargePerBadStandingPoint", DBTYPE_R4);
+    header->add("serviceID", DBTYPE_I4);
+    header->add("discountPerGoodStandingPoint", DBTYPE_R4);
+    header->add("surchargePerBadStandingPoint", DBTYPE_R4);
 
-    CRowSet *rowset = new CRowSet(&header);
+    CRowset *rowset = new CRowset(header);
 
     // If no configuration exists for this service, we should return the default
     if (res.GetRowCount() == 0) {
@@ -603,29 +611,31 @@ PyResult CorpStationMgrIMBound::GetStationManagementServiceCostModifiers(PyCallA
             uint32 serviceMask = stDataMgr.GetStationServiceMask(stationID->value());
             if((serviceMask & serviceID) == serviceID) 
             {
-                PyPackedRow *newRow = rowset->NewRow();
-                newRow->SetField("serviceID", new PyInt(serviceID));
-                newRow->SetField("discountPerGoodStandingPoint", new PyFloat(0));
-                newRow->SetField("surchargePerBadStandingPoint", new PyFloat(0));
+                rowset->insert({
+                    new PyInt (serviceID),
+                    new PyFloat (0),
+                    new PyFloat (0)
+                });
             }
         }
     }
     else {
         while (res.GetRow(row)) {    
-            PyPackedRow *newRow = rowset->NewRow();
-            newRow->SetField("serviceID", new PyInt(row.GetInt(0)));
-            newRow->SetField("discountPerGoodStandingPoint", new PyFloat(row.GetFloat(1)));
-            newRow->SetField("surchargePerBadStandingPoint", new PyFloat(row.GetFloat(2)));
+            rowset->insert({
+                new PyInt (row.GetInt (0)),
+                new PyFloat (row.GetFloat (1)),
+                new PyFloat (row.GetFloat (2))
+            });
         }
     }
 
     return rowset;
 }
 
-PyResult CorpStationMgrIMBound::GetRentableItems(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::GetRentableItems(EVECallArgs&call)
 {
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetRentableItems()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetRentableItems(call.client->GetLocationID() ,res);
@@ -633,10 +643,10 @@ PyResult CorpStationMgrIMBound::GetRentableItems(PyCallArgs &call)
     return DBResultToCRowset(res);    
 }
 
-PyResult CorpStationMgrIMBound::GetOwnerIDsOfClonesAtStation(PyCallArgs &call, PyInt* corporationID)
+EVEResult CorpStationMgrIMBound::GetOwnerIDsOfClonesAtStation(EVECallArgs&call, PyInt* corporationID)
 {
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetOwnerIDsOfClonesAtStation()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetOwnerIDsOfClonesAtStation(call.client->GetLocationID(), corporationID->value(), res);
@@ -644,10 +654,10 @@ PyResult CorpStationMgrIMBound::GetOwnerIDsOfClonesAtStation(PyCallArgs &call, P
     return DBResultToCRowset(res);    
 }
 
-PyResult CorpStationMgrIMBound::GetStationImprovements(PyCallArgs &call)
+EVEResult CorpStationMgrIMBound::GetStationImprovements(EVECallArgs&call)
 {
     _log(CORP__CALL, "CorpStationMgrIMBound::Handle_GetStationImprovements()");
-    call.Dump(CORP__CALL_DUMP);
+    call.dump(CORP__CALL_DUMP);
 
     DBQueryResult res;
     StationDB::GetOutpostImprovements(call.client->GetLocationID(), res);
@@ -655,7 +665,7 @@ PyResult CorpStationMgrIMBound::GetStationImprovements(PyCallArgs &call)
     PyDict* dict = new PyDict();
     DBResultRow row;
 
-    PyRep *imp[6];
+    PyDataType *imp[6];
 
     // If no data exists for this station, we should return the default
     if (res.GetRowCount() == 0)
@@ -669,12 +679,12 @@ PyResult CorpStationMgrIMBound::GetStationImprovements(PyCallArgs &call)
                 else 
                     imp[i] == new PyInt(row.GetInt(i));
 
-    dict->SetItemString("improvementTier2aTypeID", imp[0]);
-    dict->SetItemString("improvementTier3aTypeID", imp[1]);
-    dict->SetItemString("improvementTier1bTypeID", imp[2]);
-    dict->SetItemString("improvementTier1aTypeID", imp[3]);
-    dict->SetItemString("improvementTier2bTypeID", imp[4]);
-    dict->SetItemString("improvementTier1cTypeID", imp[5]);
+    dict->set ("improvementTier2aTypeID", imp[0]);
+    dict->set ("improvementTier3aTypeID", imp[1]);
+    dict->set ("improvementTier1bTypeID", imp[2]);
+    dict->set ("improvementTier1aTypeID", imp[3]);
+    dict->set ("improvementTier2bTypeID", imp[4]);
+    dict->set ("improvementTier1cTypeID", imp[5]);
 
     return new PyObject("util.KeyVal", dict);
 }

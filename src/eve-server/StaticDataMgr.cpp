@@ -16,7 +16,7 @@
 #include "../eve-common/EVE_POS.h"
 
 #include "StaticDataMgr.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "database/EVEDBUtils.h"
 #include "manufacturing/FactoryDB.h"
 #include "map/MapDB.h"
@@ -1075,15 +1075,17 @@ void StaticDataMgr::GetRamRequiredItems(const uint32 typeID, const int8 activity
         }
 }
 
-PyRep* StaticDataMgr::GetStationCount()
+PyDataType* StaticDataMgr::GetStationCount()
 {
     PyList* list = new PyList();
     std::map<uint32, uint8>::iterator itr = m_stationCount.begin(), end = m_stationCount.end();
     while (itr != end) {
-        PyTuple* tuple = new PyTuple(2);
-        tuple->SetItem(0, new PyInt(itr->first));
-        tuple->SetItem(1, new PyInt(itr->second));
-        list->AddItem(tuple);
+        list->add(
+            new PyTuple {
+                new PyInt (itr->first),
+                new PyInt (itr->second)
+            }
+        );
         ++itr;
     }
     return list;
@@ -1324,21 +1326,34 @@ bool StaticDataMgr::IsStation(uint32 stationID/*0*/)
     return (itr != m_stationRegion.end());
 }
 
-DBRowDescriptor* StaticDataMgr::CreateHeader() {
+DBRowDescriptor* StaticDataMgr::CreateHeader(PythonArena* arena) {
     // this is correct data for crucible.  dont alter
-    PyList *keywords = new PyList();
-        keywords->AddItem(new_tuple(new PyString("stacksize"), new PyToken("util.StackSize")));
-        keywords->AddItem(new_tuple(new PyString("singleton"), new PyToken("util.Singleton")));
-    DBRowDescriptor* header = new DBRowDescriptor(keywords);
-        header->AddColumn("itemID",     DBTYPE_I8);     // int64
-        header->AddColumn("typeID",     DBTYPE_I4);     // int32
-        header->AddColumn("ownerID",    DBTYPE_I4);     // int32
-        header->AddColumn("locationID", DBTYPE_I4);     // this should be I8 (according to packets)
-        header->AddColumn("flagID",     DBTYPE_I2);     // int16
-        header->AddColumn("quantity",   DBTYPE_I4);     // int32
-        header->AddColumn("groupID",    DBTYPE_I4);     // int32
-        header->AddColumn("categoryID", DBTYPE_I4);     // int32
-        header->AddColumn("customInfo", DBTYPE_STR);
+    // this builds two custom columns that are of a special type
+    // instead of a normal database type (DBTYPE enum)
+    // TODO: USE A STATIC, IMMUTABLE VALUE INSTEAD
+    DBRowDescriptor* header = new(arena) DBRowDescriptor(
+        arena->List ({
+            arena->Tuple ({
+                arena->String ("stacksize"),
+                arena->Token ("util.StackSize")
+            }),
+            arena->Tuple ({
+                arena->String ("singleton"),
+                arena->Token ("util.Singleton")
+            })
+        })
+    );
+
+    header->add("itemID",     DBTYPE_I8);     // int64
+    header->add("typeID",     DBTYPE_I4);     // int32
+    header->add("ownerID",    DBTYPE_I4);     // int32
+    header->add("locationID", DBTYPE_I4);     // this should be I8 (according to packets)
+    header->add("flagID",     DBTYPE_I2);     // int16
+    header->add("quantity",   DBTYPE_I4);     // int32
+    header->add("groupID",    DBTYPE_I4);     // int32
+    header->add("categoryID", DBTYPE_I4);     // int32
+    header->add("customInfo", DBTYPE_STR);
+
     return header;
 }
 
@@ -1347,7 +1362,7 @@ PyDict* StaticDataMgr::GetBPMatlData(uint16 typeID)
     auto itr = m_bpMatlData.find(typeID);
     if (itr != m_bpMatlData.end()) {
         PyIncRef(itr->second);
-        itr->second->Dump(MANUF__DEBUG, "    ");
+        itr->second->dump(MANUF__DEBUG, "    ");
         return itr->second;
     }
     return nullptr;
@@ -1374,9 +1389,9 @@ PyDict* StaticDataMgr::SetBPMatlType(int8 catID, uint16 typeID, uint16 prodID)
     PyList* skillListInvent = new PyList();
 
     DBRowDescriptor* header = new DBRowDescriptor();
-        header->AddColumn("quantity",          DBTYPE_I4);
-        header->AddColumn("requiredTypeID",    DBTYPE_I4);
-        header->AddColumn("damagePerJob",      DBTYPE_R4);
+        header->add("quantity",          DBTYPE_I4);
+        header->add("requiredTypeID",    DBTYPE_I4);
+        header->add("damagePerJob",      DBTYPE_R4);
 
     // NOTE: this is for BLUEPRINTS ONLY and is always populated (ancient relic error fix)
     if (catID == EVEDB::invCategories::Blueprint) {
@@ -1385,11 +1400,16 @@ PyDict* StaticDataMgr::SetBPMatlType(int8 catID, uint16 typeID, uint16 prodID)
         ramMatls.clear();
         GetRamMaterials(prodID, ramMatls);
         for (auto cur : ramMatls) {
-            PyPackedRow* row = new PyPackedRow(header);
-                row->SetField("quantity",        new PyInt(cur.quantity));
-                row->SetField("requiredTypeID",  new PyInt(cur.materialTypeID));
-                row->SetField("damagePerJob",    new PyFloat(1.0f));
-            matlListManuf->AddItem(row);
+            matlListManuf->add(
+                new PyPackedRow (
+                    header,
+                    {
+                        new PyInt (cur.quantity),
+                        new PyInt (cur.materialTypeID),
+                        new PyFloat (1.0f)
+                    }
+                )
+            );
         }
     }
 
@@ -1402,10 +1422,14 @@ PyDict* StaticDataMgr::SetBPMatlType(int8 catID, uint16 typeID, uint16 prodID)
     GetRamRequirements(typeID, ramReqs);
     //GetRamRequirements(prodID, ramReqs);
     for (auto cur : ramReqs) {
-        PyPackedRow* row = new PyPackedRow(header);
-            row->SetField("quantity",        new PyInt(cur.quantity));
-            row->SetField("requiredTypeID",  new PyInt(cur.requiredTypeID));
-            row->SetField("damagePerJob",    new PyFloat(cur.damagePerJob));
+        PyPackedRow* row = new PyPackedRow(
+            header,
+            {
+                new PyInt (cur.quantity),
+                new PyInt (cur.requiredTypeID),
+                new PyFloat (cur.damagePerJob)
+            }
+        );
 
         using namespace EvERam;
         switch(cur.activityID) {
@@ -1413,11 +1437,11 @@ PyDict* StaticDataMgr::SetBPMatlType(int8 catID, uint16 typeID, uint16 prodID)
                 /** @todo  this needs work.  dunno how to remove 'extra' materials from this list */
                 manuf = true;
                 if (IsSkillTypeID(cur.requiredTypeID)) {
-                    skillListManuf->AddItem(row);
+                    skillListManuf->add(row);
                 } else if (cur.extra) {
-                    extraListManuf->AddItem(row);
+                    extraListManuf->add(row);
                 } else {
-                    matlListManuf->AddItem(row);
+                    matlListManuf->add(row);
                 }
             } break;
             case Activity::ResearchTech: {          //2
@@ -1426,51 +1450,51 @@ PyDict* StaticDataMgr::SetBPMatlType(int8 catID, uint16 typeID, uint16 prodID)
             case Activity::ResearchTime: {          //3
                 te = true;
                 if (IsSkillTypeID(cur.requiredTypeID)) {
-                    skillListTE->AddItem(row);
+                    skillListTE->add(row);
                 } else {
-                    matlListTE->AddItem(row);
+                    matlListTE->add(row);
                 }
             } break;
             case Activity::ResearchMaterial: {      //4
                 me = true;
                 if (IsSkillTypeID(cur.requiredTypeID)) {
-                    skillListME->AddItem(row);
+                    skillListME->add(row);
                 } else {
-                    matlListME->AddItem(row);
+                    matlListME->add(row);
                 }
             } break;
             case Activity::Copying: {               //5
                 copy = true;
                 if (IsSkillTypeID(cur.requiredTypeID)) {
-                    skillListCopy->AddItem(row);
+                    skillListCopy->add(row);
                 } else {
-                    matlListCopy->AddItem(row);
+                    matlListCopy->add(row);
                 }
             } break;
             case Activity::Duplicating: {           //6
                 dup = true;
                 if (IsSkillTypeID(cur.requiredTypeID)) {
-                    skillListDup->AddItem(row);
+                    skillListDup->add(row);
                 } else if (cur.extra) {
-                    extraListDup->AddItem(row);
+                    extraListDup->add(row);
                 } else {
-                    matlListDup->AddItem(row);
+                    matlListDup->add(row);
                 }
             } break;
             case Activity::ReverseEngineering: {    //7
                 re = true;
                 if (IsSkillTypeID(cur.requiredTypeID)) {
-                    skillListRE->AddItem(row);
+                    skillListRE->add(row);
                 } else {
-                    matlListRE->AddItem(row);
+                    matlListRE->add(row);
                 }
             } break;
             case Activity::Invention: {             //8
                 invent = true;
                 if (IsSkillTypeID(cur.requiredTypeID)) {
-                    skillListInvent->AddItem(row);
+                    skillListInvent->add(row);
                 } else {
-                    matlListInvent->AddItem(row);
+                    matlListInvent->add(row);
                 }
             } break;
         }
@@ -1479,7 +1503,7 @@ PyDict* StaticDataMgr::SetBPMatlType(int8 catID, uint16 typeID, uint16 prodID)
     // this is the response.  test for items populated above and create an ItemString in the dict for that item.
     // items not populated will not be shown in the BP info.
     DBQueryResult mtRes;
-    PyRep* mtCRowSet = DBResultToCRowset(mtRes);
+    PyDataType* mtCRowSet = DBResultToCRowset(mtRes);
     PyDict* rsp = new PyDict();
     // activity '0' should stay empty
     //activityNone = 0
@@ -1487,79 +1511,81 @@ PyDict* StaticDataMgr::SetBPMatlType(int8 catID, uint16 typeID, uint16 prodID)
 
     if (manuf) {        //activityManufacturing = 1
         PyDict* Manufacturing = new PyDict();
-            Manufacturing->SetItemString("skills", skillListManuf);
-            Manufacturing->SetItemString("rawMaterials", matlListManuf);
-            CRowSet *rowset = new CRowSet(&header);
+            Manufacturing->set ("skills", skillListManuf);
+            Manufacturing->set ("rawMaterials", matlListManuf);
+            CRowset *rowset = new CRowset(header);
             PyList::const_iterator itr = extraListManuf->begin();
             for (; itr != extraListManuf->end(); ++itr) {
-                PyPackedRow* from = (*itr)->AsPackedRow();
-                PyPackedRow* into = rowset->NewRow();
-                into->SetField((uint32)0, from->GetField(0));
-                into->SetField((uint32)1, from->GetField(1));
-                into->SetField((uint32)2, from->GetField(2));
+                PyPackedRow* from = (*itr)->as<PyPackedRow>();
+                rowset->insert({
+                    from->get (0),
+                    from->get (1),
+                    from->get (2)
+                });
             }
-        Manufacturing->SetItemString("extras", rowset);     // have to build a crowset for this
-        rsp->SetItem(new PyInt(1), new PyObject("util.KeyVal", Manufacturing));
+        Manufacturing->set ("extras", rowset);     // have to build a crowset for this
+        rsp->set(new PyInt (1), new PyObject("util.KeyVal", Manufacturing));
     }
     if (tech) {        //activityResearchingTechnology = 2
         // not used.  not defined in client.  no data for this activity
     }
     if (te) {        //activityResearchingTimeProductivity = 3
         PyDict* ResearchTime = new PyDict();
-            ResearchTime->SetItemString("skills", skillListTE);
-            ResearchTime->SetItemString("rawMaterials", matlListTE);
+            ResearchTime->set ("skills", skillListTE);
+            ResearchTime->set ("rawMaterials", matlListTE);
             PyIncRef(mtCRowSet);
-        ResearchTime->SetItemString("extras", mtCRowSet);
-        rsp->SetItem(new PyInt(3), new PyObject("util.KeyVal", ResearchTime));
+        ResearchTime->set ("extras", mtCRowSet);
+        rsp->set(new PyInt(3), new PyObject("util.KeyVal", ResearchTime));
     }
     if (me) {        //activityResearchingMaterialProductivity = 4
         PyDict* ResearchMaterial = new PyDict();
-            ResearchMaterial->SetItemString("skills", skillListME);
-            ResearchMaterial->SetItemString("rawMaterials", matlListME);
+            ResearchMaterial->set ("skills", skillListME);
+            ResearchMaterial->set ("rawMaterials", matlListME);
             PyIncRef(mtCRowSet);
-        ResearchMaterial->SetItemString("extras", mtCRowSet);
-        rsp->SetItem(new PyInt(4), new PyObject("util.KeyVal", ResearchMaterial));
+        ResearchMaterial->set ("extras", mtCRowSet);
+        rsp->set(new PyInt(4), new PyObject("util.KeyVal", ResearchMaterial));
     }
     if (copy) {        //activityCopying = 5
         PyDict* Copying = new PyDict();
-            Copying->SetItemString("skills", skillListCopy);
-            Copying->SetItemString("rawMaterials", matlListCopy);
+            Copying->set ("skills", skillListCopy);
+            Copying->set ("rawMaterials", matlListCopy);
             PyIncRef(mtCRowSet);
-        Copying->SetItemString("extras", mtCRowSet);
-        rsp->SetItem(new PyInt(5), new PyObject("util.KeyVal", Copying));
+        Copying->set ("extras", mtCRowSet);
+        rsp->set(new PyInt(5), new PyObject("util.KeyVal", Copying));
     }
     if (dup) {       //activityDuplicating = 6
         // no longer used...updated to "copying" after RMR
         PyDict* Duplicating = new PyDict();
-            Duplicating->SetItemString("skills", skillListDup);
-            Duplicating->SetItemString("rawMaterials", matlListDup);
-            CRowSet *rowset = new CRowSet(&header);
+            Duplicating->set ("skills", skillListDup);
+            Duplicating->set ("rawMaterials", matlListDup);
+            CRowset *rowset = new CRowset(header);
             PyList::const_iterator itr = extraListDup->begin();
             for (; itr != extraListDup->end(); ++itr) {
-                PyPackedRow* from = (*itr)->AsPackedRow();
-                PyPackedRow* into = rowset->NewRow();
-                into->SetField((uint32)0, from->GetField(0));
-                into->SetField((uint32)1, from->GetField(1));
-                into->SetField((uint32)2, from->GetField(2));
+                PyPackedRow* from = (*itr)->as<PyPackedRow>();
+                rowset->insert({
+                    from->get (0),
+                    from->get (1),
+                    from->get (2)
+                });
             }
-        Duplicating->SetItemString("extras", rowset);    // have to build a crowset for this
-        rsp->SetItem(new PyInt(6), new PyObject("util.KeyVal", Duplicating));
+        Duplicating->set ("extras", rowset);    // have to build a crowset for this
+        rsp->set(new PyInt(6), new PyObject("util.KeyVal", Duplicating));
     }
     if (re) {        //activityReverseEngineering = 7
         PyDict* ReverseEngineering = new PyDict();
-            ReverseEngineering->SetItemString("skills", skillListRE);
-            ReverseEngineering->SetItemString("rawMaterials", matlListRE);
+            ReverseEngineering->set ("skills", skillListRE);
+            ReverseEngineering->set ("rawMaterials", matlListRE);
             PyIncRef(mtCRowSet);
-        ReverseEngineering->SetItemString("extras", mtCRowSet);
-        rsp->SetItem(new PyInt(7), new PyObject("util.KeyVal", ReverseEngineering));
+        ReverseEngineering->set ("extras", mtCRowSet);
+        rsp->set(new PyInt(7), new PyObject("util.KeyVal", ReverseEngineering));
     }
     if (invent) {     //activityInvention = 8
         PyDict* Invention = new PyDict();
-            Invention->SetItemString("skills", skillListInvent);
-            Invention->SetItemString("rawMaterials", matlListInvent);
+            Invention->set ("skills", skillListInvent);
+            Invention->set ("rawMaterials", matlListInvent);
             PyIncRef(mtCRowSet);
-        Invention->SetItemString("extras", mtCRowSet);
-        rsp->SetItem(new PyInt(8), new PyObject("util.KeyVal", Invention));
+        Invention->set ("extras", mtCRowSet);
+        rsp->set(new PyInt(8), new PyObject("util.KeyVal", Invention));
     }
 
     /**

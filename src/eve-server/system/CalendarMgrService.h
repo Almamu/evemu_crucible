@@ -36,17 +36,17 @@ public:
     CalendarMgrService();
 
 protected:
-    PyResult GetResponsesForCharacter(PyCallArgs& call);
-    PyResult GetResponsesToEvent(PyCallArgs& call, PyInt* eventID, PyInt* ownerID);
-    PyResult DeleteEvent(PyCallArgs& call, PyInt* eventID, PyInt* ownerID);
-    PyResult SendEventResponse(PyCallArgs& call, PyInt* eventID, PyInt* ownerID, PyInt* response);
-    PyResult CreatePersonalEvent(PyCallArgs& call, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important, PyList* invitees);
-    PyResult CreateCorporationEvent(PyCallArgs& call, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important);
-    PyResult CreateAllianceEvent(PyCallArgs& call, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important);
-    PyResult EditPersonalEvent(PyCallArgs& call, PyInt* eventID, PyLong* oldDateTime, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important);
-    PyResult EditCorporationEvent(PyCallArgs& call, PyInt* eventID, PyLong* oldDateTime, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important);
-    PyResult EditAllianceEvent(PyCallArgs& call, PyInt* eventID, PyLong* oldDateTime, PyLong* dateTime, PyInt* duration, PyWString* title, PyWString* description, PyRep* important);
-    PyResult UpdateEventParticipants(PyCallArgs& call, PyInt* eventID, PyList* charsToAdd, PyList* charsToRemove);
+  EVEResult GetResponsesForCharacter(EVECallArgs& call);
+  EVEResult GetResponsesToEvent(EVECallArgs& call, PyInt* eventID, PyInt* ownerID);
+  EVEResult DeleteEvent(EVECallArgs& call, PyInt* eventID, PyInt* ownerID);
+  EVEResult SendEventResponse(EVECallArgs& call, PyInt* eventID, PyInt* ownerID, PyInt* response);
+  EVEResult CreatePersonalEvent(EVECallArgs& call, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important, PyList* invitees);
+  EVEResult CreateCorporationEvent(EVECallArgs& call, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important);
+  EVEResult CreateAllianceEvent(EVECallArgs& call, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important);
+  EVEResult EditPersonalEvent(EVECallArgs& call, PyInt* eventID, PyInt* oldDateTime, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important);
+  EVEResult EditCorporationEvent(EVECallArgs& call, PyInt* eventID, PyInt* oldDateTime, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important);
+  EVEResult EditAllianceEvent(EVECallArgs& call, PyInt* eventID, PyInt* oldDateTime, PyInt* dateTime, PyInt* duration, PyString* title, PyString* description, PyDataType* important);
+  EVEResult UpdateEventParticipants(EVECallArgs& call, PyInt* eventID, PyList* charsToAdd, PyList* charsToRemove);
 };
 
 #endif // EVEMU_SYSTEM_CALENDARMGR_H__

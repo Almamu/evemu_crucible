@@ -46,7 +46,7 @@ CertificateMgrService::CertificateMgrService(EVEServiceManager& mgr) :
     this->m_cache = this->m_manager.Lookup <ObjCacheService>("objectCaching");
 }
 
-PyResult CertificateMgrService::GetMyCertificates(PyCallArgs &call) {
+EVEResult CertificateMgrService::GetMyCertificates(EVECallArgs&call) {
     CertMap crt = CertMap();
     call.client->GetChar()->GetCertificates( crt );
 
@@ -57,20 +57,22 @@ PyResult CertificateMgrService::GetMyCertificates(PyCallArgs &call) {
         rs.header.push_back( "visibilityFlags" );
 
     for (auto cur : crt) {
-        PyList* fieldData = new PyList();
-            fieldData->AddItemInt( cur.first );
-            fieldData->AddItemLong( cur.second.grantDate );
-            fieldData->AddItemInt( cur.second.visibilityFlags );
-        rs.lines->AddItem( fieldData );
+        rs.lines->add (
+            new PyList {
+                new PyInt (cur.first),
+                new PyInt (cur.second.grantDate),
+                new PyInt (cur.second.visibilityFlags)
+            }
+        );
     }
     return rs.Encode();
 }
 
-PyResult CertificateMgrService::GetCertificateCategories(PyCallArgs &call) {
+EVEResult CertificateMgrService::GetCertificateCategories(EVECallArgs&call) {
     ObjectCachedMethodID method_id(GetName().c_str(), "GetCertificateCategories");
 
     if (!this->m_cache->IsCacheLoaded(method_id)) {
-        PyRep* res = m_db.GetCertificateCategories();
+        PyDataType* res = m_db.GetCertificateCategories();
         if (res == nullptr)
             codelog(SERVICE__ERROR, "Failed to load cache, generating empty contents.");
         this->m_cache->GiveCache(method_id, &res);
@@ -79,11 +81,11 @@ PyResult CertificateMgrService::GetCertificateCategories(PyCallArgs &call) {
     return this->m_cache->MakeObjectCachedMethodCallResult(method_id);
 }
 
-PyResult CertificateMgrService::GetAllShipCertificateRecommendations(PyCallArgs &call) {
+EVEResult CertificateMgrService::GetAllShipCertificateRecommendations(EVECallArgs&call) {
     ObjectCachedMethodID method_id(GetName().c_str(), "GetAllShipCertificateRecommendations");
 
     if (!this->m_cache->IsCacheLoaded(method_id)) {
-        PyRep* res = m_db.GetAllShipCertificateRecommendations();
+        PyDataType* res = m_db.GetAllShipCertificateRecommendations();
         if (res == nullptr)
             codelog(SERVICE__ERROR, "Failed to load cache, generating empty contents.");
         this->m_cache->GiveCache(method_id, &res);
@@ -92,11 +94,11 @@ PyResult CertificateMgrService::GetAllShipCertificateRecommendations(PyCallArgs 
     return this->m_cache->MakeObjectCachedMethodCallResult(method_id);
 }
 
-PyResult CertificateMgrService::GetCertificateClasses(PyCallArgs &call) {
+EVEResult CertificateMgrService::GetCertificateClasses(EVECallArgs&call) {
     ObjectCachedMethodID method_id(GetName().c_str(), "GetCertificateClasses");
 
     if (!this->m_cache->IsCacheLoaded(method_id)) {
-        PyRep* res = m_db.GetCertificateClasses();
+        PyDataType* res = m_db.GetCertificateClasses();
         if (res == nullptr)
             codelog(SERVICE__ERROR, "Failed to load cache, generating empty contents.");
         this->m_cache->GiveCache(method_id, &res);
@@ -105,28 +107,28 @@ PyResult CertificateMgrService::GetCertificateClasses(PyCallArgs &call) {
     return this->m_cache->MakeObjectCachedMethodCallResult(method_id);
 }
 
-PyResult CertificateMgrService::GrantCertificate(PyCallArgs &call, PyInt* certificateID) {
+EVEResult CertificateMgrService::GrantCertificate(EVECallArgs&call, PyInt* certificateID) {
     call.client->GetChar()->GrantCertificate(certificateID->value());
     return PyStatic.NewNone();
 }
 
-PyResult CertificateMgrService::UpdateCertificateFlags(PyCallArgs &call, PyInt* certificateID, PyInt* visibility) {
+EVEResult CertificateMgrService::UpdateCertificateFlags(EVECallArgs&call, PyInt* certificateID, PyInt* visibility) {
     call.client->GetChar()->UpdateCertificate(certificateID->value(), visibility->value());
     return PyStatic.NewNone();
 }
 
-PyResult CertificateMgrService::BatchCertificateGrant(PyCallArgs &call, PyList* certificateIDs) {
+EVEResult CertificateMgrService::BatchCertificateGrant(EVECallArgs&call, PyList* certificateIDs) {
     // TODO: rewrite this when improvements to py types are made
     std::vector<int32> ints;
 
     PyList::const_iterator list_2_cur = certificateIDs->begin();
     for (size_t list_2_index(0); list_2_cur != certificateIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_SingleIntList failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         ints.push_back(t->value());
     }
 
@@ -135,29 +137,29 @@ PyResult CertificateMgrService::BatchCertificateGrant(PyCallArgs &call, PyList* 
     std::vector<int32>::iterator itr = ints.begin();
     for (; itr != ints.end(); ++itr) {
         ch->GrantCertificate(*itr);
-        res->AddItemInt(*itr);
+        res->add(new PyInt (*itr));
     }
     return res;
 }
 
-PyResult CertificateMgrService::BatchCertificateUpdate(PyCallArgs &call, PyDict* batchUpdate) {
+EVEResult CertificateMgrService::BatchCertificateUpdate(EVECallArgs&call, PyDict* batchUpdate) {
     // TODO: rewrite this when improvements to py types are made
     std::map<uint32, uint32> update;
 
     PyDict::const_iterator dict_2_cur = batchUpdate->begin();
     for (size_t dict_2_index(0); dict_2_cur != batchUpdate->end(); ++dict_2_cur, ++dict_2_index) {
-        if (!dict_2_cur->first->IsInt()) {
+        if (!dict_2_cur->first->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_BatchCertificateUpdate failed: Key %u in dict dict_2 is not Int: %s", dict_2_index, dict_2_cur->first->TypeString());
             return nullptr;
         }
 
-        const PyInt* k = dict_2_cur->first->AsInt();
-        if (!dict_2_cur->second->IsInt()) {
+        const PyInt* k = dict_2_cur->first->as<PyInt>();
+        if (!dict_2_cur->second->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_BatchCertificateUpdate failed: Value %d in dict dict_2 is not Int: %s", dict_2_index, dict_2_cur->second->TypeString());
             return nullptr;
         }
 
-        const PyInt* v = dict_2_cur->second->AsInt();
+        const PyInt* v = dict_2_cur->second->as<PyInt>();
         update[k->value()] = v->value();
     }
     CharacterRef ch = call.client->GetChar();
@@ -167,7 +169,7 @@ PyResult CertificateMgrService::BatchCertificateUpdate(PyCallArgs &call, PyDict*
     return PyStatic.NewNone();
 }
 
-PyResult CertificateMgrService::GetCertificatesByCharacter(PyCallArgs& call, PyInt* characterID)
+EVEResult CertificateMgrService::GetCertificatesByCharacter(EVECallArgs& call, PyInt* characterID)
 {
     CertMap crt;
     sItemFactory.GetCharacterRef(characterID->value())->GetCertificates(crt);
@@ -179,11 +181,13 @@ PyResult CertificateMgrService::GetCertificatesByCharacter(PyCallArgs& call, PyI
         rs.header.push_back("visibilityFlags");
 
     for (auto cur : crt) {
-        PyList* fieldData = new PyList();
-            fieldData->AddItemLong( cur.second.grantDate );
-            fieldData->AddItemInt( cur.second.certificateID );
-            fieldData->AddItemInt( cur.second.visibilityFlags );
-        rs.lines->AddItem( fieldData );
+        rs.lines->add(
+            new PyList {
+                new PyInt (cur.second.grantDate),
+                new PyInt (cur.second.certificateID),
+                new PyInt (cur.second.visibilityFlags)
+            }
+        );
     }
     return rs.Encode();
 }

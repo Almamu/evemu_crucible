@@ -41,12 +41,12 @@ public:
     static int GetLPBalanceForCorp(int32 characterID, int32 corporationID);
 
 protected:
-    PyResult TakeOffer(PyCallArgs& call, PyInt* corpID, PyInt* storeID);
-    PyResult ExchangeConcordLP(PyCallArgs& call, PyInt* corporationID, PyFloat* amount);
-    PyResult GetLPExchangeRates(PyCallArgs& call);
-    PyResult GetLPForCharacterCorp(PyCallArgs& call, PyInt* corporationID);
-    PyResult GetLPsForCharacter(PyCallArgs& call);
-    PyResult GetAvailableOffersFromCorp(PyCallArgs& call, PyInt* corporationID, PyBool* trueValue);
+  EVEResult TakeOffer(EVECallArgs& call, PyInt* corpID, PyInt* storeID);
+  EVEResult ExchangeConcordLP(EVECallArgs& call, PyInt* corporationID, PyFloat* amount);
+  EVEResult GetLPExchangeRates(EVECallArgs& call);
+  EVEResult GetLPForCharacterCorp(EVECallArgs& call, PyInt* corporationID);
+  EVEResult GetLPsForCharacter(EVECallArgs& call);
+  EVEResult GetAvailableOffersFromCorp(EVECallArgs& call, PyInt* corporationID, PyBool* trueValue);
 
     static DBQueryResult GetLPRowsForCharacter(int32 characterID);
     static DBQueryResult GetLPOffersForCorp(int32 corporationID);

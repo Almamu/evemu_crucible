@@ -43,10 +43,10 @@ public:
     void BoundReleased (InventoryBound* bound) override;
 
 protected:
-    PyResult GetItemDescriptor(PyCallArgs& call);
+  EVEResult GetItemDescriptor(EVECallArgs& call);
 
     //overloaded in order to support bound objects:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters);
 };
 
 class InvBrokerBound : public EVEBoundObject <InvBrokerBound>
@@ -55,17 +55,17 @@ public:
     InvBrokerBound(EVEServiceManager& mgr, InvBrokerService& parent, uint32 locationID, uint32 groupID);
 
 protected:
-    PyResult GetContainerContents(PyCallArgs& call, PyInt* containerID, PyInt* locationID);
-    PyResult GetInventoryFromId(PyCallArgs& call, PyInt* inventoryID, PyInt* passive);
-    PyResult GetInventory(PyCallArgs& call, PyInt* containerID, std::optional <PyInt*> ownerID);
-    PyResult SetLabel(PyCallArgs& call, PyInt* itemID, PyRep* itemName);
-    PyResult TrashItems(PyCallArgs& call, PyList* itemIDs, PyInt* locationID);
-    PyResult AssembleCargoContainer(PyCallArgs& call, PyInt* itemID, PyNone* none, PyFloat* zero);
-    PyResult BreakPlasticWrap(PyCallArgs& call);
-    PyResult TakeOutTrash(PyCallArgs& call, PyList* itemIDs);
-    PyResult SplitStack(PyCallArgs& call, PyInt* locationID, PyInt* itemID, PyInt* quantity, PyInt* ownerID);
-    PyResult DeliverToCorpHangar(PyCallArgs& call, PyInt* officeID, PyInt* locationID, PyInt* itemsToDeliver, std::optional <PyInt*> quantity, PyInt* ownerID, PyInt* destinationFlag);
-    PyResult DeliverToCorpMember(PyCallArgs& call, PyInt* corporationMemberID, PyInt* stationID, PyList* itemIDs, std::optional <PyInt*> quantity, PyInt* ownerID);
+  EVEResult GetContainerContents(EVECallArgs& call, PyInt* containerID, PyInt* locationID);
+  EVEResult GetInventoryFromId(EVECallArgs& call, PyInt* inventoryID, PyInt* passive);
+  EVEResult GetInventory(EVECallArgs& call, PyInt* containerID, std::optional <PyInt*> ownerID);
+  EVEResult SetLabel(EVECallArgs& call, PyInt* itemID, PyDataType* itemName);
+  EVEResult TrashItems(EVECallArgs& call, PyList* itemIDs, PyInt* locationID);
+  EVEResult AssembleCargoContainer(EVECallArgs& call, PyInt* itemID, PyNone* none, PyFloat* zero);
+  EVEResult BreakPlasticWrap(EVECallArgs& call);
+  EVEResult TakeOutTrash(EVECallArgs& call, PyList* itemIDs);
+  EVEResult SplitStack(EVECallArgs& call, PyInt* locationID, PyInt* itemID, PyInt* quantity, PyInt* ownerID);
+  EVEResult DeliverToCorpHangar(EVECallArgs& call, PyInt* officeID, PyInt* locationID, PyInt* itemsToDeliver, std::optional <PyInt*> quantity, PyInt* ownerID, PyInt* destinationFlag);
+  EVEResult DeliverToCorpMember(EVECallArgs& call, PyInt* corporationMemberID, PyInt* stationID, PyList* itemIDs, std::optional <PyInt*> quantity, PyInt* ownerID);
 
 protected:
     uint32 m_locationID;

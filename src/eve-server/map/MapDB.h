@@ -57,7 +57,7 @@ public:
     static void LoadDynamicData(uint32 sysID, SystemKillData& data);
 
     // dynamic data db methods    -allan
-    static PyRep* GetDynamicData(uint8 type, uint8 time);
+    static PyDataType* GetDynamicData(uint8 type, uint8 time);
     static void ManipulateTimeData();
     static void SetSystemActive(uint32 sysID, bool active=false);
 

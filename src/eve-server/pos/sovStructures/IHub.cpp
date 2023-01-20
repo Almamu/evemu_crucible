@@ -21,7 +21,7 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "planet/Planet.h"
 #include "pos/sovStructures/IHub.h"
 #include "system/Container.h"

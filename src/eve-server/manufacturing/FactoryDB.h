@@ -23,14 +23,14 @@ class FactoryDB
 {
 public:
     // client calls
-    static PyRep* GetJobs2(const int32 ownerID, const bool completed);
-    static PyRep* AssemblyLinesSelectPublic(const uint32 regionID);
-    static PyRep* AssemblyLinesSelectPersonal(const uint32 charID);
-    static PyRep* AssemblyLinesSelectPrivate(const uint32 charID);
-    static PyRep* AssemblyLinesSelectCorporation(const uint32 corporationID);
-    static PyRep* AssemblyLinesSelectAlliance(const int32 allianceID);
-    static PyRep* AssemblyLinesGet(const uint32 containerID);
-    static PyRep* GetMaterialCompositionOfItemType(const uint32 typeID);
+    static PyDataType* GetJobs2(const int32 ownerID, const bool completed);
+    static PyDataType* AssemblyLinesSelectPublic(const uint32 regionID);
+    static PyDataType* AssemblyLinesSelectPersonal(const uint32 charID);
+    static PyDataType* AssemblyLinesSelectPrivate(const uint32 charID);
+    static PyDataType* AssemblyLinesSelectCorporation(const uint32 corporationID);
+    static PyDataType* AssemblyLinesSelectAlliance(const int32 allianceID);
+    static PyDataType* AssemblyLinesGet(const uint32 containerID);
+    static PyDataType* GetMaterialCompositionOfItemType(const uint32 typeID);
     static void GetOutpostMaterialCompositionOfItemType(const uint32 typeID, DBQueryResult& res);
 
     // for static data mgr

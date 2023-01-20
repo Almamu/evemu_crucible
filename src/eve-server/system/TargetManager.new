@@ -27,7 +27,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "Profile.h"
 #include "Client.h"
 #include "inventory/AttributeEnum.h"

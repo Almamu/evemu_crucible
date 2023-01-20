@@ -44,27 +44,27 @@ CharFittingMgr::CharFittingMgr() :
 }
 
 //11:37:43 L CharFittingMgr::Handle_GetFittings(): size= 1 from 'allan'
-PyResult CharFittingMgr::GetFittings(PyCallArgs &call, PyInt* ownerID) {
+EVEResult CharFittingMgr::GetFittings(EVECallArgs&call, PyInt* ownerID) {
     //self.fittings[ownerID] = self.GetFittingMgr(ownerID).GetFittings(ownerID)
     // client/script/environment/fittingsvc.py(112) PersistFitting
 
     _log(PLAYER__CALL, "CharFittingMgr::Handle_GetFittings()");
-    call.Dump(PLAYER__CALL_DUMP);
+    call.dump(PLAYER__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CharFittingMgr::SaveFitting(PyCallArgs &call, PyInt* ownerID, PyObject* fitting)
+EVEResult CharFittingMgr::SaveFitting(EVECallArgs&call, PyInt* ownerID, PyObject* fitting)
 {
     //    fitting.ownerID = ownerID
     //    fitting.fittingID = self.GetFittingMgr(ownerID).SaveFitting(ownerID, fitting)
     _log(PLAYER__CALL, "CharFittingMgr::Handle_SaveFitting()");
-    call.Dump(PLAYER__CALL_DUMP);
+    call.dump(PLAYER__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CharFittingMgr::SaveManyFittings(PyCallArgs &call, PyInt* ownerID, PyDict* fittingsToSave)
+EVEResult CharFittingMgr::SaveManyFittings(EVECallArgs&call, PyInt* ownerID, PyDict* fittingsToSave)
 {
     /*
         newFittingIDs = self.GetFittingMgr(ownerID).SaveManyFittings(ownerID, fittingsToSave)
@@ -73,25 +73,25 @@ PyResult CharFittingMgr::SaveManyFittings(PyCallArgs &call, PyInt* ownerID, PyDi
             self.fittings[ownerID][row.realFittingID].fittingID = row.realFittingID
         */
     _log(PLAYER__CALL, "CharFittingMgr::Handle_SaveManyFittings()");
-    call.Dump(PLAYER__CALL_DUMP);
+    call.dump(PLAYER__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CharFittingMgr::DeleteFitting(PyCallArgs &call, PyInt* ownerID, PyInt* fittingID)
+EVEResult CharFittingMgr::DeleteFitting(EVECallArgs&call, PyInt* ownerID, PyInt* fittingID)
 {
     // self.GetFittingMgr(ownerID).DeleteFitting(ownerID, fittingID)
     _log(PLAYER__CALL, "CharFittingMgr::Handle_DeleteFitting()");
-    call.Dump(PLAYER__CALL_DUMP);
+    call.dump(PLAYER__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult CharFittingMgr::UpdateNameAndDescription(PyCallArgs &call, PyInt* fittingID, PyInt* ownerID, PyWString* name, PyWString* description)
+EVEResult CharFittingMgr::UpdateNameAndDescription(EVECallArgs&call, PyInt* fittingID, PyInt* ownerID, PyString* name, PyString* description)
 {
     // self.GetFittingMgr(ownerID).UpdateNameAndDescription(fittingID, ownerID, name, description)
     _log(PLAYER__CALL, "CharFittingMgr::Handle_UpdateNameAndDescription()");
-    call.Dump(PLAYER__CALL_DUMP);
+    call.dump(PLAYER__CALL_DUMP);
 
     return nullptr;
 }

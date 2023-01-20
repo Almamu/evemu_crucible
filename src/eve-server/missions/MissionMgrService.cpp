@@ -34,11 +34,11 @@ MissionMgrService::MissionMgrService() :
     this->Add("GetMyCourierMissions", &MissionMgrService::GetMyCourierMissions);
 }
 
-PyResult MissionMgrService::GetMyCourierMissions(PyCallArgs& call)
+EVEResult MissionMgrService::GetMyCourierMissions(EVECallArgs& call)
 {
     //SELECT * FROM courierMissions
     sLog.White("MissionMgrService", "Handle_GetMyCourierMissions() size=%lli", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }

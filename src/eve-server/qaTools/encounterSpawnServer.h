@@ -21,9 +21,9 @@ public:
     encounterSpawnServer();
 
 protected:
-    PyResult GetMyEncounters(PyCallArgs& call);
-    PyResult RequestActivateEncounters(PyCallArgs& call, PyList* encounterList);
-    PyResult RequestDeactivateEncounters(PyCallArgs& call, PyList* encounterList);
+  EVEResult GetMyEncounters(EVECallArgs& call);
+  EVEResult RequestActivateEncounters(EVECallArgs& call, PyList* encounterList);
+  EVEResult RequestDeactivateEncounters(EVECallArgs& call, PyList* encounterList);
 };
 
 #endif  // _EVEMU_QATOOLS_SPAWN_SERVER_H

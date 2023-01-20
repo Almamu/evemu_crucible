@@ -37,22 +37,22 @@ class ConfigDB
 : public ServiceDB
 {
 public:
-    PyRep *GetMultiOwnersEx(const std::vector<int32> &entityIDs);
-    PyRep *GetMultiLocationsEx(const std::vector<int32> &entityIDs);
-    PyRep *GetMultiStationEx(const std::vector<int32> &entityIDs);
-    PyRep *GetMultiAllianceShortNamesEx(const std::vector<int32> &entityIDs);
-    PyRep *GetMultiCorpTickerNamesEx(const std::vector<int32> &entityIDs);
-    PyRep *GetMultiGraphicsEx(const std::vector<int32> &entityIDs);
-    PyRep *GetMultiInvTypesEx(const std::vector<int32> &typeIDs);
+    PyDataType *GetMultiOwnersEx(VectorWrapper<PyInt> entityIDs, PythonArena* arena);
+    PyDataType *GetMultiLocationsEx(const std::vector<int32> &entityIDs);
+    PyDataType *GetMultiStationEx(const std::vector<int32> &entityIDs);
+    PyDataType *GetMultiAllianceShortNamesEx(const std::vector<int32> &entityIDs);
+    PyDataType *GetMultiCorpTickerNamesEx(VectorWrapper<PyInt> entityIDs, PythonArena* arena);
+    PyDataType *GetMultiGraphicsEx(const std::vector<int32> &entityIDs);
+    PyDataType *GetMultiInvTypesEx(const std::vector<int32> &typeIDs);
     PyObject *GetUnits();
     PyObjectEx *GetMapObjects(uint32 entityID, bool wantRegions, bool wantConstellations, bool wantSystems, bool wantStations);
     PyObject *GetMap(uint32 solarSystemID);
     PyObject *GetMapOffices(uint32);
     PyObject *GetMapConnections(uint32, bool, bool, bool, uint16, uint16);
     PyObject *ListLanguages();
-    PyRep *GetStationSolarSystemsByOwner(uint32 ownerID);
-    PyRep *GetCelestialStatistic(uint32 celestialID);
-    PyRep *GetTextsForGroup(const std::string & langID, uint32 textgroup);
+    PyDataType *GetStationSolarSystemsByOwner(uint32 ownerID);
+    PyDataType *GetCelestialStatistic(uint32 celestialID);
+    PyDataType *GetTextsForGroup(const std::string & langID, uint32 textgroup);
     PyObject *GetMapLandmarks();
 
     /**
@@ -61,7 +61,7 @@ public:
     * @param[in] solarSystemID  ID of the solar system whose objects are being retrieved
     * @author allan
     */
-    PyRep *GetDynamicCelestials(uint32 solarSystemID);
+    PyDataType *GetDynamicCelestials(uint32 solarSystemID, PythonArena* arena);
 
 protected:
 };

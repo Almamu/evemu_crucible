@@ -31,7 +31,7 @@
 #include "Client.h"
 #include "ConsoleCommands.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "ServiceDB.h"
 #include "agents/Agent.h"
 #include "exploration/Probes.h"
@@ -353,7 +353,7 @@ bool EntityList::IsOnline(uint32 charID)
     return true;
 }
 
-PyRep* EntityList::PyIsOnline(uint32 charID)
+PyDataType* EntityList::PyIsOnline(uint32 charID)
 {
     if (m_players.find(charID) == m_players.end())
         return PyStatic.NewFalse();
@@ -615,19 +615,19 @@ void EntityList::Broadcast(const char* notifyType, const char* idType, PyTuple**
     payload = nullptr;    //consumed
 
     //now sent it to the client
-    PyAddress dest;
-        dest.type = PyAddress::Broadcast;
+    EVEPacketAddress dest;
+        dest.type = EVEPacketAddress::Broadcast;
         dest.service = notifyType;
         dest.bcast_idtype = idType;
     Broadcast(dest, notify);
 }
 
-void EntityList::Broadcast(const PyAddress &dest, EVENotificationStream &noti) const {
+void EntityList::Broadcast(const EVEPacketAddress &dest, EVENotificationStream &noti) const {
     for (auto cur : m_players)
         cur.second->SendNotification(dest, noti);
 }
 
-void EntityList::Multicast(const character_set &cset, const PyAddress &dest, EVENotificationStream &noti) const {
+void EntityList::Multicast(const character_set &cset, const EVEPacketAddress &dest, EVENotificationStream &noti) const {
     std::map<uint32, Client*>::const_iterator itr = m_players.begin();
     for (auto cur : cset) {
         itr = m_players.find(cur);

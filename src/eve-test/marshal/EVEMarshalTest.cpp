@@ -27,30 +27,33 @@
 
 int marshal_EVEMarshalTest( int argc, char* argv[] )
 {
-    DBRowDescriptor *header = new DBRowDescriptor;
+    StaticPythonArena in(1 * 1024 * 1024);
+    StaticPythonArena out(1 * 1024 * 1024);
+
+    DBRowDescriptor *header = new(&in) DBRowDescriptor;
     // Fill header:
-    header->AddColumn( "historyDate", DBTYPE_FILETIME );
-    header->AddColumn( "lowPrice", DBTYPE_CY );
-    header->AddColumn( "highPrice", DBTYPE_CY );
-    header->AddColumn( "avgPrice", DBTYPE_CY );
-    header->AddColumn( "volume", DBTYPE_I8 );
-    header->AddColumn( "orders", DBTYPE_I4 );
+    header->add ("historyDate", DBTYPE_FILETIME);
+    header->add ("lowPrice", DBTYPE_CY);
+    header->add ("highPrice", DBTYPE_CY);
+    header->add ("avgPrice", DBTYPE_CY);
+    header->add ("volume", DBTYPE_I8);
+    header->add ("orders", DBTYPE_I4);
 
-    CRowSet* rs = new CRowSet( &header );
+    CRowset* rs = new(&in) CRowset (header);
 
-    PyPackedRow* row = rs->NewRow();
-    row->SetField( "historyDate", new PyLong( Win32TimeNow() ) );
-    row->SetField( "lowPrice", new PyLong( 18000 ) );
-    row->SetField( "highPrice", new PyLong( 19000 ) );
-    row->SetField( "avgPrice", new PyLong( 18400 ) );
-    row->SetField( "volume", new PyLong( 5463586 ) );
-    row->SetField( "orders", new PyInt( 254 ) );
+    rs->insert({
+        in.Int(Win32TimeNow()),
+        in.Int(18000),
+        in.Int(19000),
+        in.Int(18400),
+        in.Int(5463586),
+        in.Int(254)
+    });
 
     ::puts( "Marshaling..." );
 
     Buffer marshaled;
     bool res = MarshalDeflate( rs, marshaled );
-    PyDecRef( rs );
 
     if( !res )
     {
@@ -60,7 +63,7 @@ int marshal_EVEMarshalTest( int argc, char* argv[] )
 
     ::puts( "Unmarshaling..." );
 
-    PyRep* rep = InflateUnmarshal( marshaled );
+    PyDataType* rep = InflateUnmarshal (marshaled, &out);
     if( NULL == rep )
     {
         ::puts( "Failed to unmarshal Python object." );
@@ -68,8 +71,16 @@ int marshal_EVEMarshalTest( int argc, char* argv[] )
     }
 
     ::puts( "Final:" );
-    rep->Dump( stdout, "    " );
+    rep->dump( stdout, "    " );
     PyDecRef( rep );
+
+    if (in.freeBytes() != out.freeBytes()) {
+        return EXIT_FAILURE;
+    }
+
+    if (!rep->equals (rs)) {
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

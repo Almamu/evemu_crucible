@@ -41,15 +41,15 @@ TutorialService::TutorialService() :
     this->Add("GetCareerAgents", &TutorialService::GetCareerAgents);
 }
 
-PyResult TutorialService::GetTutorials(PyCallArgs &call) {
+EVEResult TutorialService::GetTutorials(EVECallArgs&call) {
   sLog.Warning( "TutorialService::Handle_GetTutorials()", "size=%lu", call.tuple->size());
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
     return(m_db.GetAllTutorials());
 }
 
-PyResult TutorialService::GetTutorialInfo(PyCallArgs &call, PyInt* tutorialID) {
+EVEResult TutorialService::GetTutorialInfo(EVECallArgs&call, PyInt* tutorialID) {
   sLog.Warning( "TutorialService::Handle_GetTutorialInfo()", "size=%lu", call.tuple->size());
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
     Rsp_GetTutorialInfo rsp;
 
     rsp.pagecriterias = m_db.GetPageCriterias(tutorialID->value());
@@ -79,7 +79,7 @@ PyResult TutorialService::GetTutorialInfo(PyCallArgs &call, PyInt* tutorialID) {
     return(rsp.Encode());
 }
 
-PyResult TutorialService::GetTutorialAgents(PyCallArgs &call, PyList* agentIDs) {
+EVEResult TutorialService::GetTutorialAgents(EVECallArgs&call, PyList* agentIDs) {
     /*  this should be cached
           [PyTuple 4 items]
             [PyInt 1]
@@ -226,31 +226,31 @@ PyResult TutorialService::GetTutorialAgents(PyCallArgs &call, PyList* agentIDs) 
             ["gender" => <1> [Bool]]
                 */
     sLog.White( "TutorialService::Handle_GetTutorialAgents()", "size=%lu", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
-    return new PyInt( 0 );
+    return call.arena.Int (0);
 }
 
-PyResult TutorialService::GetCriterias(PyCallArgs &call) {
+EVEResult TutorialService::GetCriterias(EVECallArgs&call) {
   sLog.White( "TutorialService::Handle_GetCriterias()", "size=%lu", call.tuple->size());
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
     return(m_db.GetAllCriterias());
 }
 
-PyResult TutorialService::GetCategories(PyCallArgs &call) {
+EVEResult TutorialService::GetCategories(EVECallArgs&call) {
   sLog.White( "TutorialService::Handle_GetCategories()", "size=%lu", call.tuple->size());
-  call.Dump(SERVICE__CALL_DUMP);
+  call.dump(SERVICE__CALL_DUMP);
     return(m_db.GetCategories());
 }
 
 //00:25:53 L TutorialService::Handle_GetCharacterTutorialState(): size= 0
-PyResult TutorialService::GetCharacterTutorialState(PyCallArgs& call) {
+EVEResult TutorialService::GetCharacterTutorialState(EVECallArgs& call) {
   /*  Empty Call  */
 
-    return new PyInt( 0 );
+    return call.arena.Int (0);
 }
 
-PyResult TutorialService::GetTutorialsAndConnections(PyCallArgs& call) {
+EVEResult TutorialService::GetTutorialsAndConnections(EVECallArgs& call) {
     /*  no logs */
   /*  This is used to link tutorials using connections to other tutorials  */
             /*
@@ -267,10 +267,10 @@ PyResult TutorialService::GetTutorialsAndConnections(PyCallArgs& call) {
     uint8 raceID = call.client->GetChar()->race();
     return (m_db.GetTutorialsAndConnections(raceID));
     */
-    return PyStatic.NewNone();
+    return call.arena.None ();
 }
 
-PyResult TutorialService::GetCareerAgents(PyCallArgs& call) {
+EVEResult TutorialService::GetCareerAgents(EVECallArgs& call) {
   /*  Empty Call  */
   /**
         agentMapping = sm.RemoteSvc('tutorialSvc').GetCareerAgents()
@@ -287,7 +287,7 @@ PyResult TutorialService::GetCareerAgents(PyCallArgs& call) {
                 self.careerAgents[careerType]['station'][agent.agentID] = sm.GetService('map').GetStation(agent.stationID)
 */
 
-    return PyStatic.NewNone();
+    return call.arena.None ();
 }
 
 

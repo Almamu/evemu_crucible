@@ -76,44 +76,42 @@ DungeonService::DungeonService() :
     this->Add("DEGetRoomObjectPaletteData", &DungeonService::DEGetRoomObjectPaletteData);
 }
 
-PyResult DungeonService::IsObjectLocked(PyCallArgs& call, PyInt* objectID)
+EVEResult DungeonService::IsObjectLocked(EVECallArgs& call, PyInt* objectID)
 {
     //return sm.RemoteSvc('dungeon').IsObjectLocked(objectID)
     _log(DUNG__CALL,  "DungeonService::Handle_IsObjectLocked size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     // TODO: IMPLEMENT THE LOCKING MECHANISM
 
-    PyTuple* result = new PyTuple(2);
-
-    result->SetItem(0, new PyBool(false));
-    result->SetItem(1, new PyList());
-
-    return result;
+    return new PyTuple {
+        new PyBool (false),
+        new PyList ()
+    };
 }
 
-PyResult DungeonService::AddObject(PyCallArgs& call, PyInt* roomID, PyInt* tupeID, PyFloat* x, PyFloat* y, PyFloat* z, PyFloat* pitch, PyFloat* roll, PyFloat* radius)
+EVEResult DungeonService::AddObject(EVECallArgs& call, PyInt* roomID, PyInt* tupeID, PyFloat* x, PyFloat* y, PyFloat* z, PyFloat* pitch, PyFloat* roll, PyFloat* radius)
 {
     // (newObjectID, revisionID,) = sm.RemoteSvc('dungeon').AddObject(roomID, typeID, x, y, z, yaw, pitch, roll, radius)
 
     _log(DUNG__CALL,  "DungeonService::Handle_AddObject size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     if(call.tuple->size() != 9) {
         _log(SERVICE__ERROR, "Wrong number of arguments in call to AddObject");
-        return NULL;
+        return nullptr;
     }
 
     Dungeon::RoomObject newObject;
-    newObject.roomID = PyRep::IntegerValue(call.tuple->GetItem(0));
-    newObject.typeID = PyRep::IntegerValueU32(call.tuple->GetItem(1));
-    newObject.x = PyRep::FloatValue(call.tuple->GetItem(2));
-    newObject.y = PyRep::FloatValue(call.tuple->GetItem(3));
-    newObject.z = PyRep::FloatValue(call.tuple->GetItem(4));
-    newObject.yaw = PyRep::FloatValue(call.tuple->GetItem(5));
-    newObject.pitch = PyRep::FloatValue(call.tuple->GetItem(6));
-    newObject.roll = PyRep::FloatValue(call.tuple->GetItem(7));
-    newObject.radius = PyRep::FloatValue(call.tuple->GetItem(8));
+    newObject.roomID = call.tuple->at (0)->i64();
+    newObject.typeID = call.tuple->at (1)->u32();
+    newObject.x = call.tuple->at (2)->decimal();
+    newObject.y = call.tuple->at (3)->decimal();
+    newObject.z = call.tuple->at (4)->decimal();
+    newObject.yaw = call.tuple->at (5)->decimal();
+    newObject.pitch = call.tuple->at (6)->decimal();
+    newObject.roll = call.tuple->at (7)->decimal();
+    newObject.radius = call.tuple->at (8)->decimal();
 
     uint32 groupID = DungeonDB::GetFirstGroupForRoom(newObject.roomID);
 
@@ -122,9 +120,9 @@ PyResult DungeonService::AddObject(PyCallArgs& call, PyInt* roomID, PyInt* tupeI
     Client *pClient(call.client);
 
     GPoint objPos;
-    objPos.x = newObject.x + pClient->GetSession()->GetCurrentFloat("editor_room_x");
-    objPos.y = newObject.y + pClient->GetSession()->GetCurrentFloat("editor_room_y");
-    objPos.z = newObject.z + pClient->GetSession()->GetCurrentFloat("editor_room_z");
+    objPos.x = newObject.x + pClient->GetSession()->decimal ("editor_room_x");
+    objPos.y = newObject.y + pClient->GetSession()->decimal ("editor_room_y");
+    objPos.z = newObject.z + pClient->GetSession()->decimal ("editor_room_z");
 
     ItemData dData(newObject.typeID, 1/*EVE SYSTEM*/, pClient->GetLocationID(), flagNone, "", objPos);
     InventoryItemRef iRef = InventoryItem::SpawnItem(sItemFactory.GetNextTempID(), dData);
@@ -142,23 +140,21 @@ PyResult DungeonService::AddObject(PyCallArgs& call, PyInt* roomID, PyInt* tupeI
     // Add the entity to the SystemManager
     pClient->SystemMgr()->AddEntity(oSE, false);
 
-    // Return objectID and revisionID
-    PyTuple *result = new PyTuple(2);
-    result->SetItem(0, new PyInt(newObject.objectID));
-    result->SetItem(1, new PyInt(1/*dummy value*/));
-
-    return result;
+    return new PyTuple {
+        new PyInt (newObject.objectID),
+        new PyInt (1 /* dummy value */)
+    };
 }
 
-PyResult DungeonService::RemoveObject(PyCallArgs& call, PyInt* objectID)
+EVEResult DungeonService::RemoveObject(EVECallArgs& call, PyInt* objectID)
 {
     //sm.RemoteSvc('dungeon').RemoveObject(objectID)
     _log(DUNG__CALL,  "DungeonService::Handle_RemoveObject  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     if(call.tuple->size() != 1) {
         _log(SERVICE__ERROR, "Wrong number of arguments in call to RemoveObject");
-        return NULL;
+        return nullptr;
     }
 
     // Remove the object from the room
@@ -167,15 +163,15 @@ PyResult DungeonService::RemoveObject(PyCallArgs& call, PyInt* objectID)
     return nullptr;
 }
 
-PyResult DungeonService::CopyObject(PyCallArgs& call, PyInt* objectID, PyInt* roomID, PyFloat* offsetX, PyFloat* offsetY, PyFloat* offsetZ)
+EVEResult DungeonService::CopyObject(EVECallArgs& call, PyInt* objectID, PyInt* roomID, PyFloat* offsetX, PyFloat* offsetY, PyFloat* offsetZ)
 {
     //newObjectID = sm.RemoteSvc('dungeon').CopyObject(objectID, roomID, offsetX, offsetY, offsetZ)
     _log(DUNG__CALL,  "DungeonService::Handle_CopyObject  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     if(call.tuple->size() != 5) {
         _log(SERVICE__ERROR, "Wrong number of arguments in call to CopyObject");
-        return NULL;
+        return nullptr;
     }
 
     // Copy the object to the room
@@ -198,9 +194,9 @@ PyResult DungeonService::CopyObject(PyCallArgs& call, PyInt* objectID, PyInt* ro
 
     GPoint objPos;
 
-    objPos.x = newObject.x + pClient->GetSession()->GetCurrentFloat("editor_room_x");
-    objPos.y = newObject.y + pClient->GetSession()->GetCurrentFloat("editor_room_y");
-    objPos.z = newObject.z + pClient->GetSession()->GetCurrentFloat("editor_room_z");
+    objPos.x = newObject.x + pClient->GetSession()->decimal ("editor_room_x");
+    objPos.y = newObject.y + pClient->GetSession()->decimal ("editor_room_y");
+    objPos.z = newObject.z + pClient->GetSession()->decimal ("editor_room_z");
 
     ItemData dData(newObject.typeID, 1/*EVE SYSTEM*/, pClient->GetLocationID(), flagNone, "", objPos);
     InventoryItemRef iRef = InventoryItem::SpawnItem(sItemFactory.GetNextTempID(), dData);
@@ -221,41 +217,41 @@ PyResult DungeonService::CopyObject(PyCallArgs& call, PyInt* objectID, PyInt* ro
     return nullptr;
 }
 
-PyResult DungeonService::EditObject(PyCallArgs& call)
+EVEResult DungeonService::EditObject(EVECallArgs& call)
 {
     _log(DUNG__CALL,  "DungeonService::Handle_EditObject  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult DungeonService::EditObjectName(PyCallArgs& call, PyInt* newObjectID, PyWString* objectName)
+EVEResult DungeonService::EditObjectName(EVECallArgs& call, PyInt* newObjectID, PyString* objectName)
 {
     //sm.RemoteSvc('dungeon').EditObjectName(newObjectID, objectName)
     _log(DUNG__CALL,  "DungeonService::Handle_EditObjectName  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     if(call.tuple->size() != 2) {
         _log(SERVICE__ERROR, "Wrong number of arguments in call to EditObjectName");
-        return NULL;
+        return nullptr;
     }
 
     // Update the object name
     DungeonEditSE* oSE = call.client->services().Lookup <KeeperService>("keeper")->GetBound()->GetRoomObject(newObjectID->value());
 
-    std::string newObjectName = PyRep::StringContent(objectName);
+    std::string newObjectName = objectName->string();
     oSE->Rename(newObjectName.c_str());
 
     return nullptr;
 }
 
-PyResult DungeonService::EditObjectRadius(PyCallArgs& call)
+EVEResult DungeonService::EditObjectRadius(EVECallArgs& call)
 {
     _log(DUNG__CALL,  "DungeonService::Handle_EditObjectRadius  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
-    uint32 itemID = call.byname["objectID"]->AsInt()->value();
-    double radius = call.byname["radius"]->AsFloat()->value();
+    uint32 itemID = call.byname["objectID"]->as<PyInt>()->value();
+    double radius = call.byname["radius"]->as<PyFloat>()->value();
 
     SystemEntity* entity = call.client->SystemMgr()->GetEntityByID(itemID);
 
@@ -274,15 +270,15 @@ PyResult DungeonService::EditObjectRadius(PyCallArgs& call)
     return nullptr;
 }
 
-PyResult DungeonService::EditObjectXYZ(PyCallArgs& call)
+EVEResult DungeonService::EditObjectXYZ(EVECallArgs& call)
 {
     _log(DUNG__CALL,  "DungeonService::Handle_EditObjectXYZ  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
-    uint32 itemID = call.byname["objectID"]->AsInt()->value();
-    double x = call.byname["x"]->AsFloat()->value();
-    double y = call.byname["y"]->AsFloat()->value();
-    double z = call.byname["z"]->AsFloat()->value();
+    uint32 itemID = call.byname["objectID"]->as<PyInt>()->value();
+    double x = call.byname["x"]->as<PyFloat>()->value();
+    double y = call.byname["y"]->as<PyFloat>()->value();
+    double z = call.byname["z"]->as<PyFloat>()->value();
 
     SystemEntity* entity = call.client->SystemMgr()->GetEntityByID(itemID);
 
@@ -309,15 +305,15 @@ PyResult DungeonService::EditObjectXYZ(PyCallArgs& call)
     return nullptr;
 }
 
-PyResult DungeonService::EditObjectYawPitchRoll(PyCallArgs& call)
+EVEResult DungeonService::EditObjectYawPitchRoll(EVECallArgs& call)
 {
     _log(DUNG__CALL,  "DungeonService::Handle_EditObjectYawPitchRoll  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
-    uint32 itemID = call.byname["objectID"]->AsInt()->value();
-    double yaw = call.byname["yaw"]->AsFloat()->value();
-    double pitch = call.byname["pitch"]->AsFloat()->value();
-    double roll = call.byname["roll"]->AsFloat()->value();
+    uint32 itemID = call.byname["objectID"]->as<PyInt>()->value();
+    double yaw = call.byname["yaw"]->as<PyFloat>()->value();
+    double pitch = call.byname["pitch"]->as<PyFloat>()->value();
+    double roll = call.byname["roll"]->as<PyFloat>()->value();
 
     SystemEntity* entity = call.client->SystemMgr()->GetEntityByID(itemID);
 
@@ -336,23 +332,23 @@ PyResult DungeonService::EditObjectYawPitchRoll(PyCallArgs& call)
     return nullptr;
 }
 
-PyResult DungeonService::TemplateAdd(PyCallArgs& call, PyWString* templateName, PyWString* templateDescription)
+EVEResult DungeonService::TemplateAdd(EVECallArgs& call, PyString* templateName, PyString* templateDescription)
 {
     //templateID = sm.RemoteSvc('dungeon').TemplateAdd(templateName, templateDescription)
     _log(DUNG__CALL,  "DungeonService::Handle_TemplateAdd  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     // Get the currently edited roomID from KeeperBound
     uint32 roomID = call.client->services().Lookup <KeeperService>("keeper")->GetBound()->GetCurrentRoomID();
 
     if(call.tuple->size() != 2) {
         _log(SERVICE__ERROR, "Wrong number of arguments in call to TemplateAdd");
-        return NULL;
+        return nullptr;
     }
 
     // Convert to std::string
-    std::string nameString = PyRep::StringContent(templateName);
-    std::string descriptionString = PyRep::StringContent(templateDescription);
+    std::string nameString = templateName->string();
+    std::string descriptionString = templateDescription->string();
 
     // Create the new template
     uint32 templateID = DungeonDB::CreateTemplate(nameString, descriptionString, roomID);
@@ -360,43 +356,43 @@ PyResult DungeonService::TemplateAdd(PyCallArgs& call, PyWString* templateName, 
     return new PyInt(templateID);
 }
 
-PyResult DungeonService::TemplateRemove(PyCallArgs& call, PyInt* templateID)
+EVEResult DungeonService::TemplateRemove(EVECallArgs& call, PyInt* templateID)
 {
     //sm.RemoteSvc('dungeon').TemplateRemove(self.sr.node.id)
     _log(DUNG__CALL,  "DungeonService::Handle_TemplateRemove  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
-    DungeonDB::DeleteTemplate(call.tuple->GetItem(0)->AsInt()->value());
+    DungeonDB::DeleteTemplate(call.tuple->at (0)->as<PyInt>()->value());
 
     return nullptr;
 }
 
-PyResult DungeonService::TemplateEdit(PyCallArgs& call, PyInt* templateID, PyWString* templateName, PyWString* templateDescription)
+EVEResult DungeonService::TemplateEdit(EVECallArgs& call, PyInt* templateID, PyString* templateName, PyString* templateDescription)
 {
     //dungeonSvc.TemplateEdit(self.templateRow.templateID, templateName, templateDescription)
     _log(DUNG__CALL,  "DungeonService::Handle_TemplateEdit  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
-    DungeonDB::EditTemplate(call.tuple->GetItem(0)->AsInt()->value(), call.tuple->GetItem(1)->AsWString()->content(), call.tuple->GetItem(2)->AsWString()->content());
+    DungeonDB::EditTemplate(call.tuple->at (0)->as<PyInt>()->value(), call.tuple->at (1)->as<PyString>()->content(), call.tuple->at (2)->as<PyString>()->content());
 
     return nullptr;
 }
 
-PyResult DungeonService::AddTemplateObjects(PyCallArgs& call, PyInt* roomID, PyInt* objectID, PyTuple* position)
+EVEResult DungeonService::AddTemplateObjects(EVECallArgs& call, PyInt* roomID, PyInt* objectID, PyTuple* position)
 {
     // objectIDs = sm.RemoteSvc('dungeon').AddTemplateObjects(roomID, self.sr.node.id, (posInRoom.x, posInRoom.y, posInRoom.z)
 
     _log(DUNG__CALL,  "DungeonService::Handle_AddTemplateObjects  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     if(call.tuple->size() != 3) {
         _log(SERVICE__ERROR, "Wrong number of arguments in call to AddTemplateObjects");
-        return NULL;
+        return nullptr;
     }
 
-    double posInRoomX = position->GetItem(0)->AsFloat()->value();
-    double posInRoomY = position->GetItem(1)->AsFloat()->value();
-    double posInRoomZ = position->GetItem(2)->AsFloat()->value();
+    double posInRoomX = position->at (0)->as<PyFloat>()->value();
+    double posInRoomY = position->at (1)->as<PyFloat>()->value();
+    double posInRoomZ = position->at (2)->as<PyFloat>()->value();
 
     std::vector<Dungeon::RoomObject> objects;
     DungeonDB::GetTemplateObjects(objectID->value(), objects);
@@ -411,9 +407,9 @@ PyResult DungeonService::AddTemplateObjects(PyCallArgs& call, PyInt* roomID, PyI
         GPoint objPos;
 
         // Relative position for the object to be spawned at
-        objPos.x = posInRoomX + cur.x + pClient->GetSession()->GetCurrentFloat("editor_room_x");
-        objPos.y = posInRoomY + cur.y + pClient->GetSession()->GetCurrentFloat("editor_room_y");
-        objPos.z = posInRoomZ + cur.z + pClient->GetSession()->GetCurrentFloat("editor_room_z");
+        objPos.x = posInRoomX + cur.x + pClient->GetSession()->decimal ("editor_room_x");
+        objPos.y = posInRoomY + cur.y + pClient->GetSession()->decimal ("editor_room_y");
+        objPos.z = posInRoomZ + cur.z + pClient->GetSession()->decimal ("editor_room_z");
 
         // Position to be stored in the DB
         double dbPosX = posInRoomX + cur.x;
@@ -433,29 +429,28 @@ PyResult DungeonService::AddTemplateObjects(PyCallArgs& call, PyInt* roomID, PyI
         pClient->services().Lookup <KeeperService>("keeper")->GetBound()->AddRoomObject(oSE);
         pClient->SystemMgr()->AddEntity(oSE, false);
 
-        objectIDs->AddItem(new PyInt(oSE->GetData().objectID));
+        objectIDs->add(new PyInt(oSE->GetData().objectID));
     }
 
     return objectIDs;
 }
 
-PyResult DungeonService::TemplateObjectAddDungeonList(PyCallArgs& call, PyInt* templateID, PyList* objectIDs)
+EVEResult DungeonService::TemplateObjectAddDungeonList(EVECallArgs& call, PyInt* templateID, PyList* objectIDs)
 {
     //sm.RemoteSvc('dungeon').TemplateObjectAddDungeonList(templateID, objectIDList)
     _log(DUNG__CALL,  "DungeonService::Handle_TemplateObjectAddDungeonList  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     return nullptr;
 }
 
-
-PyResult DungeonService::GetArchetypes(PyCallArgs& call)
+EVEResult DungeonService::GetArchetypes(EVECallArgs& call)
 {
     /**     archetypes = sm.RemoteSvc('dungeon').GetArchetypes()
      *        archetypeOptions = [ (archetype.archetypeName, archetype.archetypeID) for archetype in archetypes ]
      */
     _log(DUNG__CALL,  "DungeonService::Handle_GetArchetypes  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     DBQueryResult res;
     DungeonDB::GetArchetypes(res);
@@ -463,14 +458,14 @@ PyResult DungeonService::GetArchetypes(PyCallArgs& call)
     return DBResultToCRowset(res);
 }
 
-PyResult DungeonService::DEGetDungeons(PyCallArgs& call)
+EVEResult DungeonService::DEGetDungeons(EVECallArgs& call)
 {
     /* dungeon = sm.RemoteSvc('dungeon').DEGetDungeons(archetypeID=archetypeID, factionID=factionID)
      * dungeon = sm.RemoteSvc('dungeon').DEGetDungeons(dungeonID=dungeonID)[0]
      * dungeon.dungeonNameID, dungeon.dungeonID, dungeon.factionID
      */
 
-    //PyRep *result = NULL;
+    //PyDataType *result = NULL;
     //dict args:
     // archetypeID, factionID
     // or dungeonVID
@@ -480,21 +475,21 @@ PyResult DungeonService::DEGetDungeons(PyCallArgs& call)
     //       dungeonVID
 
     _log(DUNG__CALL,  "DungeonService::Handle_DEGetDungeons  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     DBQueryResult res;
 
     if (call.tuple->size() == 0) { // No args
         DungeonDB::GetDungeons(res);
     } else if (call.tuple->size() == 1) { // dungeonID
-        DungeonDB::GetDungeons(call.byname["dungeonID"]->AsInt()->value(), res);
+        DungeonDB::GetDungeons(call.byname["dungeonID"]->as<PyInt>()->value(), res);
     } else if (call.tuple->size() == 2) { // archetypeID, factionID
-        DungeonDB::GetDungeons(call.byname["archetypeID"]->AsInt()->value(), call.byname["factionID"]->AsInt()->value(), res);
+        DungeonDB::GetDungeons(call.byname["archetypeID"]->as<PyInt>()->value(), call.byname["factionID"]->as<PyInt>()->value(), res);
     }
     return DBResultToCRowset(res);
 }
 
-PyResult DungeonService::DEGetTemplates(PyCallArgs& call)
+EVEResult DungeonService::DEGetTemplates(EVECallArgs& call)
 {
         /*
         self.templateRows = sm.RemoteSvc('dungeon').DEGetTemplates()
@@ -506,7 +501,7 @@ PyResult DungeonService::DEGetTemplates(PyCallArgs& call)
              */
 
     _log(DUNG__CALL,  "DungeonService::Handle_DEGetTemplates  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     DBQueryResult res;
     DungeonDB::GetTemplates(res, call.client->GetUserID());
@@ -514,32 +509,31 @@ PyResult DungeonService::DEGetTemplates(PyCallArgs& call)
     return DBResultToCRowset(res);
 }
 
-
-PyResult DungeonService::DEGetRooms(PyCallArgs& call)
+EVEResult DungeonService::DEGetRooms(EVECallArgs& call)
 {
     //rooms = sm.RemoteSvc('dungeon').DEGetRooms(dungeonID=seldungeon.dungeonID)
     //dict arg: dungeonVID
-    //PyRep *result = NULL;
+    //PyDataType *result = NULL;
 
     //rows: roomName
 
     _log(DUNG__CALL,  "DungeonService::Handle_DEGetRooms  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     DBQueryResult res;
-    DungeonDB::GetRooms(call.byname["dungeonID"]->AsInt()->value(), res);
+    DungeonDB::GetRooms(call.byname["dungeonID"]->as<PyInt>()->value(), res);
 
     return DBResultToCRowset(res);
 }
 
-PyResult DungeonService::DEGetRoomObjectPaletteData(PyCallArgs& call)
+EVEResult DungeonService::DEGetRoomObjectPaletteData(EVECallArgs& call)
 {
     /* Object Pallete Data = Object Groups 
      * roomObjectGroups = sm.RemoteSvc('dungeon').DEGetRoomObjectPaletteData()
      * id, name  in either dict or list (client can process both)
      */
     _log(DUNG__CALL,  "DungeonService::Handle_DEGetRoomObjectPaletteData  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     DBQueryResult res;
     DungeonDB::GetGroups(res);
@@ -553,23 +547,25 @@ PyResult DungeonService::DEGetRoomObjectPaletteData(PyCallArgs& call)
         Inv::GrpData grp;
         sDataMgr.GetGroup(cur.second.groupID, grp);
         if (grp.catID == EVEDB::invCategories::Celestial) {
-            PyTuple* tuple = new PyTuple(2);
-            tuple->items[0] = new PyInt(cur.second.id);
-            tuple->items[1] = new PyString(cur.second.name);
-            list->AddItem(tuple);
+            list->add (
+                new PyTuple {
+                    new PyInt (cur.second.id),
+                    new PyString (cur.second.name)
+                }
+            );
         }
     }
 
     return list;
 }
 
-PyResult DungeonService::DEGetFactions(PyCallArgs& call)
+EVEResult DungeonService::DEGetFactions(EVECallArgs& call)
 {
     /* factions = sm.RemoteSvc('dungeon').DEGetFactions()
         factionOptions = [ (cfg.eveowners.Get(faction.factionID).name, faction.factionID) for faction in factions ]
         */
     _log(DUNG__CALL,  "DungeonService::Handle_DEGetFactions  size: %lli", call.tuple->size());
-    call.Dump(DUNG__CALL_DUMP);
+    call.dump(DUNG__CALL_DUMP);
 
     DBQueryResult res;
     DungeonDB::GetFactions(res);

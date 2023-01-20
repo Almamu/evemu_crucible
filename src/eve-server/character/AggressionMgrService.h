@@ -39,7 +39,7 @@ public:
     void BoundReleased (AggressionMgrBound* bound) override;
 
 protected:
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters) override;
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters) override;
 
 private:
     std::map <uint32, AggressionMgrBound*> m_instances;
@@ -52,8 +52,8 @@ public:
     uint32 GetSystemID() { return this->m_systemID; }
 
 protected:
-    PyResult GetCriminalTimeStamps(PyCallArgs& call, PyInt* characterID);
-    PyResult CheckLootRightExceptions(PyCallArgs& call, PyInt* containerID);
+  EVEResult GetCriminalTimeStamps(EVECallArgs& call, PyInt* characterID);
+  EVEResult CheckLootRightExceptions(EVECallArgs& call, PyInt* containerID);
 
 private:
     uint32 m_systemID;

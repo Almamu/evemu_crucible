@@ -97,10 +97,10 @@ void ModuleItem::SetOnline(bool online/*false*/, bool isRig/*false*/) {
 
         shipEff.repeat = (online ? 1 : 0);
         shipEff.error = PyStatic.NewNone();
-    PyList* events = new PyList();
-        events->AddItem(shipEff.Encode());
     Notify_OnMultiEvent multi;
-        multi.events = events;
+    multi.events = new PyList {
+        shipEff.Encode ()
+    };
     PyTuple* tmp = multi.Encode();
     pClient->SendNotification("OnMultiEvent", "clientID", &tmp);
 }

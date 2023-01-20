@@ -41,10 +41,10 @@ public:
 protected:
     ShipDB m_db;
 
-    PyResult GetContractForShip(PyCallArgs& call, PyInt* shipID);
-    PyResult GetInsurancePrice(PyCallArgs& call, PyInt* typeID);
+    EVEResult GetContractForShip(EVECallArgs& call, PyInt* shipID);
+    EVEResult GetInsurancePrice(EVECallArgs& call, PyInt* typeID);
 
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters);
 };
 
 class InsuranceBound : public EVEBoundObject <InsuranceBound>
@@ -53,10 +53,10 @@ public:
     InsuranceBound(EVEServiceManager& mgr, InsuranceService& parent, ShipDB* db);
 
 protected:
-    PyResult InsureShip(PyCallArgs& call, PyInt* shipID, PyFloat* amount, std::optional<PyInt*> isCorporation);
-    PyResult UnInsureShip(PyCallArgs& call, PyInt* shipID);
-    PyResult GetContracts(PyCallArgs& call, std::optional<PyRep*> isCorporation);
-    PyResult GetInsurancePrice(PyCallArgs& call, PyInt* typeID);
+  EVEResult InsureShip(EVECallArgs& call, PyInt* shipID, PyFloat* amount, std::optional<PyInt*> isCorporation);
+  EVEResult UnInsureShip(EVECallArgs& call, PyInt* shipID);
+  EVEResult GetContracts(EVECallArgs& call, std::optional<PyDataType*> isCorporation);
+  EVEResult GetInsurancePrice(EVECallArgs& call, PyInt* typeID);
 
 protected:
     ShipDB* m_db;

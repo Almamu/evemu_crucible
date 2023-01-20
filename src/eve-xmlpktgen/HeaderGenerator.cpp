@@ -84,8 +84,10 @@ bool ClassHeaderGenerator::ProcessElementDef( const TiXmlElement* field )
         "\n"
         "    void Dump(LogType type, const char* pfx = \" \") const;\n"
         "\n"
-        "    bool Decode(PyRep* packet);\n"
-        "    bool Decode(PyRep** packet);\n"
+        "    void dump(LogType type, const char* pfx = \" \") const;\n"
+        "\n"
+        "    bool Decode(PyDataType* packet);\n"
+        "    bool Decode(PyDataType** packet);\n"
         "    bool Decode(%s** packet);\n"
         "    %s* Encode() const;\n"
         "\n"
@@ -176,7 +178,7 @@ bool ClassHeaderGenerator::ProcessRaw( const TiXmlElement* field )
         return false;
 
     fprintf( mOutputFile,
-        "    PyRep*\t\t%s;\n",
+        "    PyDataType*\t\t%s;\n",
         name
     );
 
@@ -593,7 +595,7 @@ bool ClassHeaderGenerator::ProcessDictInt( const TiXmlElement* field )
         return false;
 
     fprintf( mOutputFile,
-        "    std::map<int32, PyRep*>\t%s;\n",
+        "    std::map<int32, PyDataType*>\t%s;\n",
         name
     );
 
@@ -612,7 +614,7 @@ bool ClassHeaderGenerator::ProcessDictStr( const TiXmlElement* field )
         return false;
 
     fprintf( mOutputFile,
-        "    std::map<std::string, PyRep*>\t%s;\n",
+        "    std::map<std::string, PyDataType*>\t%s;\n",
         name
     );
 

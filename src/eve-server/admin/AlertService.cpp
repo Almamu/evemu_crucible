@@ -25,13 +25,12 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "admin/AlertService.h"
 
 AlertService::AlertService() :
     Service("alert"),
-    traceLogger(nullptr)
-{
+    traceLogger(nullptr) {
     this->Add("BeanCount", &AlertService::BeanCount);
     this->Add("BeanDelivery", &AlertService::BeanDelivery);
     this->Add("GroupBeanDelivery", &AlertService::GroupBeanDelivery);
@@ -41,8 +40,7 @@ AlertService::AlertService() :
         traceLogger = new PyTraceLog("evemu_client_stack_trace.txt", true, true);
 }
 
-AlertService::~AlertService()
-{
+AlertService::~AlertService() {
     SafeDelete(traceLogger);
 }
 
@@ -52,22 +50,15 @@ AlertService::~AlertService()
   *      to us through BeanDelivery every 15 minutes. When we are in developer mode we should send back PyNone asking the
   *      to send us the stack trace immediately.
   */
-PyResult AlertService::BeanCount(PyCallArgs &call, PyRep* ignored) {
+EVEResult AlertService::BeanCount(EVECallArgs&call, PyDataType* ignored) {
     _log(CLIENT__WARNING, "AlertService::Handle_BeanCount(): size=%lli", call.tuple->size());
-    //call.Dump(CLIENT__CALL_DUMP);
+    //call.dump(CLIENT__CALL_DUMP);
 
-    PyTuple *result = new PyTuple(2);
-
-    // what we are sending back is just a static mErrorID and the command not to do anything with it.
-    if (sConfig.debug.BeanCount or sConfig.debug.IsTestServer) {
-        result->items[0] = PyStatic.NewNone();
-    } else {
-        result->items[0] = new PyInt(34135);    //ErrorID
-    }
-
-    result->items[1] = new PyInt(0);        //loggingMode, 0=local, 1=DB (Capt: This isn't correct at all as it seems..)
-
-    return (PyRep*)result;
+    return call.arena.Tuple ({
+        // what we are sending back is just a static mErrorID and the command not to do anything with it.
+        sConfig.debug.BeanCount or sConfig.debug.IsTestServer ? (PyDataType*) call.arena.None() : (PyDataType*) call.arena.Int (34135), // errorID
+        call.arena.Int (0) // logging mode, 0 = local, 1= DB (Capt: This isn't correct at all as it seems..)
+    });
 }
 
 /** The client "stacks" up the python "stack" traces and sends them every 15 minutes.
@@ -75,22 +66,20 @@ PyResult AlertService::BeanCount(PyCallArgs &call, PyRep* ignored) {
   *      meaning that we should code a mErrorID tracker for it. To handle these.
   */
 // note:  this is a rather complicated system....
-PyResult AlertService::BeanDelivery(PyCallArgs& call, PyList* beans)
-{
+EVEResult AlertService::BeanDelivery(EVECallArgs& call, PyList* beans) {
     _log(CLIENT__WARNING, "AlertService::Handle_BeanDelivery(): size=%lli", call.tuple->size());
-    //call.Dump(CLIENT__CALL_DUMP);
+    //call.dump(CLIENT__CALL_DUMP);
     /* Unhandled for now as we have no interest in receiving batched python stack traces
      * nor official style debugging... Just gimme the info dude (see Handle_SendClientStackTraceAlert).
      */
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
-PyResult AlertService::GroupBeanDelivery(PyCallArgs& call, PyBuffer* compressedBeans)
-{
+EVEResult AlertService::GroupBeanDelivery(EVECallArgs& call, PyBuffer* compressedBeans) {
     _log(CLIENT__WARNING, "AlertService::Handle_GroupBeanDelivery(): size=%u", call.tuple->size() );
-    //call.Dump(CLIENT__CALL_DUMP);
+    //call.dump(CLIENT__CALL_DUMP);
 
-    return PyStatic.NewNone();
+    return call.arena.None();
 }
 
 /**
@@ -103,13 +92,13 @@ PyResult AlertService::GroupBeanDelivery(PyCallArgs& call, PyBuffer* compressedB
  * and skip the BeanDelivery system.
  * @return guess it should have PyNone back.
  */
-PyResult AlertService::SendClientStackTraceAlert(PyCallArgs &call, PyTuple* stackId, PyString* stackTrace, PyString* mode, PyRep* nextErrorKeyHash) {
+EVEResult AlertService::SendClientStackTraceAlert(EVECallArgs&call, PyTuple* stackId, PyString* stackTrace, PyString* mode, PyDataType* nextErrorKeyHash) {
     _log(CLIENT__WARNING, "AlertService::Handle_SendClientStackTraceAlert(): size=%lli", call.tuple->size());
-    //call.Dump(CLIENT__CALL_DUMP);
+    //call.dump(CLIENT__CALL_DUMP);
     //  self.stacktraceLogMode[stackID[0]] = sm.ProxySvc('alert').SendClientStackTraceAlert(stackID, stackTrace, mode, nextErrorKeyHash)
 
   if (sConfig.debug.StackTrace or is_log_enabled(CLIENT__STACK_TRACE))
     traceLogger->logTrace(*call.tuple);
 
-    return PyStatic.NewNone();
+    return call.arena.None();
 }

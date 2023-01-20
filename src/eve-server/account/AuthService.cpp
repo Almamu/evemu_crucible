@@ -25,7 +25,7 @@
 
 #include "eve-server.h"
 
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "account/AuthService.h"
 
 AuthService::AuthService() :
@@ -38,44 +38,44 @@ AuthService::AuthService() :
     this->Add("SetLanguageID", &AuthService::SetLanguageID);
 }
 
-PyResult AuthService::Ping(PyCallArgs &call) {
-    return new PyLong(GetFileTimeNow());
+EVEResult AuthService::Ping(EVECallArgs&call) {
+    return call.arena.Int(GetFileTimeNow());
 }
 
-PyResult AuthService::GetPostAuthenticationMessage(PyCallArgs &call)
+EVEResult AuthService::GetPostAuthenticationMessage(EVECallArgs&call)
 {
     if (sConfig.account.loginMessage.empty())
-        return PyStatic.NewNone();
+        return call.arena.None();
 
-    PyDict* args = new PyDict;
-        args->SetItemString( "message", new PyString( sConfig.account.loginMessage ) );
-    return new PyObject( "util.KeyVal", args );
+    return call.arena.Object ("util.KeyVal", call.arena.Dict ({
+        {"message", call.arena.String (sConfig.account.loginMessage)}
+    }));
 }
 
-PyResult AuthService::AmUnderage(PyCallArgs &call)
+EVEResult AuthService::AmUnderage(EVECallArgs&call)
 {
     //  return sm.RemoteSvc('authentication').AmUnderage()
     sLog.Warning("AuthService", "Handle_AmUnderage() size=%lli", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     // return boolean
-    return new PyBool(false);
+    return call.arena.Bool(false);
 }
 
-PyResult AuthService::AccruedTime(PyCallArgs &call)
+EVEResult AuthService::AccruedTime(EVECallArgs&call)
 {
     // return sm.RemoteSvc('authentication').AccruedTime()
     sLog.Warning("AuthService", "Handle_AccruedTime() size=%lli", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }
 
-PyResult AuthService::SetLanguageID(PyCallArgs &call, PyRep* languageID)
+EVEResult AuthService::SetLanguageID(EVECallArgs&call, PyDataType* languageID)
 {
     //sm.RemoteSvc('authentication').SetLanguageID(setlanguageID)
     sLog.Warning("AuthService", "Handle_SetLanguageID() size=%lli", call.tuple->size());
-    call.Dump(SERVICE__CALL_DUMP);
+    call.dump(SERVICE__CALL_DUMP);
 
     return nullptr;
 }

@@ -47,7 +47,7 @@ void VoucherService::BoundReleased (VoucherBound* bound) {
     this->m_instances.erase (it);
 }
 
-PyResult VoucherService::GetObject(PyCallArgs& call, PyInt* voucherID) {
+EVEResult VoucherService::GetObject(EVECallArgs& call, PyInt* voucherID) {
   /**
     voucher = self.GetVoucherSvc().GetObject(voucherID)
     if voucher is None:
@@ -58,7 +58,7 @@ PyResult VoucherService::GetObject(PyCallArgs& call, PyInt* voucherID) {
     auto it = this->m_instances.find (voucherID->value());
 
     if (it == this->m_instances.end ()) {
-        //call.Dump(BOOKMARK__CALL_DUMP);
+        //call.dump(BOOKMARK__CALL_DUMP);
         // return none for now, to allow client to use default name of 'bookmark'
         //return PyStatic.NewNone();
         InventoryItemRef iRef = sItemFactory.GetItemRef(voucherID->value());
@@ -77,12 +77,10 @@ PyResult VoucherService::GetObject(PyCallArgs& call, PyInt* voucherID) {
 
     bound->NewReference (call.client);
 
-    PyTuple* rsp = new PyTuple(2);
-
-    rsp->SetItem(0, new PySubStruct(new PySubStream(bound->GetOID())));
-    rsp->SetItem(1, PyStatic.NewNone());
-
-    return rsp;
+    return new PyTuple {
+        new PySubStruct (new PySubStream(bound->GetOID())),
+        PyStatic.NewNone()
+    };
 }
 
 VoucherBound::VoucherBound(EVEServiceManager& mgr, VoucherService& parent, InventoryItemRef itemRef) :
@@ -92,7 +90,7 @@ VoucherBound::VoucherBound(EVEServiceManager& mgr, VoucherService& parent, Inven
     this->Add("GetDescription", &VoucherBound::GetDescription);
 }
 
-PyResult VoucherBound::GetDescription(PyCallArgs &call) {
+EVEResult VoucherBound::GetDescription(EVECallArgs&call) {
     //   name = voucher.GetDescription()
 
     // get bookmark name (memo) as stored in db.  item.customInfo is bookmarkID this item is copied from

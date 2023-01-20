@@ -45,14 +45,14 @@ InvBrokerService::InvBrokerService(EVEServiceManager &mgr) :
     this->Add("GetItemDescriptor", &InvBrokerService::GetItemDescriptor);
 }
 
-PyResult InvBrokerService::GetItemDescriptor(PyCallArgs &call) {
-    return sDataMgr.CreateHeader();
+EVEResult InvBrokerService::GetItemDescriptor(EVECallArgs&call) {
+    return sDataMgr.CreateHeader(&call.arena);
 }
 
-BoundDispatcher* InvBrokerService::BindObject(Client* client, PyRep* bindParameters) {
+BoundDispatcher* InvBrokerService::BindObject(Client* client, PyDataType* bindParameters) {
     InvBroker_BindArgs args;
     //crap
-    PyRep* tmp(bindParameters->Clone());
+    PyDataType* tmp(bindParameters->clone());
     if (!args.Decode(&tmp)) {
         codelog(SERVICE__ERROR, "%s: Failed to decode bind args.", GetName().c_str());
         return nullptr;
@@ -91,7 +91,7 @@ InvBrokerBound::InvBrokerBound(EVEServiceManager& mgr, InvBrokerService& parent,
 }
 
 //is this completely right?
-PyResult InvBrokerBound::GetContainerContents(PyCallArgs &call, PyInt* containerID, PyInt* locationID)
+EVEResult InvBrokerBound::GetContainerContents(EVECallArgs&call, PyInt* containerID, PyInt* locationID)
 {
     InventoryItemRef item = sItemFactory.GetItemRefFromID(containerID->value());
     if (item.get() == nullptr) {
@@ -115,14 +115,14 @@ PyResult InvBrokerBound::GetContainerContents(PyCallArgs &call, PyInt* container
 }
 
 //this is a view into the entire inventory item.  this CAN throw.  find and implement client error msgs here for corp usage
-PyResult InvBrokerBound::GetInventoryFromId(PyCallArgs &call, PyInt* inventoryID, PyInt* passive) {
+EVEResult InvBrokerBound::GetInventoryFromId(EVECallArgs&call, PyInt* inventoryID, PyInt* passive) {
     /** @note this means "Get the Inventory of this itemID */
     /*
             if e.args[0] == 'CrpAccessDenied':
                 self.CloseContainer(itemid)
     */
     _log(INV__DUMP, "InvBrokerBound::Handle_GetInventoryFromId() size=%lli", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     sItemFactory.SetUsingClient( call.client );
     InventoryItemRef iRef(nullptr);
@@ -244,14 +244,14 @@ PyResult InvBrokerBound::GetInventoryFromId(PyCallArgs &call, PyInt* inventoryID
 
     ib->NewReference(call.client);
 
-    return new PySubStruct(new PySubStream(ib->GetOID()));
+    return call.arena.SubStruct(call.arena.SubStream(ib->GetOID(&call.arena)));
 }
 
 //this is a view into an inventory item using a specific flag.
-PyResult InvBrokerBound::GetInventory(PyCallArgs &call, PyInt* containerID, std::optional <PyInt*> cOwnerID) {
+EVEResult InvBrokerBound::GetInventory(EVECallArgs&call, PyInt* containerID, std::optional <PyInt*> cOwnerID) {
     /** @note  this means "Get the Inventory containing this itemID */
     _log(INV__DUMP, "InvBrokerBound::Handle_GetInventory() size=%lli", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     uint32 ownerID = cOwnerID.has_value() ? cOwnerID.value()->value() : 0;
     sItemFactory.SetUsingClient( call.client );
@@ -341,7 +341,7 @@ PyResult InvBrokerBound::GetInventory(PyCallArgs &call, PyInt* containerID, std:
 }
 
 // this cannot throw, returns nothing.
-PyResult InvBrokerBound::SetLabel(PyCallArgs &call, PyInt* itemID, PyRep* itemName) {
+EVEResult InvBrokerBound::SetLabel(EVECallArgs&call, PyInt* itemID, PyDataType* itemName) {
     sItemFactory.SetUsingClient( call.client );
     InventoryItemRef iRef = sItemFactory.GetItemRef(itemID->value());
     if (iRef.get() == nullptr) {
@@ -379,7 +379,7 @@ PyResult InvBrokerBound::SetLabel(PyCallArgs &call, PyInt* itemID, PyRep* itemNa
     if (error) {
         call.client->SendErrorMsg("You are not allowed to rename that.");
     } else {
-        iRef->Rename(PyRep::StringContent(itemName));
+        iRef->Rename(itemName->string());
     }
 
     // Release the ItemFactory
@@ -393,18 +393,18 @@ PyResult InvBrokerBound::SetLabel(PyCallArgs &call, PyInt* itemID, PyRep* itemNa
     return nullptr;
 }
 
-PyResult InvBrokerBound::TrashItems(PyCallArgs &call, PyList* itemIDs, PyInt* locationID) {
+EVEResult InvBrokerBound::TrashItems(EVECallArgs&call, PyList* itemIDs, PyInt* locationID) {
 
     std::vector <int32> items;
 
     PyList::const_iterator list_2_cur = itemIDs->begin();
     for (size_t list_2_index(0); list_2_cur != itemIDs->end(); ++list_2_cur, ++list_2_index) {
-        if (!(*list_2_cur)->IsInt()) {
+        if (!(*list_2_cur)->is<PyInt>()) {
             _log(XMLP__DECODE_ERROR, "Decode Call_TrashItems failed: Element %u in list list_2 is not an integer: %s", list_2_index, (*list_2_cur)->TypeString());
             return nullptr;
         }
 
-        const PyInt* t = (*list_2_cur)->AsInt();
+        const PyInt* t = (*list_2_cur)->as<PyInt>();
         items.push_back(t->value());
     }
 
@@ -433,7 +433,7 @@ PyResult InvBrokerBound::TrashItems(PyCallArgs &call, PyList* itemIDs, PyInt* lo
  * @note   these do absolutely nothing at this time....
  */
 
-PyResult InvBrokerBound::AssembleCargoContainer(PyCallArgs &call, PyInt* itemID, PyNone* none, PyFloat* zero) {
+EVEResult InvBrokerBound::AssembleCargoContainer(EVECallArgs&call, PyInt* itemID, PyNone* none, PyFloat* zero) {
     /* invMgr.AssembleCargoContainer(invItem.itemID, None, 0.0)
      *
      * 14:37:46 [BindDump]   Call Arguments:
@@ -451,28 +451,28 @@ PyResult InvBrokerBound::AssembleCargoContainer(PyCallArgs &call, PyInt* itemID,
      */
 
     sLog.Warning( "InvBrokerBound::Handle_AssembleCargoContainer()", "size=%lu", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     return nullptr;
 }
 
-PyResult InvBrokerBound::BreakPlasticWrap(PyCallArgs &call) {
+EVEResult InvBrokerBound::BreakPlasticWrap(EVECallArgs&call) {
     // ConfirmBreakCourierPackage   - this is for courier contracts
     sLog.Warning( "InvBrokerBound::Handle_BreakPlasticWrap()", "size=%lu", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     return nullptr;
 }
 
-PyResult InvBrokerBound::TakeOutTrash(PyCallArgs& call, PyList* itemIDs) {
+EVEResult InvBrokerBound::TakeOutTrash(EVECallArgs& call, PyList* itemIDs) {
     //self.invCache.GetInventory(const.containerHangar).TakeOutTrash([ invItem.itemID for invItem in invItems ])
     sLog.Warning( "InvBrokerBound::Handle_TakeOutTrash()", "size=%lu", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     return nullptr;
 }
 
-PyResult InvBrokerBound::SplitStack(PyCallArgs &call, PyInt* locationID, PyInt* itemID, PyInt* quantity, PyInt* ownerID) {
+EVEResult InvBrokerBound::SplitStack(EVECallArgs&call, PyInt* locationID, PyInt* itemID, PyInt* quantity, PyInt* ownerID) {
     //
     /*
     18:22:26 W InvBrokerBound::Handle_SplitStack(): size= 4
@@ -485,12 +485,12 @@ PyResult InvBrokerBound::SplitStack(PyCallArgs &call, PyInt* locationID, PyInt* 
     */
 
     sLog.Warning( "InvBrokerBound::Handle_SplitStack()", "size=%lu", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     return nullptr;
 }
 
-PyResult InvBrokerBound::DeliverToCorpHangar(PyCallArgs &call, PyInt* officeID, PyInt* locationID, PyInt* itemsToDeliver, std::optional <PyInt*> quantity, PyInt* ownerID, PyInt* destinationFlag) {
+EVEResult InvBrokerBound::DeliverToCorpHangar(EVECallArgs&call, PyInt* officeID, PyInt* locationID, PyInt* itemsToDeliver, std::optional <PyInt*> quantity, PyInt* ownerID, PyInt* destinationFlag) {
     //
     /*
     18:11:51 W InvBrokerBound::Handle_DeliverToCorpHangar(): size= 6
@@ -506,12 +506,12 @@ PyResult InvBrokerBound::DeliverToCorpHangar(PyCallArgs &call, PyInt* officeID, 
     */
 
     sLog.Warning( "InvBrokerBound::Handle_DeliverToCorpHangar()", "size=%lu", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     return nullptr;
 }
 
-PyResult InvBrokerBound::DeliverToCorpMember(PyCallArgs &call, PyInt* corporationMemberID, PyInt* stationID, PyList* itemIDs, std::optional <PyInt*> quantity, PyInt* ownerID) {
+EVEResult InvBrokerBound::DeliverToCorpMember(EVECallArgs&call, PyInt* corporationMemberID, PyInt* stationID, PyList* itemIDs, std::optional <PyInt*> quantity, PyInt* ownerID) {
     //
     /*
     18:49:06 W InvBrokerBound::Handle_DeliverToCorpMember(): size= 5
@@ -525,7 +525,7 @@ PyResult InvBrokerBound::DeliverToCorpMember(PyCallArgs &call, PyInt* corporatio
     18:49:06 [InvDump]       [ 4]    Integer: 98000001          << ownerID (corpID)
     */
     sLog.Warning( "InvBrokerBound::Handle_DeliverToCorpMember()", "size=%lu", call.tuple->size());
-    call.Dump(INV__DUMP);
+    call.dump(INV__DUMP);
 
     return nullptr;
 }

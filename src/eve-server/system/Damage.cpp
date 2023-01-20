@@ -31,7 +31,7 @@
 
 #include "Client.h"
 #include "EntityList.h"
-#include "EVEServerConfig.h"
+#include "config/EVEServerConfig.h"
 #include "manufacturing/Blueprint.h"
 #include "map/MapDB.h"
 #include "npc/NPC.h"
@@ -294,57 +294,60 @@ bool SystemEntity::ApplyDamage(Damage &d) {
          */
         if (HasPilot()) {
             //  notify player of damage received
-            PyDict* dict = new PyDict();
-                dict->SetItemString("source", new PyInt(d.srcSE->GetID()));
-                dict->SetItemString("weapon", new PyInt((d.chargeRef.get() != nullptr ? d.chargeRef->typeID() : d.weaponRef->typeID())));
-                dict->SetItemString("target", new PyInt(GetID()));
-                dict->SetItemString("damage", new PyFloat(total_damage));
-            PyTuple* tuple = new PyTuple(3);
-                tuple->SetItem(0, new PyString("OnDamageMessage"));
-                tuple->SetItem(1, new PyString(Dmg::Msg::Taken[damageID]));
-                tuple->SetItem(2, dict);
+            PyTuple* tuple = new PyTuple {
+                new PyString ("OnDamageMessage"),
+                new PyString (Dmg::Msg::Taken[damageID]),
+                new PyDict {
+                    {"source", new PyInt (d.srcSE->GetID())},
+                    {"weapon", new PyInt ((d.chargeRef.get() != nullptr ? d.chargeRef->typeID() : d.weaponRef->typeID()))},
+                    {"target", new PyInt (GetID())},
+                    {"damage", new PyFloat (total_damage)}
+                }
+            };
             GetPilot()->QueueDestinyEvent(&tuple);
         }
         if (d.srcSE->HasPilot()) {
             //notify to player of damage done:
-            PyDict* dict = new PyDict();
-                dict->SetItemString("weapon", new PyInt((d.chargeRef.get() != nullptr ? d.chargeRef->typeID() : d.weaponRef->typeID())));
-                dict->SetItemString("target", new PyInt(GetID()));
-                dict->SetItemString("damage", new PyFloat(total_damage));
-            PyTuple* tuple = new PyTuple(3);
             bool banked = false;
-            tuple->SetItem(0, new PyString("OnDamageMessage"));
             if (d.weaponRef->IsModuleItem()) {
                 GenericModule* pMod = d.srcSE->GetShipSE()->GetShipItemRef()->GetModule(d.weaponRef->flag());
                 if (pMod != nullptr)
                     if (pMod->IsLinked())
                         banked = true;
             }
-            if (banked) {
-                tuple->SetItem(1, new PyString(Dmg::Msg::Banked[damageID]));
-            } else {
-                tuple->SetItem(1, new PyString(Dmg::Msg::Given[damageID]));
-            }
-            tuple->SetItem(2, dict);
+            PyTuple* tuple = new PyTuple {
+                new PyString ("OnDamageMessage"),
+                new PyString (banked ? Dmg::Msg::Banked[damageID] : Dmg::Msg::Given[damageID]),
+                new PyDict {
+                    {"weapon", new PyInt((d.chargeRef.get() != nullptr ? d.chargeRef->typeID() : d.weaponRef->typeID()))},
+                    {"target", new PyInt (GetID())},
+                    {"damage", new PyFloat (total_damage)}
+                }
+            };
             d.srcSE->GetPilot()->QueueDestinyEvent(&tuple);
         } else if (d.srcSE->IsDroneSE()) {
             // verify drone has owner set
             if (d.srcSE->GetDroneSE()->GetOwner() != nullptr) {
                 //  notify player of damage done by drone
-                PyDict* dict = new PyDict();
-                    dict->SetItemString("source", new PyInt(d.srcSE->GetID()));
-                    dict->SetItemString("target", new PyInt(GetID()));
                 /*
                 PyTuple* tuple = new PyTuple(2);
                     tuple->AddItem(0, PyStatic.NewNone());  // i dont know what this is
                     tuple->AddItem(1, new PyInt(d.srcSE->GetDroneSE()->GetOwner()->GetCharID())):
                 */
-                    //dict->SetItemString("owner", tuple));
-                    dict->SetItemString("damage", new PyFloat(total_damage));
-                PyTuple* tuple = new PyTuple(3);
-                    tuple->SetItem(0, new PyString("OnDamageMessage"));
-                    tuple->SetItem(1, new PyString(Dmg::Msg::Taken[damageID]));
-                    tuple->SetItem(2, dict);
+                    //dict->set ("owner", tuple));
+                PyTuple* tuple = new PyTuple {
+                    new PyString ("OnDamageMessage"),
+                    new PyString (Dmg::Msg::Taken [damageID]),
+                    new PyDict {
+                        {"source", new PyInt (d.srcSE->GetID())},
+                        {"target", new PyInt (GetID())},
+                        {"damage", new PyFloat (total_damage)}/*,
+                        {"owner", new PyTuple {
+                             PyStatic.NewNone(),
+                             new PyInt (d.srcSE->GetDroneSE()->GetOwner()->GetCharID())
+                         }*/
+                    }
+                };
                 d.srcSE->GetDroneSE()->GetOwner()->QueueDestinyEvent(&tuple);
             } else {
                 // make error about active drone with no owner set

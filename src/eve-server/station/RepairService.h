@@ -41,8 +41,8 @@ public:
     static void GetDamageReports(uint32 itemID, Inventory* pInv, PyList* list);
 
 protected:
-    PyResult UnasembleItems(PyCallArgs& call, PyDict* validIDsByStationID, PyList* skipChecks);
-    BoundDispatcher* BindObject(Client* client, PyRep* bindParameters) override;
+  EVEResult UnasembleItems(EVECallArgs& call, PyDict* validIDsByStationID, PyList* skipChecks);
+    BoundDispatcher* BindObject(Client* client, PyDataType* bindParameters) override;
 
 private:
     std::map<uint32, RepairServiceBound*> m_instances;
@@ -54,9 +54,9 @@ public:
 
     uint32 GetLocationID () { return this->m_locationID; }
 protected:
-    PyResult DamageModules(PyCallArgs& call, PyList* itemIDAndAmountOfDamage);
-    PyResult RepairItems(PyCallArgs& call, PyList* itemIDs, PyFloat* iskAmount);
-    PyResult GetDamageReports(PyCallArgs& call, PyList* itemIDs);
+  EVEResult DamageModules(EVECallArgs& call, PyList* itemIDAndAmountOfDamage);
+  EVEResult RepairItems(EVECallArgs& call, PyList* itemIDs, PyFloat* iskAmount);
+  EVEResult GetDamageReports(EVECallArgs& call, PyList* itemIDs);
 
     uint32 m_locationID;
 };

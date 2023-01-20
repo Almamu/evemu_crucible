@@ -122,15 +122,16 @@ uint32 Prospector::DoCycle()
 void Prospector::SendFailure()
 {
     if (m_salvager) {
-        PyTuple* type = new PyTuple(2);
-            type->SetItem(0, new PyInt(4));
-            type->SetItem(1, new PyInt(m_targetSE->GetTypeID()));
-        PyDict* dict = new PyDict;
-            dict->SetItemString("type", type);
-        PyTuple* tup = new PyTuple(3);
-            tup->SetItem(0, new PyString("OnRemoteMessage"));
-            tup->SetItem(1, new PyString("SalvagingFailure"));
-            tup->SetItem(2, dict);
+        PyTuple* tup = new PyTuple {
+            new PyString ("OnRemoteMessage"),
+            new PyString ("SalvagingFailure"),
+            new PyDict {
+                {"type", new PyTuple {
+                     new PyInt (4),
+                     new PyInt (m_targetSE->GetTypeID())
+                }}
+            }
+        };
         m_shipRef->GetPilot()->QueueDestinyEvent(&tup);
     }
     if (m_dataMiner) {

@@ -64,18 +64,19 @@ bool BookmarkService::LookupBookmark(uint32 bookmarkID, uint32& itemID, uint16& 
     return m_db.GetBookmarkInformation(bookmarkID, itemID, typeID, locationID, x, y, z);
 }
 
-PyResult BookmarkService::GetBookmarks(PyCallArgs &call) {
-    PyTuple* result = new PyTuple(2);
-        result->SetItem(0, m_db.GetBookmarks(call.client->GetCharacterID()));
-        result->SetItem(1, m_db.GetFolders(call.client->GetCharacterID()));
-    result->Dump(BOOKMARK__RSP_DUMP, "    ");
+EVEResult BookmarkService::GetBookmarks(EVECallArgs&call) {
+    PyTuple* result = call.arena.Tuple ({
+        m_db.GetBookmarks (call.client->GetCharacterID(), &call.arena),
+        m_db.GetFolders(call.client->GetCharacterID(), &call.arena)
+    });
+    result->dump(BOOKMARK__RSP_DUMP, "    ");
     return result;
 }
 
-PyResult BookmarkService::CreateFolder(PyCallArgs &call, PyRep* name) {
-    call.Dump(BOOKMARK__CALL_DUMP);
+EVEResult BookmarkService::CreateFolder(EVECallArgs&call, PyDataType* name) {
+    call.dump(BOOKMARK__CALL_DUMP);
     /** @todo sanitize name */
-    std::string nameStr = PyRep::StringContent(name);
+    std::string nameStr = name->string();
 
     uint32 ownerID = call.client->GetCharacterID();
     Rsp_CreateFolder result;
@@ -88,18 +89,18 @@ PyResult BookmarkService::CreateFolder(PyCallArgs &call, PyRep* name) {
     return result.Encode();
 }
 
-PyResult BookmarkService::UpdateFolder(PyCallArgs &call, PyInt* folderID, PyRep* folderName) {
-    call.Dump(BOOKMARK__CALL_DUMP);
+EVEResult BookmarkService::UpdateFolder(EVECallArgs&call, PyInt* folderID, PyDataType* folderName) {
+    call.dump(BOOKMARK__CALL_DUMP);
     /** @todo sanitize name */
-    if (!m_db.UpdateFolder(folderID->value(), PyRep::StringContent(folderName)))
+    if (!m_db.UpdateFolder(folderID->value(), folderName->string()))
         return PyStatic.NewFalse();
 
     return PyStatic.NewTrue();
 }
 
-PyResult BookmarkService::DeleteFolder(PyCallArgs &call, PyInt* folderID) {
+EVEResult BookmarkService::DeleteFolder(EVECallArgs&call, PyInt* folderID) {
     // bookmarks = self.bookmarkMgr.DeleteFolder(folderID)
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
 
     // call db to get list of bmIDs in deleted folder.  return result with this data
     std::vector< int32 > bmIDs;
@@ -109,8 +110,8 @@ PyResult BookmarkService::DeleteFolder(PyCallArgs &call, PyInt* folderID) {
     PyList* list = new PyList();
     for (auto cur : bmIDs) {
         PyDict* dict = new PyDict();
-        dict->SetItemString("bookmarkID", new PyInt(cur));
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        dict->set ("bookmarkID", new PyInt(cur));
+        list->add(new PyObject("util.KeyVal", dict));
     }
 
     m_db.DeleteFolder(folderID->value());
@@ -118,21 +119,21 @@ PyResult BookmarkService::DeleteFolder(PyCallArgs &call, PyInt* folderID) {
     return list;
 }
 
-PyResult BookmarkService::BookmarkLocation(PyCallArgs& call, PyInt* itemID, PyInt* ownerID, PyRep* memo, PyRep* comment, std::optional<PyInt*> folderID) {
+EVEResult BookmarkService::BookmarkLocation(EVECallArgs& call, PyInt* itemID, PyInt* ownerID, PyDataType* memo, PyDataType* comment, std::optional<PyInt*> folderID) {
   /*  bookmarkID, itemID, typeID, x, y, z, locationID = sm.RemoteSvc('bookmark').BookmarkLocation(itemID, ownerID, memo, comment, folderID)  */
 
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
 
     BmData data = BmData();
-    data.memo = PyRep::StringContent(memo);
-    data.note = PyRep::StringContent(comment);
+    data.memo = memo->string();
+    data.note = comment->string();
     data.ownerID = ownerID->value();
     data.creatorID = data.ownerID;
     data.created = GetFileTimeNow();
 
     // Check for presence of folderID in the packet
     if (call.byname.find("folderID") != call.byname.end())
-        data.folderID = PyRep::IntegerValueU32(call.byname.find("folderID")->second);
+        data.folderID = call.byname.find("folderID")->second->u32();
 
     if (IsPlayerItem(itemID->value())) {      // entity #'s above 140m are player-owned.  player is in ship
         data.typeID = EVEDB::invTypes::SolarSystem;
@@ -175,11 +176,11 @@ PyResult BookmarkService::BookmarkLocation(PyCallArgs& call, PyInt* itemID, PyIn
     return result.Encode();
 }
 
-PyResult BookmarkService::BookmarkScanResult(PyCallArgs &call, PyInt* locationID, PyRep* memo, PyRep* comment, PyString* resultID, PyInt* ownerID, std::optional<PyInt*> folderID)
+EVEResult BookmarkService::BookmarkScanResult(EVECallArgs&call, PyInt* locationID, PyDataType* memo, PyDataType* comment, PyString* resultID, PyInt* ownerID, std::optional<PyInt*> folderID)
 {
     //  bookmarkID, itemID, typeID, x, y, z, locationID = self.bookmarkMgr.BookmarkScanResult(locationID, memo, comment, resultID, ownerID, folderID=0)
 
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     //args.Dump(BOOKMARK__CALL_DUMP, "    ");
     /*
     * 22:25:58 [SvcCallDump]       Tuple: 5 elements
@@ -190,8 +191,8 @@ PyResult BookmarkService::BookmarkScanResult(PyCallArgs &call, PyInt* locationID
     * 22:25:58 [SvcCallDump]         [ 4] Integer field: 140000000
     */
     BmData data = BmData();
-    data.memo = PyRep::StringContent(memo);
-    data.note = PyRep::StringContent(comment);
+    data.memo = memo->string();
+    data.note = comment->string();
     data.ownerID = ownerID->value();
     data.creatorID = data.ownerID;
     data.created = GetFileTimeNow();
@@ -200,7 +201,7 @@ PyResult BookmarkService::BookmarkScanResult(PyCallArgs &call, PyInt* locationID
     data.point = ManagerDB::GetAnomalyPos(resultID->content());
 
     if (call.byname.find("folderID") != call.byname.end())
-        data.folderID = PyRep::IntegerValueU32(call.byname.find("folderID")->second);
+        data.folderID = call.byname.find("folderID")->second->u32();
 
     m_db.SaveNewBookmark(data);
 
@@ -217,16 +218,16 @@ PyResult BookmarkService::BookmarkScanResult(PyCallArgs &call, PyInt* locationID
     return result.Encode();
 }
 
-PyResult BookmarkService::DeleteBookmarks(PyCallArgs &call, std::optional <PyObjectEx*> bookmarks) {
-    call.Dump(BOOKMARK__CALL_DUMP);
+EVEResult BookmarkService::DeleteBookmarks(EVECallArgs&call, std::optional <PyObjectEx*> bookmarks) {
+    call.dump(BOOKMARK__CALL_DUMP);
     if (bookmarks.has_value() == false)
         return PyStatic.NewNone();
 
-    PyList* bmList = bookmarks.value()->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+    PyList* bmList = bookmarks.value()->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
     //std::vector<int32> bmIDs;
     for (size_t i = 0; i < bmList->size(); ++i)
-        m_db.ChangeOwner(bmList->GetItem(i)->AsInt()->value());
-        //bmIDs.push_back(bmList->GetItem(i)->AsInt()->value());
+        m_db.ChangeOwner(bmList->at (i)->as<PyInt>()->value());
+        //bmIDs.push_back(bmList->at (i)->as<PyInt>()->value());
 
     // player is deleting this bm from their pnp window.  there may be copies, so dont remove from db
     //  instead, to keep this in db and avoid appearance in players pnp window, just change owner to system
@@ -234,28 +235,27 @@ PyResult BookmarkService::DeleteBookmarks(PyCallArgs &call, std::optional <PyObj
     return PyStatic.NewNone();
 }
 
-
-PyResult BookmarkService::MoveBookmarksToFolder(PyCallArgs &call, PyInt* folderID, std::optional <PyObjectEx*> bookmarkIDs) {
+EVEResult BookmarkService::MoveBookmarksToFolder(EVECallArgs&call, PyInt* folderID, std::optional <PyObjectEx*> bookmarkIDs) {
     // rows = bookmarkMgr.MoveBookmarksToFolder(folderID, bookmarkIDs)
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
 
     //args.Dump(BOOKMARK__CALL_DUMP, "    ");
 
     if (bookmarkIDs.has_value() == false)
         return PyStatic.NewNone();
 
-    PyList* bmList = bookmarkIDs.value()->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+    PyList* bmList = bookmarkIDs.value()->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
 
     std::vector<int32> bmIDs;
     for (size_t i = 0; i < bmList->size(); ++i)
-        bmIDs.push_back(bmList->GetItem(i)->AsInt()->value());
+        bmIDs.push_back(bmList->at (i)->as<PyInt>()->value());
 
     m_db.MoveBookmarkToFolder(folderID->value(), bmIDs);
 
     return m_db.GetBookmarksInFolder(folderID->value());
 }
 
-PyResult BookmarkService::AddBookmarkFromVoucher(PyCallArgs &call, PyInt* itemID, PyInt* ownerID, std::optional <PyInt*> folderID) {
+EVEResult BookmarkService::AddBookmarkFromVoucher(EVECallArgs&call, PyInt* itemID, PyInt* ownerID, std::optional <PyInt*> folderID) {
     /** bookmark = sm.RemoteSvc('bookmark').AddBookmarkFromVoucher, itemID, ownerID, folderID, violateSafetyTimer=True)
      *
      *         02:04:15 [BM CallDump]   Call Arguments:
@@ -265,7 +265,7 @@ PyResult BookmarkService::AddBookmarkFromVoucher(PyCallArgs &call, PyInt* itemID
      *         02:04:15 [BM CallDump]       [ 2]       None
      */
 
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     /*
      *    args.itemID
      *    args.ownerID
@@ -294,49 +294,48 @@ PyResult BookmarkService::AddBookmarkFromVoucher(PyCallArgs &call, PyInt* itemID
 
     // return new bm data to client
     PyDict* dict = new PyDict();
-    dict->SetItemString("bookmarkID", new PyInt(data.bookmarkID));
-    dict->SetItemString("ownerID", new PyInt(data.ownerID));
-    dict->SetItemString("itemID", new PyInt(data.itemID));
-    dict->SetItemString("typeID", new PyInt(data.typeID));
-    dict->SetItemString("flag", PyStatic.NewNone());
-    dict->SetItemString("memo", new PyString(data.memo));
-    dict->SetItemString("created", new PyLong(data.created));
-    dict->SetItemString("x", new PyFloat(data.point.x));
-    dict->SetItemString("y", new PyFloat(data.point.y));
-    dict->SetItemString("z", new PyFloat(data.point.z));
-    dict->SetItemString("locationID", new PyInt(data.locationID));
-    dict->SetItemString("note", new PyString(data.note));
-    dict->SetItemString("creatorID", new PyInt(data.creatorID));
+    dict->set ("bookmarkID", new PyInt(data.bookmarkID));
+    dict->set ("ownerID", new PyInt(data.ownerID));
+    dict->set ("itemID", new PyInt(data.itemID));
+    dict->set ("typeID", new PyInt(data.typeID));
+    dict->set ("flag", PyStatic.NewNone());
+    dict->set ("memo", new PyString(data.memo));
+    dict->set ("created", new PyInt(data.created));
+    dict->set ("x", new PyFloat(data.point.x));
+    dict->set ("y", new PyFloat(data.point.y));
+    dict->set ("z", new PyFloat(data.point.z));
+    dict->set ("locationID", new PyInt(data.locationID));
+    dict->set ("note", new PyString(data.note));
+    dict->set ("creatorID", new PyInt(data.creatorID));
     if (data.folderID > 0) {
-        dict->SetItemString("folderID", new PyInt(data.folderID));
+        dict->set ("folderID", new PyInt(data.folderID));
     } else {
-        dict->SetItemString("folderID", PyStatic.NewNone());
+        dict->set ("folderID", PyStatic.NewNone());
     }
 
     return new PyObject("util.KeyVal", dict);
 }
 
-
-PyResult BookmarkService::CopyBookmarks(PyCallArgs &call, std::optional <PyObjectEx*> bookmarksToCopy, std::optional <PyInt*> folderID) {
+EVEResult BookmarkService::CopyBookmarks(EVECallArgs&call, std::optional <PyObjectEx*> bookmarksToCopy, std::optional <PyInt*> folderID) {
     //newBookmarks, message = bookmarkMgr.CopyBookmarks(bookmarksToCopy, folderID)
 
   //{'FullPath': u'UI/Messages', 'messageID': 258505, 'label': u'CantTradeMissionBookmarksBody'}(u'You cannot trade or copy mission bookmarks.', None, None)
 
     // this is called when dropping bms on corp header in bm window
 
-    call.Dump(BOOKMARK__CALL_DUMP);
+    call.dump(BOOKMARK__CALL_DUMP);
     //args.Dump(BOOKMARK__CALL_DUMP, "    ");
 
     if (bookmarksToCopy.has_value() == false)
-        return new_tuple(PyStatic.NewNone(), PyStatic.NewNone());
+        return new PyTuple {PyStatic.NewNone(), PyStatic.NewNone() };
 
-    PyList* bmList = bookmarksToCopy.value()->header()->AsTuple()->GetItem(1)->AsTuple()->GetItem(0)->AsList();
+    PyList* bmList = bookmarksToCopy.value()->header()->as<PyTuple>()->at (1)->as<PyTuple>()->at (0)->as<PyList>();
 
     PyList* list = new PyList();
     for (size_t i = 0; i < bmList->size(); ++i) {
-        InventoryItemRef iRef = sItemFactory.GetItemRef(bmList->GetItem(i)->AsInt()->value());
+        InventoryItemRef iRef = sItemFactory.GetItemRef(bmList->at (i)->as<PyInt>()->value());
         if (iRef.get() == nullptr) {
-            codelog(ITEM__ERROR, "%s: Failed to retrieve bookmark data for voucherID %u", call.client->GetName(), bmList->GetItem(i)->AsInt()->value());
+            codelog(ITEM__ERROR, "%s: Failed to retrieve bookmark data for voucherID %u", call.client->GetName(), bmList->at (i)->as<PyInt>()->value());
             continue;
         }
 
@@ -354,30 +353,29 @@ PyResult BookmarkService::CopyBookmarks(PyCallArgs &call, std::optional <PyObjec
 
         // return new bm data to client
         PyDict* dict = new PyDict();
-        dict->SetItemString("bookmarkID", new PyInt(data.bookmarkID));
-        dict->SetItemString("ownerID", new PyInt(data.ownerID));
-        dict->SetItemString("itemID", new PyInt(data.itemID));
-        dict->SetItemString("typeID", new PyInt(data.typeID));
-        dict->SetItemString("flag", PyStatic.NewNone());
-        dict->SetItemString("memo", new PyString(data.memo));
-        dict->SetItemString("created", new PyLong(data.created));
-        dict->SetItemString("x", new PyFloat(data.point.x));
-        dict->SetItemString("y", new PyFloat(data.point.y));
-        dict->SetItemString("z", new PyFloat(data.point.z));
-        dict->SetItemString("locationID", new PyInt(data.locationID));
-        dict->SetItemString("note", new PyString(data.note));
-        dict->SetItemString("creatorID", new PyInt(data.creatorID));
+        dict->set ("bookmarkID", new PyInt(data.bookmarkID));
+        dict->set ("ownerID", new PyInt(data.ownerID));
+        dict->set ("itemID", new PyInt(data.itemID));
+        dict->set ("typeID", new PyInt(data.typeID));
+        dict->set ("flag", PyStatic.NewNone());
+        dict->set ("memo", new PyString(data.memo));
+        dict->set ("created", new PyInt(data.created));
+        dict->set ("x", new PyFloat(data.point.x));
+        dict->set ("y", new PyFloat(data.point.y));
+        dict->set ("z", new PyFloat(data.point.z));
+        dict->set ("locationID", new PyInt(data.locationID));
+        dict->set ("note", new PyString(data.note));
+        dict->set ("creatorID", new PyInt(data.creatorID));
         if (data.folderID > 0) {
-            dict->SetItemString("folderID", new PyInt(data.folderID));
+            dict->set ("folderID", new PyInt(data.folderID));
         } else {
-            dict->SetItemString("folderID", PyStatic.NewNone());
+            dict->set ("folderID", PyStatic.NewNone());
         }
 
-        list->AddItem(new PyObject("util.KeyVal", dict));
+        list->add(new PyObject("util.KeyVal", dict));
     }
 
-    PyTuple* tuple = new PyTuple(2);
-    tuple->SetItem(0, list);
-    tuple->SetItem(1, PyStatic.NewNone());
-    return tuple;
+    return new PyTuple {
+        list, PyStatic.NewNone()
+    };
 }

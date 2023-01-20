@@ -33,7 +33,7 @@ public:
     VoiceMgrService();
 
 protected:
-    PyResult VoiceEnabled(PyCallArgs& call);
+  EVEResult VoiceEnabled(EVECallArgs& call);
 };
 
 #endif /* __VOICE_MGR__H__INCL__ */

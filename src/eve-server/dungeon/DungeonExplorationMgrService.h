@@ -33,7 +33,7 @@ public:
     DungeonExplorationMgrService();
 
 protected:
-    PyResult GetMyEscalatingPathDetails(PyCallArgs& call);
+  EVEResult GetMyEscalatingPathDetails(EVECallArgs& call);
 };
 
 #endif

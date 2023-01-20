@@ -40,28 +40,28 @@ PaperDollService::PaperDollService() :
 }
 
 //17:35:32 L PaperDollService::Handle_GetPaperDollData(): size=1
-PyResult PaperDollService::GetPaperDollData(PyCallArgs &call, PyInt* characterID) {
-    call.Dump(PLAYER__CALL_DUMP);
+EVEResult PaperDollService::GetPaperDollData(EVECallArgs&call, PyInt* characterID) {
+    call.dump(PLAYER__CALL_DUMP);
     // this is called when viewing full body of a character.
 
     return m_db.GetPaperDollAvatarColors(characterID->value());
 }
 
-PyResult PaperDollService::ConvertAndSavePaperDoll(PyCallArgs &call) {
-    call.Dump(PLAYER__CALL_DUMP);
+EVEResult PaperDollService::ConvertAndSavePaperDoll(EVECallArgs&call) {
+    call.dump(PLAYER__CALL_DUMP);
     return nullptr;
 }
 
-PyResult PaperDollService::UpdateExistingCharacterFull(PyCallArgs &call, PyInt* characterID, PyRep* dollInfo, PyRep* portraitInfo, PyBool* dollExists) {
-    call.Dump(PLAYER__CALL_DUMP);
+EVEResult PaperDollService::UpdateExistingCharacterFull(EVECallArgs&call, PyInt* characterID, PyDataType* dollInfo, PyDataType* portraitInfo, PyBool* dollExists) {
+    call.dump(PLAYER__CALL_DUMP);
     /*
         sm.RemoteSvc('paperDollServer').UpdateExistingCharacterFull(charID, dollInfo, portraitInfo, dollExists)
         */
     return nullptr;
 }
 
-PyResult PaperDollService::UpdateExistingCharacterLimited(PyCallArgs &call, PyInt* characterID, PyRep* dollData, PyRep* portraitInfo, PyBool* dollExists) {
-    call.Dump(PLAYER__CALL_DUMP);
+EVEResult PaperDollService::UpdateExistingCharacterLimited(EVECallArgs&call, PyInt* characterID, PyDataType* dollData, PyDataType* portraitInfo, PyBool* dollExists) {
+    call.dump(PLAYER__CALL_DUMP);
     /*
         sm.RemoteSvc('paperDollServer').UpdateExistingCharacterLimited(charID, dollData, portraitInfo, dollExists)
         */
@@ -74,7 +74,7 @@ PyResult PaperDollService::UpdateExistingCharacterLimited(PyCallArgs &call, PyIn
     return nullptr;
 }
 
-PyResult PaperDollService::GetPaperDollPortraitDataFor(PyCallArgs &call, PyInt* characterID) {
+EVEResult PaperDollService::GetPaperDollPortraitDataFor(EVECallArgs&call, PyInt* characterID) {
     //    data = sm.RemoteSvc('paperDollServer').GetPaperDollPortraitDataFor(charID)
     /*
             portraitData = sm.GetService('cc').GetPortraitData(charID)
@@ -95,16 +95,16 @@ PyResult PaperDollService::GetPaperDollPortraitDataFor(PyCallArgs &call, PyInt* 
     return m_db.GetPaperDollPortraitData(characterID->value());
 }
 
-PyResult PaperDollService::GetMyPaperDollData(PyCallArgs &call, PyInt* characterID)
+EVEResult PaperDollService::GetMyPaperDollData(EVECallArgs&call, PyInt* characterID)
 {
-    call.Dump(PLAYER__CALL_DUMP);
+    call.dump(PLAYER__CALL_DUMP);
 
 	PyDict* args = new PyDict;
 
-	args->SetItemString( "colors", m_db.GetPaperDollAvatarColors(call.client->GetCharacterID()) );
-	args->SetItemString( "modifiers", m_db.GetPaperDollAvatarModifiers(call.client->GetCharacterID()) );
-	args->SetItemString( "appearance", m_db.GetPaperDollAvatar(call.client->GetCharacterID()) );
-	args->SetItemString( "sculpts", m_db.GetPaperDollAvatarSculpts(call.client->GetCharacterID()) );
+	args->set ( "colors", m_db.GetPaperDollAvatarColors(call.client->GetCharacterID()) );
+	args->set ( "modifiers", m_db.GetPaperDollAvatarModifiers(call.client->GetCharacterID()) );
+	args->set ( "appearance", m_db.GetPaperDollAvatar(call.client->GetCharacterID()) );
+	args->set ( "sculpts", m_db.GetPaperDollAvatarSculpts(call.client->GetCharacterID()) );
 
     return new PyObject("util.KeyVal", args);
 }

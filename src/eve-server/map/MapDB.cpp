@@ -238,7 +238,7 @@ void MapDB::LoadDynamicData(uint32 sysID, SystemKillData& data)
 ///  added killsHour, factionKills, podKillsHour  24Mar14
 ///  NOTE: DB has fields for timing the *Hour and *24Hour parts. need to write checks for that once everything else is working.
 ///    NOTE:   use averages for *Hour based on current data and serverUpTime.   may be able to do 24Hour same way.
-PyRep *MapDB::GetDynamicData(uint8 type, uint8 time) {
+PyDataType *MapDB::GetDynamicData(uint8 type, uint8 time) {
     DBQueryResult res;
     switch (type) {
         case 1: {
@@ -250,10 +250,10 @@ PyRep *MapDB::GetDynamicData(uint8 type, uint8 time) {
             DBResultRow row;
             PyDict* dict = new PyDict();
             while (res.GetRow(row)) {
-                PyTuple* inner = new PyTuple(2);
-                    inner->SetItem(0, new PyInt(row.GetInt(1)));    // cyno modules on ships (fields)
-                    inner->SetItem(1, new PyInt(row.GetInt(2)));    // cyno generators (POS structures)
-                dict->SetItem(new PyInt(row.GetInt(0)), inner);
+                dict->set(new PyInt(row.GetInt(0)), new PyTuple {
+                    new PyInt (row.GetInt(1)), // cyno modules on ships (fields)
+                    new PyInt (row.GetInt (2)), // cyno generators (POS structures)
+                });
             }
             return dict;
         };

@@ -41,12 +41,12 @@ public:
 
     void BoundReleased (PlanetMgrBound* bound) override;
 protected:
-    BoundDispatcher* BindObject(Client *client, PyRep* bindParameters);
+    BoundDispatcher* BindObject(Client *client, PyDataType* bindParameters);
 
-    PyResult GetPlanetsForChar(PyCallArgs& call);
-    PyResult GetMyLaunchesDetails(PyCallArgs& call);
-    PyResult GetPlanet(PyCallArgs& call, PyInt* planetID);
-    PyResult DeleteLaunch(PyCallArgs& call, PyInt* launchID);
+    EVEResult GetPlanetsForChar(EVECallArgs& call);
+    EVEResult GetMyLaunchesDetails(EVECallArgs& call);
+    EVEResult GetPlanet(EVECallArgs& call, PyInt* planetID);
+    EVEResult DeleteLaunch(EVECallArgs& call, PyInt* launchID);
 
 private:
     std::map<uint32, PlanetMgrBound*> m_instances;
@@ -61,23 +61,23 @@ public:
     uint32 GetPlanetID () { return this->m_planet->GetID(); }
 
 protected:
-    PyResult GetPlanetResourceInfo(PyCallArgs& call);
-    PyResult GetPlanetInfo(PyCallArgs& call);
-    PyResult GetExtractorsForPlanet(PyCallArgs& call, PyInt* planetID);
-    PyResult UserUpdateNetwork(PyCallArgs& call, PyList* commandList);
-    PyResult GetProgramResultInfo(PyCallArgs& call, PyInt* ecuID, PyInt* typeID, PyList* heads, PyFloat* headRadius);
-    PyResult GetResourceData(PyCallArgs& call, PyObject* info);
-    PyResult UserAbandonPlanet(PyCallArgs& call);
-    PyResult UserLaunchCommodities(PyCallArgs& call, PyInt* commandPinID, PyDict* commoditiesToLaunch);
-    PyResult UserTransferCommodities(PyCallArgs& call, PyList* path, PyDict* commodities);
-    PyResult GetCommandPinsForPlanet(PyCallArgs& call, PyInt* planetID);
-    PyResult GetFullNetworkForOwner(PyCallArgs& call, PyInt* planetID, PyInt* characterID);
-    PyResult GMAddCommodity(PyCallArgs& call, PyInt* pinID, PyInt* typeID, PyInt* quantity);
-    PyResult GMConvertCommandCenter(PyCallArgs& call, PyInt* pinID);
-    PyResult GMForceInstallProgram(PyCallArgs& call, PyInt* pinID, PyInt* typeID, PyInt* cycleTime, PyInt* lifetimeHours, PyInt* qtyPerCycle, PyFloat* radius);
-    PyResult GMGetLocalDistributionReport(PyCallArgs& call, PyInt* planetID, PyTuple* surfacePoint);
-    PyResult GMGetSynchedServerState(PyCallArgs& call, PyInt* characterID);
-    PyResult GMRunDepletionSim(PyCallArgs& call);
+  EVEResult GetPlanetResourceInfo(EVECallArgs& call);
+  EVEResult GetPlanetInfo(EVECallArgs& call);
+  EVEResult GetExtractorsForPlanet(EVECallArgs& call, PyInt* planetID);
+  EVEResult UserUpdateNetwork(EVECallArgs& call, PyList* commandList);
+  EVEResult GetProgramResultInfo(EVECallArgs& call, PyInt* ecuID, PyInt* typeID, PyList* heads, PyFloat* headRadius);
+  EVEResult GetResourceData(EVECallArgs& call, PyObject* info);
+  EVEResult UserAbandonPlanet(EVECallArgs& call);
+  EVEResult UserLaunchCommodities(EVECallArgs& call, PyInt* commandPinID, PyDict* commoditiesToLaunch);
+  EVEResult UserTransferCommodities(EVECallArgs& call, PyList* path, PyDict* commodities);
+  EVEResult GetCommandPinsForPlanet(EVECallArgs& call, PyInt* planetID);
+  EVEResult GetFullNetworkForOwner(EVECallArgs& call, PyInt* planetID, PyInt* characterID);
+  EVEResult GMAddCommodity(EVECallArgs& call, PyInt* pinID, PyInt* typeID, PyInt* quantity);
+  EVEResult GMConvertCommandCenter(EVECallArgs& call, PyInt* pinID);
+  EVEResult GMForceInstallProgram(EVECallArgs& call, PyInt* pinID, PyInt* typeID, PyInt* cycleTime, PyInt* lifetimeHours, PyInt* qtyPerCycle, PyFloat* radius);
+  EVEResult GMGetLocalDistributionReport(EVECallArgs& call, PyInt* planetID, PyTuple* surfacePoint);
+  EVEResult GMGetSynchedServerState(EVECallArgs& call, PyInt* characterID);
+  EVEResult GMRunDepletionSim(EVECallArgs& call);
 
     /*
 

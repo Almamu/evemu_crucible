@@ -345,11 +345,12 @@ void MiningLaser::Depleted(std::multimap<float, MiningLaser*> &mMap) {
         cur.second->AddOreAndDeactivate(roidRef->typeID(), oreAmount);
 
         // inform pilot of asteroid depleted  ...no clue if it actually works like this
-        PyTuple* tuple = new PyTuple(2);
-            tuple->SetItem(0, new PyString("MiningItemDepleted"));
-        PyDict* dict = new PyDict();
-            dict->SetItemString("modulename", new PyString(cur.second->GetSelf()->itemName()));
-            tuple->SetItem(1, dict);
+        PyTuple* tuple = new PyTuple {
+            new PyString ("MiningItemDepleted"),
+            new PyDict {
+                {"modulename", new PyString (cur.second->GetSelf()->itemName())}
+            }
+        };
         cur.second->GetShipRef()->GetPilot()->QueueDestinyUpdate(&tuple);
     }
 

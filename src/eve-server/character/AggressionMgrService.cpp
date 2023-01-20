@@ -37,12 +37,12 @@ AggressionMgrBound::AggressionMgrBound(EVEServiceManager& mgr, AggressionMgrServ
     this->Add("CheckLootRightExceptions", &AggressionMgrBound::CheckLootRightExceptions);
 }
 
-PyResult AggressionMgrBound::GetCriminalTimeStamps(PyCallArgs &call, PyInt* characterID)
+EVEResult AggressionMgrBound::GetCriminalTimeStamps(EVECallArgs&call, PyInt* characterID)
 {
     return new PyDict();
 }
 
-PyResult AggressionMgrBound::CheckLootRightExceptions(PyCallArgs &call, PyInt* containerID)
+EVEResult AggressionMgrBound::CheckLootRightExceptions(EVECallArgs&call, PyInt* containerID)
 {
     // return true to allow looting
     return new PyBool(true);
@@ -53,18 +53,18 @@ AggressionMgrService::AggressionMgrService(EVEServiceManager& mgr) :
 {
 }
 
-BoundDispatcher* AggressionMgrService::BindObject(Client* client, PyRep* bindParameters) {
-    if (bindParameters->IsInt() == false) {
+BoundDispatcher* AggressionMgrService::BindObject(Client* client, PyDataType* bindParameters) {
+    if (bindParameters->is<PyInt>() == false) {
         throw CustomError("Cannot bind service");
     }
 
-    uint32 systemID = bindParameters->AsInt()->value();
+    uint32 systemID = bindParameters->as<PyInt>()->value();
     auto it = this->m_instances.find (systemID);
 
     if (it != this->m_instances.end ())
         return it->second;
 
-    AggressionMgrBound* bound = new AggressionMgrBound(this->GetServiceManager(), *this, bindParameters->AsInt()->value());
+    AggressionMgrBound* bound = new AggressionMgrBound(this->GetServiceManager(), *this, bindParameters->as<PyInt>()->value());
 
     this->m_instances.insert_or_assign (systemID, bound);
 
