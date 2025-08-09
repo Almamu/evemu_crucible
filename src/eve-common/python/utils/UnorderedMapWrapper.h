@@ -33,7 +33,7 @@
 template <class Key, class Value, class BaseKey, class BaseValue>
 struct pair_casting {
     constexpr std::pair <Key*, Value*> operator ()(const std::pair<BaseKey*,BaseValue*>& value) const {
-        return {value.first->as<Key>(), value.second->as<Value>()};
+        return {value.first->template as<Key>(), value.second->template as<Value>()};
     }
 };
 
